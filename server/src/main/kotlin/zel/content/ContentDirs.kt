@@ -7,7 +7,6 @@ internal data class ContentDirs(
     val gamedata: Path?,
     val data: Path?,
     val assets: Path?,
-    val client: Path? = null,
 ) {
     val figuredata: Path? get() = gamedata?.resolve(FIGUREDATA_FILE)?.takeIf(Files::isRegularFile)
 
@@ -15,12 +14,7 @@ internal data class ContentDirs(
         const val FIGUREDATA_FILE = "figurepartlist"
 
         fun fromEnvironment(env: Map<String, String> = System.getenv()) =
-            ContentDirs(
-                path(env, "ZEL_GAMEDATA_DIR"),
-                path(env, "ZEL_DATA_DIR"),
-                path(env, "ZEL_ASSET_DIR"),
-                path(env, "ZEL_CLIENT_DIR"),
-            )
+            ContentDirs(path(env, "ZEL_GAMEDATA_DIR"), path(env, "ZEL_DATA_DIR"), path(env, "ZEL_ASSET_DIR"))
 
         private fun path(
             env: Map<String, String>,

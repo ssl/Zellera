@@ -9,15 +9,12 @@ internal class ContentFiles(
     private val dirs: ContentDirs,
 ) {
     fun check(pack: ContentPack) {
-        entries(pack).forEach { target(it) }
+        pack.files.filterNot { it in ContentPack.READ_ENTRIES }.forEach { target(it) }
     }
-
-    private fun entries(pack: ContentPack) =
-        pack.files.filterNot { it in ContentPack.READ_ENTRIES || it.startsWith(ContentPack.CLIENT_PREFIX) }
 
     /** Each file goes through a temporary name, so the web never reads half a file. */
     fun write(pack: ContentPack): Int {
-        val entries = entries(pack)
+        val entries = pack.files.filterNot { it in ContentPack.READ_ENTRIES }
         for (entry in entries) {
             val target = target(entry)
             Files.createDirectories(target.parent)

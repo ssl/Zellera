@@ -189,8 +189,7 @@ internal class ContentPack private constructor(
 
     companion object {
         const val MANIFEST = "manifest.json"
-        const val CLIENT_PREFIX = "client/"
-        const val PROFILE_ENTRY = "${CLIENT_PREFIX}profile.json"
+        const val PROFILE_ENTRY = "client/profile.json"
 
         val READ_ENTRIES = setOf(PROFILE_ENTRY)
         private const val TABLES_PREFIX = "tables/"

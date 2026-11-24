@@ -15,15 +15,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.system.exitProcess
 
 object ContentCommand {
-    private const val USAGE =
-        "usage: zellera content import [--no-client | --client-only] <pack.zip> | zellera content status"
+    private const val USAGE = "usage: zellera content import <pack.zip> | zellera content status"
     private const val FAILED = 1
     private const val NOT_IMPORTED = 3
     private const val FILES_MISSING = 4
     private const val FORMAT_NOT_READ = 5
     private const val NAME = "content"
-    private const val NO_CLIENT = "--no-client"
-    private const val CLIENT_ONLY = "--client-only"
     private const val CONNECT_TIMEOUT_MILLIS = 300
 
     fun handles(args: Array<String>): Boolean = args.firstOrNull() == NAME
@@ -80,36 +77,24 @@ object ContentCommand {
         out: PrintStream,
     ) {
         val words = args.drop(1)
-        val withClient = NO_CLIENT !in words
-        val clientOnly = CLIENT_ONLY in words
-        val operands = words.filter { it != NO_CLIENT && it != CLIENT_ONLY }
-        if (operands.size != 2 || operands[0] != "import" || (clientOnly && !withClient)) {
-            throw ContentPackException(USAGE)
-        }
-        if (clientOnly) return installClientOnly(Path.of(operands[1]), out)
+        if (words.size != 2 || words[0] != "import") throw ContentPackException(USAGE)
         val startedAt = System.nanoTime()
         val owner = GameEnvironment.Account.SCHEMA_OWNER
         val environment = usable(owner)
-        ContentPack.open(Path.of(operands[1])).use { pack ->
-            val dirs = ContentDirs.fromEnvironment()
-            val files = ContentFiles(dirs)
-            val client = ClientInstall(dirs.client)
+        ContentPack.open(Path.of(words[1])).use { pack ->
+            val files = ContentFiles(ContentDirs.fromEnvironment())
             files.check(pack)
-            if (withClient) client.check(pack)
             val outcome =
                 onDatabase(Configuration(environment.startup(owner))) { connection ->
                     refuseWhileRunning(connection)
                     ContentImporter(connection).importTables(pack).also { environment.writeSettings(connection) }
                 }
             val written = files.write(pack)
-            val installed = if (withClient) client.write(pack) else 0
             val tookMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt)
             out.println(
                 "imported ${pack.name} ${pack.version}: ${pack.sections.size} sections, ${outcome.rows} rows, " +
                     "$written files, $tookMillis ms",
             )
-            if (installed > 0) out.println("client: $installed files installed in ${dirs.client}")
-            if (!withClient && client.names(pack).isNotEmpty()) out.println("client: not installed (--no-client)")
             val players = outcome.ids.players
             if (players.isNotEmpty()) {
                 out.println(
@@ -132,21 +117,6 @@ object ContentCommand {
                         whereAssetsAre(pack.assets),
                 )
             }
-        }
-    }
-
-    /** Only the pack's client: no database, no content files. */
-    internal fun installClientOnly(
-        path: Path,
-        out: PrintStream,
-        dirs: ContentDirs = ContentDirs.fromEnvironment(),
-    ) {
-        val dir = dirs.client
-        ContentPack.open(path).use { pack ->
-            val client = ClientInstall(dir)
-            if (client.names(pack).isEmpty()) throw ContentPackException("${pack.name} ${pack.version} holds no client")
-            client.check(pack)
-            out.println("client: ${client.write(pack)} files installed in $dir")
         }
     }
 

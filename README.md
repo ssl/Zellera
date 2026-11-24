@@ -4,15 +4,16 @@
 with wired, play games, keep pets, join groups and trade, all in the browser.
 
 Zellera is the server: the room engine, every game system, the web site, housekeeping and a public Web API. It ships
-no content of its own. You bring one thing, a content pack: it holds the world and the game client, and decides what the
-world looks like and what everything in it is called. `./zel start` runs it all on your own computer, server or container.
+no client and no content. You bring a client and a content pack, and the pack decides what the world looks like and
+what everything in it is called. `./zel start` runs it all on your own computer, server or container.
 
 ## What is in it and what you bring
 
 | | |
 |---|---|
 | **This repository** | the server (Kotlin, JDK 25), the web (Node.js 22), its database schema, themes and extensions |
-| **You bring: a content pack** | furni, catalogue, rooms, texts and the rest of the world, and the game client, imported with `./zel import <pack.zip>`; the client goes in `client/` (`ZEL_CLIENT_DIR`), the images in `.data/assets/` (`ZEL_ASSET_DIR`) or on a host (`ZEL_ASSET_URL`) |
+| **You bring: a client** | the game client, in `client/` (`ZEL_CLIENT_DIR`) |
+| **You bring: a content pack** | furni, catalogue, rooms, texts and the rest of the world, imported with `./zel import <pack.zip>`; its images go in `.data/assets/` (`ZEL_ASSET_DIR`) or on a host (`ZEL_ASSET_URL`) |
 
 The server has no furni, rooms, texts or names built in, so it does not start without a pack.
 
@@ -34,14 +35,6 @@ there:
 Because nothing is fixed in code, packs can differ completely in style: another currency set and other names, their own
 catalogue layouts, a different furni line, another tone of text. Two packs on the same server are two different games.
 The pack format is versioned; `./zel import` refuses a pack it cannot read and says which formats it takes.
-
-A pack may hold a built client as it is, in a `client/` folder. `./zel import` puts it in the client folder
-(`client/`, or the folder `ZEL_CLIENT_DIR` names) and replaces the release's own files there; your own
-`extensions/<name>/` folders and your entries in `client.json` stay. `./zel import --no-client <pack.zip>` leaves the
-client folder alone, for a client you keep yourself, and `./zel import --client-only <pack.zip>` installs only the
-client (no content, no database, no backup) when the client changed and the content did not; the web starts again to
-read it. A pack without a client works as before: put a built client in the
-client folder yourself.
 
 ## What it can do
 
@@ -119,7 +112,7 @@ Cloudflare Tunnel. `./zel doctor` checks this computer against your configuratio
 ## Start
 
 ```
-./zel import <pack.zip>   # once, before the first start; installs the pack's client too
+./zel import <pack.zip>   # once, before the first start
 ./zel start               # on this computer; --public adds a quick tunnel to the internet
 ./zel status
 ./zel stop

@@ -1,7 +1,19 @@
-# Zellera
+<p align="center"><img src="docs/logo.svg" alt="Zellera" width="560"></p>
 
-**A virtual-world game server, written from scratch.** Players build and furnish isometric rooms, bring them to life
-with wired, play games, keep pets, join groups and trade, all in the browser.
+<p align="center">
+<b>A virtual-world game server, written from scratch.</b><br>
+Players build and furnish isometric rooms, bring them to life with wired,<br>
+play games, keep pets, join groups and trade, all in the browser.
+</p>
+
+<p align="center">
+<a href="#start">Start</a> ·
+<a href="#what-it-can-do">What it can do</a> ·
+<a href="#content-packs">Content packs</a> ·
+<a href="#configuration">Configuration</a> ·
+<a href="#server-sizing">Server sizing</a> ·
+<a href="#license">License</a>
+</p>
 
 Zellera is the server: the room engine, every game system, the web site, housekeeping and a public Web API. It ships
 no client and no content. You bring a client and a content pack, and the pack decides what the world looks like and

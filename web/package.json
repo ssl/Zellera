@@ -1,0 +1,12 @@
+{
+  "name": "zellera-web",
+  "private": true,
+  "type": "module",
+  "description": "Zellera web: game page, client payload, gamedata, asset mirror and the minimal CMS",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "mariadb": "3.5.4"
+  }
+}

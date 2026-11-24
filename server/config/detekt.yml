@@ -1,0 +1,43 @@
+style:
+  ReturnCount:
+    active: true
+    max: 3
+    excludeGuardClauses: true
+    excludeReturnFromLambda: true
+  LoopWithTooManyJumpStatements:
+    active: true
+    maxJumpCount: 2
+  MagicNumber:
+    active: true
+    ignoreNumbers: ['-1', '0', '1', '2', '8', '16', '24', '0xFF', '0xFFFF']
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+  WildcardImport:
+    active: true
+
+potential-bugs:
+  UnsafeCallOnNullableType:
+    active: true
+    excludes: []
+  UnsafeCast:
+    active: true
+
+complexity:
+  LongParameterList:
+    active: true
+    allowedFunctionParameters: 9
+    allowedConstructorParameters: 30
+  ComplexCondition:
+    active: true
+    allowedConditions: 5
+  CyclomaticComplexMethod:
+    active: true
+    allowedComplexity: 20
+    ignoreSimpleWhenEntries: true
+  TooManyFunctions:
+    active: true
+    allowedFunctionsPerFile: 25
+    allowedFunctionsPerClass: 25
+    allowedFunctionsPerObject: 25
+    ignorePrivate: true

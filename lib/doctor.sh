@@ -45,17 +45,22 @@ doctor() {
     ok "network mode: $MODE$([ "$MODE" != tunnel ] || echo " ($TUNNEL_MODE)")"
   fi
 
-  if ! have java; then bad "java is missing: install JDK 25"
+  if ! have java; then
+    if is_bundle; then bad "java is missing: install Java 25 (a runtime is enough)"; else bad "java is missing: install JDK 25"; fi
   else
     line=$(java -version 2>&1 | head -1)
     if [[ $line =~ \"25[.\"] ]]; then ok "java 25"; else bad "java is not 25: $line"; fi
+  fi
+  if ! is_bundle; then :
+  elif [ -f "$(bundle_jar)" ]; then ok "server $(jar_name)"
+  else bad "the bundle's $(jar_name) is missing: unzip the bundle again"
   fi
   if ! have node; then bad "node is missing: install Node.js 22 or newer"
   else
     line=$(node --version)
     if [[ $line =~ ^v(2[2-9]|[3-9][0-9])\. ]]; then ok "node $line"; else bad "node is not 22 or newer: $line"; fi
   fi
-  doctor_tool npm "it comes with Node.js"
+  is_bundle || doctor_tool npm "it comes with Node.js"
   if ! have mariadbd; then bad "mariadbd is missing: install MariaDB 11 or newer (the server, not only the client)"
   else
     line=$(mariadbd --version 2>/dev/null || true)
@@ -66,7 +71,11 @@ doctor() {
   doctor_tool gzip "install gzip"
   case $MODE in local|domain|tunnel) doctor_tool caddy "install Caddy 2 (ZEL_PROXY=$MODE runs it)" ;; esac
   [ "$MODE" != tunnel ] || doctor_tool cloudflared "install cloudflared (ZEL_PROXY=tunnel runs it)"
-  if have git; then ok git; else warn "git is missing: ./zel upgrade needs it"; fi
+  if is_bundle; then
+    if have unzip; then ok unzip; else warn "unzip is missing: ./zel upgrade needs it"; fi
+  elif have git; then ok git
+  else warn "git is missing: ./zel upgrade needs it"
+  fi
 
   doctor_port "$ZEL_DB_PORT" db ZEL_DB_PORT
   doctor_port "$ZEL_WS_PORT" server ZEL_WS_PORT

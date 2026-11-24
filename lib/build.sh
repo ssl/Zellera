@@ -11,12 +11,11 @@ tree_is_release() {
   [ -z "$(git -C "$ROOT" status --porcelain --untracked-files=no 2>/dev/null)" ]
 }
 
-# Downloads the release's jar; it is kept only when it matches the release's .sha256.
-release_fetch() {
-  local jar url
-  jar=$(release_jar)
-  url=${ZEL_RELEASE_URL:-https://github.com/ssl/zellera/releases/download}/v$VERSION/$(jar_name)
-  mkdir -p "$(dirname "$jar")"
+release_url() { echo "${ZEL_RELEASE_URL:-https://github.com/ssl/zellera/releases/download}"; }
+
+# Downloads a release file; it is kept only when it matches the release's .sha256 next to it.
+release_download() { # url, file
+  mkdir -p "$(dirname "$2")"
   node --input-type=module -e '
     import { createHash } from "node:crypto";
     import { writeFileSync } from "node:fs";
@@ -28,13 +27,19 @@ release_fetch() {
     };
     try {
       const wanted = (await get(`${url}.sha256`)).toString("utf8").trim().split(/\s+/)[0].toLowerCase();
-      const jar = await get(url);
-      const got = createHash("sha256").update(jar).digest("hex");
+      const body = await get(url);
+      const got = createHash("sha256").update(body).digest("hex");
       if (got !== wanted) throw new Error(`${url}: sha256 is ${got}, the release says ${wanted}`);
-      writeFileSync(out, jar);
+      writeFileSync(out, body);
     } catch (e) { console.error(e.message); process.exit(1); }
-  ' "$url" "$jar"
+  ' "$1" "$2"
 }
+
+release_fetch() { release_download "$(release_url)/v$VERSION/$(jar_name)" "$(release_jar)"; }
+
+# A release bundle has no server source: its jar and the web's packages come with it, and MANIFEST lists its files.
+is_bundle() { [ -f "$ROOT/MANIFEST" ]; }
+bundle_jar() { echo "$ROOT/$(jar_name)"; }
 
 build_from_source() {
   local built
@@ -49,11 +54,21 @@ build_from_source() {
   JAR=$built
 }
 
-# Sets JAR. ZEL_BUILD: source builds here, release takes the release's jar, auto takes the release's jar when it is
-# there and the checkout is that release, else builds.
+# Sets JAR. A bundle takes its own jar. In a checkout, ZEL_BUILD: source builds here, release takes the release's jar,
+# auto takes the release's jar when it is there and the checkout is that release, else builds.
 build_server() {
   local mode=${ZEL_BUILD:-auto} release
   release=$(release_jar)
+  if is_bundle; then
+    case $mode in
+      auto|release) ;;
+      source) fail "this folder is a release bundle and holds no server source; to build the server, clone the repository (README.md, Build from source)" ;;
+      *) fail "ZEL_BUILD must be auto, source or release, not '$mode'" ;;
+    esac
+    [ -f "$(bundle_jar)" ] || fail "the bundle's $(jar_name) is missing; unzip the bundle again"
+    JAR=$(bundle_jar)
+    return 0
+  fi
   case $mode in
     source) build_from_source ;;
     release)
@@ -79,6 +94,10 @@ install_jar() {
 # Installed again when web/package-lock.json changes.
 web_packages() {
   local sum
+  if is_bundle; then
+    [ -d "$ROOT/web/node_modules" ] || fail "the bundle's web/node_modules is missing; unzip the bundle again"
+    return 0
+  fi
   sum=$(cksum < "$ROOT/web/package-lock.json")
   if [ ! -d "$ROOT/web/node_modules" ] || [ "$(cat "$DATA/web-packages" 2>/dev/null || true)" != "$sum" ]; then
     step "installing the web's packages"

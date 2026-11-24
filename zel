@@ -1,0 +1,242 @@
+#!/usr/bin/env bash
+# Runs a game from this folder: its own MariaDB, the server, the web and, unless you bring your own, a proxy.
+#
+#   ./zel start [--public]     start what is not running; --public opens a quick tunnel to the internet
+#   ./zel stop                 stop everything; the server saves its rooms first
+#   ./zel restart [--public]   stop, then start the same way
+#   ./zel status               each process: pid, port, health and version
+#   ./zel logs [name] [-f]     a log in .data/logs (db, server, web, proxy, tunnel, build, migrate); none: the
+#                              processes' logs
+#   ./zel import <pack.zip>    import a content pack (stops the game, backs up, imports, starts it again)
+#   ./zel backup               dump the database into .data/backups
+#   ./zel restore <file>       put a backup back
+#   ./zel doctor               check this computer against what the configuration needs
+#   ./zel trust                how to make this computer's browsers trust the local address
+#   ./zel upgrade [--to vX.Y.Z] [--yes]   move to a released version (docs/UPGRADING.md)
+#   ./zel install-service      Linux: run under systemd, so the game survives a crash and a reboot
+#   ./zel uninstall-service
+#   ./zel version
+#
+# Settings are in config/zellera.env, your own in config/zellera.local.env; data and logs go to .data/.
+set -euo pipefail
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+for module in env processes db build proxy tunnel backup doctor service upgrade; do
+  # shellcheck source=/dev/null
+  . "$ROOT/lib/$module.sh"
+done
+
+usage() { awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$ROOT/zel"; }
+
+stop_game() {
+  local name
+  for name in tunnel proxy web server; do stop_or_fail "$name"; done
+  rm -f "$RUN/site-url" "$RUN/tunnel.kind"
+}
+
+where_to_play() {
+  echo
+  case $MODE in
+    local) echo "game: $SITE_URL/   (this computer only; a browser warning ends with ./zel trust)" ;;
+    domain) echo "game: $SITE_URL/" ;;
+    tunnel)
+      if [ "$TUNNEL_MODE" = quick ]; then echo "game: $SITE_URL/   (a quick tunnel: a new address after every stop)"
+      else echo "game: $SITE_URL/   (tunnel $ZEL_TUNNEL)"; fi ;;
+    none)
+      echo "game: $SITE_URL/   once your proxy sends it here:"
+      echo "  /websocket        ->  http://$ZEL_LISTEN_HOST:$ZEL_WS_PORT   (a WebSocket upgrade)"
+      echo "  everything else   ->  http://$ZEL_LISTEN_HOST:$ZEL_WEB_PORT"
+      echo "  with the player's address in $ZEL_CLIENT_IP_HEADER, trusted from $ZEL_TRUSTED_PROXIES (docs/PROXY.md)" ;;
+  esac
+}
+
+start_game() { # 1 when --public was given
+  resolve_mode "${1:-}"
+  prepare_data
+  doctor_or_fail "${1:-}"
+  db_secrets
+  build_server
+  web_packages
+  service_sync
+  db_up
+  # Before the schema step: every server step writes the site's address into the settings.
+  tunnel_up
+  export_site_url
+  install_jar
+  migrate
+  content_required
+  jar_tool none keys ensure >> "$LOGS/migrate.log" 2>&1 || { tail -5 "$LOGS/migrate.log" >&2; fail "the server made no key for the key exchange"; }
+  # The server and the web read the site's address only when they start.
+  if [ "$(cat "$RUN/site-url" 2>/dev/null || true)" != "$SITE_URL" ] && { process_alive server || process_alive web; }; then
+    note "the site's address changed: the web and the server start again"
+    stop_or_fail web
+    stop_or_fail server
+    install_jar
+  fi
+  step "starting the game"
+  process_start server
+  process_start web
+  proxy_up
+  # Stopping the proxy under systemd stops the tunnel that requires it.
+  ! process_wanted tunnel || process_alive tunnel || process_start tunnel
+  echo "$SITE_URL" > "$RUN/site-url"
+  if [ -n "$PUBLIC_MARK" ]; then : > "$RUN/public"; fi
+  process_wait server "${ZEL_START_TIMEOUT:-120}"
+  process_wait web 30
+  ! process_wanted proxy || process_wait proxy 20
+  where_to_play
+}
+
+cmd_start() {
+  local public=""
+  while [ $# -gt 0 ]; do
+    case $1 in --public) public=1 ;; *) fail "start takes only --public (./zel help)" ;; esac
+    shift
+  done
+  load_env
+  lock_take
+  start_game "$public"
+}
+
+cmd_stop() {
+  [ $# = 0 ] || fail "stop takes no arguments"
+  load_env
+  lock_take
+  stop_game
+  stop_or_fail db
+  rm -f "$RUN/public"
+}
+
+cmd_restart() {
+  local public=""
+  while [ $# -gt 0 ]; do
+    case $1 in --public) public=1 ;; *) fail "restart takes only --public (./zel help)" ;; esac
+    shift
+  done
+  load_env
+  resolve_mode "$public"
+  public=$PUBLIC_MARK
+  lock_take
+  stop_game
+  start_game "$public"
+}
+
+cmd_status() {
+  local healthy=0
+  load_env
+  resolve_mode
+  echo "Zellera $VERSION in $ROOT, network mode $MODE$([ "$MODE" != tunnel ] || echo " ($TUNNEL_MODE)")$(! service_installed || echo ", under systemd")"
+  status_table || healthy=1
+  [ ! -f "$RUN/site-url" ] || echo "game: $(cat "$RUN/site-url")/"
+  return $healthy
+}
+
+cmd_logs() {
+  local name="" follow="" files=()
+  while [ $# -gt 0 ]; do
+    case $1 in -f|--follow) follow=1 ;; -*) fail "logs takes a name and -f (./zel help)" ;; *) name=$1 ;; esac
+    shift
+  done
+  load_env
+  if [ -n "$name" ]; then
+    [ -f "$LOGS/$name.log" ] || fail "no log $name in .data/logs: $(cd "$LOGS" 2>/dev/null && ls ./*.log 2>/dev/null | sed 's#^\./##; s#\.log$##' | tr '\n' ' ')"
+    files=("$LOGS/$name.log")
+  else
+    for name in $PROCESSES; do [ ! -f "$LOGS/$name.log" ] || files+=("$LOGS/$name.log"); done
+    [ ${#files[@]} -gt 0 ] || fail "no logs yet in .data/logs"
+  fi
+  if [ -n "$follow" ]; then exec tail -n 20 -f "${files[@]}"; fi
+  if [ ${#files[@]} = 1 ]; then tail -n 200 "${files[0]}"; else tail -n 20 "${files[@]}"; fi
+}
+
+cmd_import() {
+  local pack=${1:-} was_running="" public=""
+  [ $# = 1 ] || fail "import takes one content pack: ./zel import <pack.zip>"
+  [ -f "$pack" ] || fail "no such pack: $pack"
+  pack=$(cd "$(dirname "$pack")" && pwd)/$(basename "$pack")
+  load_env
+  resolve_mode
+  public=$PUBLIC_MARK
+  lock_take
+  prepare_data
+  doctor_or_fail
+  db_secrets
+  if process_alive server || process_alive web; then
+    was_running=1
+    step "stopping the game for the import"
+    stop_or_fail web
+    stop_or_fail server
+  fi
+  build_server
+  web_packages
+  db_up
+  # The settings keep the site's address they have when a quick tunnel is not open to name a new one.
+  if [ "$MODE$TUNNEL_MODE" = tunnelquick ] && process_alive tunnel; then SITE_URL=https://$(tunnel_quick_host); fi
+  export_site_url
+  install_jar
+  migrate
+  content_status
+  if [ "$CONTENT_CODE" != 3 ]; then
+    step "backing up"
+    backup_make
+  fi
+  step "importing $pack"
+  jar_tool owner content import "$pack" || fail "the import of $pack failed"
+  db_grants
+  if [ -n "$was_running" ]; then start_game "$public"; else note "imported; ./zel start starts the game"; fi
+}
+
+cmd_backup() {
+  [ $# = 0 ] || fail "backup takes no arguments"
+  load_env
+  backup_make
+}
+
+cmd_restore() {
+  local file="" yes=""
+  while [ $# -gt 0 ]; do
+    case $1 in --yes) yes=1 ;; -*) fail "restore takes a backup file and --yes" ;; *) file=$1 ;; esac
+    shift
+  done
+  [ -n "$file" ] || fail "restore takes a backup file: ./zel restore .data/backups/<file>.sql.gz"
+  load_env
+  lock_take
+  prepare_data
+  backup_restore "$file" "$yes"
+}
+
+cmd_upgrade() {
+  local target="" yes=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --to) target=${2:?--to needs a version, like v1.2.0}; shift ;;
+      --yes) yes=1 ;;
+      *) fail "upgrade takes --to <version> and --yes" ;;
+    esac
+    shift
+  done
+  load_env
+  resolve_mode
+  lock_take
+  prepare_data
+  upgrade "$target" "$yes"
+}
+
+main() {
+  local command=${1:-help}
+  [ $# = 0 ] || shift
+  cd "$ROOT"
+  case $command in
+    start|stop|restart|status|logs|import|backup|restore|upgrade) "cmd_$command" "$@" ;;
+    doctor) load_env; doctor ;;
+    trust) load_env; trust_help ;;
+    install-service) load_env; resolve_mode; export_site_url; lock_take; service_install ;;
+    uninstall-service) load_env; lock_take; service_uninstall ;;
+    version) [ -f "$ROOT/VERSION" ] || fail "no VERSION file in $ROOT"; cat "$ROOT/VERSION" ;;
+    help|-h|--help) usage ;;
+    # What a systemd unit runs after its process: wait until it answers.
+    _wait) load_env; resolve_mode; process_wait "${1:?}" 240 ;;
+    _upgrade-finish) load_env; resolve_mode; lock_take; upgrade_finish "$@" ;;
+    *) echo "zel: unknown command $command" >&2; usage >&2; exit 2 ;;
+  esac
+}
+main "$@"

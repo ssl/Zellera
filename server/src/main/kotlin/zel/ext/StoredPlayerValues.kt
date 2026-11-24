@@ -12,6 +12,7 @@ internal class StoredPlayerValues(
     private val inOrder: (key: Any, job: Runnable) -> Unit,
 ) : PlayerValues {
     private class Entry {
+        @Suppress("DoubleMutabilityForCollection")
         var values: MutableMap<String, Long>? = null
         val waiting = mutableListOf<(MutableMap<String, Long>) -> Unit>()
     }

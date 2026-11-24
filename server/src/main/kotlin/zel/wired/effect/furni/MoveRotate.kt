@@ -93,7 +93,7 @@ class MoveRotate(
         val X_STEP = listOf(EAST, WEST)
         val Y_STEP = listOf(NORTH, SOUTH)
 
-        /** Movements 4..11, in order (movement 1 draws one of them); any higher value steps south, a negative one nothing. */
+        /** Movements 4..11 in order (movement 1 draws one); a higher value steps south, a negative one nothing. */
         val STEPS = listOf(NORTH, EAST, SOUTH, WEST, Step(1, -1), Step(1, 1), Step(-1, 1), Step(-1, -1))
     }
 }

@@ -2,11 +2,11 @@ package zel.protocol.typed
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import zel.protocol.generated.ClientHelloInCodec
-import zel.protocol.generated.MessageRegistry
 import io.netty.channel.Channel
 import io.netty.util.AttributeKey
 import org.slf4j.LoggerFactory
+import zel.protocol.generated.ClientHelloInCodec
+import zel.protocol.generated.MessageRegistry
 
 private const val HELLO_PREFIX = "zellera-"
 

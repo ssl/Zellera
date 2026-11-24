@@ -1,10 +1,10 @@
 package zel.game.players
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.ext.ExtensionBus
 import zel.ext.ServerEvent
 import zel.game.quests.PlayerActions
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** The save opens before unregistering, so a new login waits for it rather than read stale rows. */

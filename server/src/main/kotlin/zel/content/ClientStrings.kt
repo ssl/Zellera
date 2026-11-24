@@ -1,8 +1,8 @@
 package zel.content
 
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.orFallback
-import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicReference
 import javax.sql.DataSource
 

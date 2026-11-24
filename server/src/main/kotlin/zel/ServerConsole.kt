@@ -1,8 +1,8 @@
 package zel
 
-import zel.core.console.ConsoleMenu
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.core.console.ConsoleMenu
 import java.io.BufferedReader
 import java.io.IOException
 

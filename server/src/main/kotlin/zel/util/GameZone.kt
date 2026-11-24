@@ -1,7 +1,7 @@
 package zel.util
 
-import zel.core.Configuration
 import org.slf4j.LoggerFactory
+import zel.core.Configuration
 import java.time.Clock
 import java.time.DateTimeException
 import java.time.Instant

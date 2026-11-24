@@ -1,5 +1,6 @@
 package zel.protocol.incoming.users
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.achievements.GameEvents
 import zel.game.achievements.count
@@ -44,7 +45,6 @@ import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.player
 import zel.protocol.typed.signedIn
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 
 class PlayerProfilePackets(
     private val services: GameServices,

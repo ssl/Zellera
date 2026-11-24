@@ -1,5 +1,7 @@
 package zel.game.moderation
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Params
 import zel.db.Sql
 import zel.db.allOrNothing
@@ -8,8 +10,6 @@ import zel.db.orFallback
 import zel.db.write
 import zel.db.writeEach
 import zel.game.items.OwnedFurni
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource

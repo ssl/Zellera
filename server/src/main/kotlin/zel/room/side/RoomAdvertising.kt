@@ -1,5 +1,6 @@
 package zel.room.side
 
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.allOrNothing
 import zel.db.intOrNone
@@ -30,7 +31,6 @@ import zel.room.listing.RoomListings
 import zel.room.tick.Audience
 import zel.room.tick.Lane
 import zel.util.SECONDS_PER_MINUTE
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class RoomAdvertising(

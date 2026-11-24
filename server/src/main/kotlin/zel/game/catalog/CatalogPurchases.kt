@@ -1,12 +1,12 @@
 package zel.game.catalog
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.ext.ExtensionBus
 import zel.ext.ServerEvent
 import zel.game.players.Player
 import zel.protocol.outgoing.catalog.PurchaseError
 import zel.protocol.outgoing.catalog.PurchaseNotAllowed
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class CatalogPurchases(
     private val services: CatalogServices,

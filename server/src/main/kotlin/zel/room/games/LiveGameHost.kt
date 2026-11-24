@@ -1,5 +1,7 @@
 package zel.room.games
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.allOrNothing
 import zel.db.insertForId
 import zel.db.orFallback
@@ -15,8 +17,6 @@ import zel.room.RoomScope
 import zel.room.furni.RoomFurni
 import zel.room.tick.Audience
 import zel.room.tick.Lane
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class LiveGameHost(

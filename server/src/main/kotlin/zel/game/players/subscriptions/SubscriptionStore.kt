@@ -1,9 +1,9 @@
 package zel.game.players.subscriptions
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.db.insertForId
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 

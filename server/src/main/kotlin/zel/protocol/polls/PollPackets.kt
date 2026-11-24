@@ -1,5 +1,6 @@
 package zel.protocol.polls
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.players.Player
 import zel.game.polls.Poll
@@ -15,7 +16,6 @@ import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.PacketSession
 import zel.room.port.RoomPort
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 
 /** Only opening is answered; poll id 0 likes or dislikes the staff question. */
 class PollPackets(

@@ -1,6 +1,5 @@
 package zel.net.server.handlers
 
-import zel.core.BuildInfo
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
@@ -13,6 +12,7 @@ import io.netty.handler.codec.http.HttpMethod
 import io.netty.handler.codec.http.HttpResponseStatus
 import io.netty.handler.codec.http.HttpUtil
 import io.netty.handler.codec.http.HttpVersion
+import zel.core.BuildInfo
 
 /** Answers `GET /health` with the running version; the listener only opens once the game is loaded. */
 class HealthAnswer : ChannelInboundHandlerAdapter() {

@@ -1,10 +1,10 @@
 package zel.net.server
 
-import zel.core.load.ServerGauges
 import io.netty.util.concurrent.DefaultEventExecutorGroup
 import io.netty.util.concurrent.DefaultThreadFactory
 import io.netty.util.concurrent.EventExecutor
 import io.netty.util.concurrent.EventExecutorGroup
+import zel.core.load.ServerGauges
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger

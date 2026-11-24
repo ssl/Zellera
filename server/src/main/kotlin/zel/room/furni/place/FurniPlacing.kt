@@ -1,5 +1,7 @@
 package zel.room.furni.place
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.items.ProductKind
 import zel.game.quests.CountedAction
 import zel.game.quests.PlayerActions
@@ -23,8 +25,6 @@ import zel.room.map.Point
 import zel.room.persist.FurniTransfers
 import zel.room.tick.Audience
 import zel.room.tick.Lane
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /** Runs under the room lock; the row is written on the room's [writes]. */
 class FurniPlacing(

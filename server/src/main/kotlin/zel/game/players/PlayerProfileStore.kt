@@ -1,12 +1,12 @@
 package zel.game.players
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.db.noneAsNull
 import zel.db.orFallback
 import zel.game.messenger.FriendCategory
 import zel.game.navigation.NavigatorSavedSearch
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(PlayerProfileStore::class.java)
 

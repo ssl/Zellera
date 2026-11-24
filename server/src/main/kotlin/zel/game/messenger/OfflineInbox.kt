@@ -1,9 +1,9 @@
 package zel.game.messenger
 
-import zel.db.Sql
-import zel.db.SqlFailure
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Sql
+import zel.db.SqlFailure
 
 /**
  * The stored messages nobody was there to read. One login is handed at most [deliveryMax] of them, oldest first,

@@ -1,13 +1,13 @@
 package zel.game.catalog
 
-import zel.content.ClientStrings
-import zel.db.Params
-import zel.db.orFallback
-import zel.game.catalog.layouts.PageLayoutRow
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.content.ClientStrings
+import zel.db.Params
+import zel.db.orFallback
+import zel.game.catalog.layouts.PageLayoutRow
 import java.sql.ResultSet
 
 /** The builder tree loads after the shop's so shared offer ids can be told apart. */

@@ -1,9 +1,9 @@
 package zel.game.economy
 
+import org.slf4j.LoggerFactory
 import zel.db.Database
 import zel.db.Sql
 import zel.db.SqlFailure
-import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(CurrencyStore::class.java)
 

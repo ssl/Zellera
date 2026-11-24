@@ -1,5 +1,6 @@
 package zel.protocol.icons
 
+import org.slf4j.LoggerFactory
 import zel.game.achievements.AchievementTally
 import zel.game.catalog.CatalogOffer
 import zel.game.icons.IconAchievements
@@ -34,7 +35,6 @@ import zel.protocol.typed.PacketPackage
 import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.PacketSession
 import zel.room.port.RoomPort
-import org.slf4j.LoggerFactory
 import java.sql.SQLException
 
 class IconPackets(

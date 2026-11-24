@@ -1,8 +1,8 @@
 package zel.game.messenger
 
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.orFallback
-import org.slf4j.LoggerFactory
 
 class FriendRequestStore(
     private val sql: Sql,

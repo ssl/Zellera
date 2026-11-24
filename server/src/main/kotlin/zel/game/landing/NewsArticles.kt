@@ -1,11 +1,11 @@
 package zel.game.landing
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.db.Database
 import zel.db.SqlFailure
 import zel.game.items.ItemDataUrls
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class NewsArticles(
     database: Database,

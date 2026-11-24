@@ -1,10 +1,10 @@
 package zel.game.catalog
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.core.rules.rules
 import zel.game.catalog.marketplace.MarketplaceFee
 import zel.game.economy.EconomyLedger
-import org.slf4j.LoggerFactory
 
 /** Read on each use so a configuration reload applies at once. */
 class CatalogSettings(

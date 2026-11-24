@@ -1,5 +1,6 @@
 package zel.wired
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.room.Room
 import zel.room.RoomListener
@@ -18,7 +19,6 @@ import zel.wired.firing.FlashBatch
 import zel.wired.firing.FlashOut
 import zel.wired.usage.RunBudget
 import zel.wired.usage.WiredError
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 class WiredRooms(

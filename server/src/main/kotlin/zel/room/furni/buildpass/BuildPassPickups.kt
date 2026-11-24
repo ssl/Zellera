@@ -1,11 +1,11 @@
 package zel.room.furni.buildpass
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.DeadlockRetry
 import zel.room.RoomScope
 import zel.room.RoomWrites
 import zel.room.furni.RoomFurni
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class BuildPassPickups(
     private val reader: BuildPassReader,

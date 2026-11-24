@@ -1,7 +1,7 @@
 package zel.game.items
 
-import zel.core.Configuration
 import org.slf4j.LoggerFactory
+import zel.core.Configuration
 
 class FurniTitles(
     private val location: FurnidataLocation = FurnidataLocation.Absent("no furnidata source configured"),

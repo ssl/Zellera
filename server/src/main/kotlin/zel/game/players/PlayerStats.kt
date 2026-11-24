@@ -1,11 +1,11 @@
 package zel.game.players
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.achievements.Achievement
 import zel.game.messenger.MessengerPace
 import zel.game.permissions.PlayerLimits
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 import java.util.concurrent.CopyOnWriteArrayList
 
 private val log = LoggerFactory.getLogger(PlayerStats::class.java)

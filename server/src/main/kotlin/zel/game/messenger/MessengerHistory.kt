@@ -1,9 +1,9 @@
 package zel.game.messenger
 
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.db.noneAsNull
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 
 /** The stored chats; a page is the [PAGE_SIZE] newest messages older than a given id, oldest first. */

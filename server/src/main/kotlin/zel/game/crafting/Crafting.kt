@@ -1,10 +1,10 @@
 package zel.game.crafting
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.rows
 import zel.game.items.Item
 import zel.game.items.Items
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import java.sql.SQLException
 import javax.sql.DataSource

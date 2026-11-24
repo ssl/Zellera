@@ -1,11 +1,11 @@
 package zel.game.pets
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.first
 import zel.db.orFallback
 import zel.db.write
 import zel.game.items.PetProducts
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.util.concurrent.ConcurrentHashMap
 

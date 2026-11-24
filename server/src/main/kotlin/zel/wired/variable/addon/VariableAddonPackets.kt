@@ -1,5 +1,6 @@
 package zel.wired.variable.addon
 
+import io.netty.channel.ChannelHandler
 import zel.core.rules.rules
 import zel.protocol.generated.SynchronizeVariableAddonInCodec
 import zel.protocol.generated.WiredGenerateWebApiKeyInCodec
@@ -11,7 +12,6 @@ import zel.room.Room
 import zel.room.RoomRegistry
 import zel.room.RoomScope
 import zel.wired.protocol.withWiredLevel
-import io.netty.channel.ChannelHandler
 
 class VariableAddonPackets(
     private val registry: RoomRegistry,

@@ -1,8 +1,8 @@
 package zel.core.config
 
-import zel.core.Configuration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.core.Configuration
 
 class ConfigurationReload(
     private val configuration: Configuration,

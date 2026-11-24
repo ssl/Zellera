@@ -1,9 +1,9 @@
 package zel.game.players
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.db.noneAsNull
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(PlayerStatsStore::class.java)
 

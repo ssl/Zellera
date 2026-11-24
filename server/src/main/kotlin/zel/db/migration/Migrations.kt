@@ -1,10 +1,10 @@
 package zel.db.migration
 
-import zel.db.Sql
-import zel.db.migration.SchemaCommand.Step
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.configuration.FluentConfiguration
 import org.flywaydb.core.api.exception.FlywayValidateException
+import zel.db.Sql
+import zel.db.migration.SchemaCommand.Step
 import javax.sql.DataSource
 
 /** The database must be empty or one this server created. */

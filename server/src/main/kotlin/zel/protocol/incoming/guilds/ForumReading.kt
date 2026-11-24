@@ -2,6 +2,7 @@
 
 package zel.protocol.incoming.guilds
 
+import org.slf4j.LoggerFactory
 import zel.game.guilds.Guild
 import zel.game.guilds.forums.ForumLists
 import zel.game.guilds.forums.ForumThread
@@ -9,7 +10,6 @@ import zel.protocol.generated.UpdateForumReadMarkerIn
 import zel.protocol.outgoing.generic.alerts.BubbleAlert
 import zel.protocol.outgoing.handshake.ErrorReport
 import zel.protocol.typed.PacketIds
-import org.slf4j.LoggerFactory
 
 internal class ForumReading(
     private val services: GuildServices,

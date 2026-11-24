@@ -1,8 +1,8 @@
 package zel.core.threading
 
-import zel.db.DatabaseWriter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.DatabaseWriter
 import java.time.Duration
 import java.util.concurrent.Delayed
 import java.util.concurrent.RejectedExecutionException

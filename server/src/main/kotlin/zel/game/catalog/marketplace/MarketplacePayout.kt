@@ -1,5 +1,6 @@
 package zel.game.catalog.marketplace
 
+import org.slf4j.LoggerFactory
 import zel.db.allOrNothing
 import zel.game.catalog.CatalogServices
 import zel.game.economy.BalanceChange
@@ -7,7 +8,6 @@ import zel.game.economy.LedgerEntry
 import zel.game.economy.LedgerTransaction
 import zel.game.players.Player
 import zel.game.players.WalletWrites
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 
 /** Prices go to the wallet unless the earnings center pays them. */

@@ -1,9 +1,9 @@
 package zel.game.messenger
 
-import zel.db.Sql
-import zel.db.SqlFailure
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Sql
+import zel.db.SqlFailure
 
 /** From the session when the blocker is online, else `player_blocks`; an unreadable list counts as no block. */
 class PlayerBlocks(

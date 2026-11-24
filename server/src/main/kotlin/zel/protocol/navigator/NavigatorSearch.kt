@@ -1,5 +1,6 @@
 package zel.protocol.navigator
 
+import org.slf4j.LoggerFactory
 import zel.db.orFallback
 import zel.game.navigation.BlockStyle
 import zel.game.navigation.DisplayMode
@@ -15,7 +16,6 @@ import zel.game.players.Player
 import zel.room.listing.ListedRoom
 import zel.room.listing.RoomCategory
 import zel.room.listing.RoomListings
-import org.slf4j.LoggerFactory
 
 class NavigatorSearch(
     private val rooms: RoomListings,

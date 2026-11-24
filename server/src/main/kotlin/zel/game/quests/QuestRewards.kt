@@ -1,11 +1,11 @@
 package zel.game.quests
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.economy.EconomyLedger
 import zel.game.items.Item
 import zel.game.items.Items
 import zel.game.players.Player
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /** [source] is a currency's ledger reason. */
 class QuestRewards(

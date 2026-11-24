@@ -1,5 +1,8 @@
 package zel.protocol.outgoing.catalog
 
+import it.unimi.dsi.fastutil.ints.IntArrayList
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
+import org.slf4j.LoggerFactory
 import zel.game.catalog.BuildPassBuyPages
 import zel.game.catalog.BundleDiscount
 import zel.game.catalog.Catalog
@@ -58,9 +61,6 @@ import zel.protocol.generated.SellablePetPalettesOut
 import zel.protocol.generated.TargetedOfferOut
 import zel.util.MILLIS_PER_SECOND
 import zel.util.SECONDS_PER_MINUTE
-import it.unimi.dsi.fastutil.ints.IntArrayList
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet
-import org.slf4j.LoggerFactory
 import java.util.function.IntUnaryOperator
 
 @Suppress("TooManyFunctions") // one builder per message

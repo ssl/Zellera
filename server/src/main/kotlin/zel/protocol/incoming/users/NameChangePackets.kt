@@ -1,5 +1,7 @@
 package zel.protocol.incoming.users
 
+import io.netty.util.AttributeKey
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.db.SqlFailure
 import zel.game.achievements.GameEvents
@@ -21,8 +23,6 @@ import zel.protocol.typed.PacketPackage
 import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.signedIn
 import zel.server.GameServices
-import io.netty.util.AttributeKey
-import org.slf4j.LoggerFactory
 
 class NameChangePackets(
     private val services: GameServices,

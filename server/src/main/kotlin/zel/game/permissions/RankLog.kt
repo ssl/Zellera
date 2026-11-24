@@ -1,9 +1,9 @@
 package zel.game.permissions
 
-import zel.db.Sql
-import zel.db.orFallback
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Sql
+import zel.db.orFallback
 
 class RankLog internal constructor(
     private val sql: Sql,

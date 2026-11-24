@@ -1,5 +1,6 @@
 package zel.game.rewardtracks
 
+import org.slf4j.LoggerFactory
 import zel.game.bots.BotLook
 import zel.game.bots.Bots
 import zel.game.catalog.Catalog
@@ -16,7 +17,6 @@ import zel.protocol.outgoing.inventory.AddBot
 import zel.protocol.outgoing.inventory.AddRoomItem
 import zel.protocol.outgoing.inventory.AddRoomItem.UnseenCategory
 import zel.protocol.outgoing.inventory.InventoryUpdateItem
-import org.slf4j.LoggerFactory
 
 /** A row that cannot be read into a [Payout] pays nothing and logs why. */
 class PrizeHandout(

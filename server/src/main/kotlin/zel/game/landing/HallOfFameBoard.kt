@@ -1,8 +1,8 @@
 package zel.game.landing
 
+import org.slf4j.LoggerFactory
 import zel.db.Database
 import zel.db.SqlFailure
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 
 /** Only [COMPETITION] has standings. */

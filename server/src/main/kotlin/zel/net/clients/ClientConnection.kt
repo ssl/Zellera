@@ -1,5 +1,9 @@
 package zel.net.clients
 
+import io.netty.channel.Channel
+import io.netty.util.AttributeKey
+import io.netty.util.concurrent.EventExecutor
+import org.slf4j.LoggerFactory
 import zel.ext.ExtensionBus
 import zel.game.LatencyTracker
 import zel.game.players.DeviceReading
@@ -12,10 +16,6 @@ import zel.protocol.outgoing.OutgoingMessage
 import zel.protocol.typed.ClientVersions
 import zel.protocol.typed.PacketWarnings
 import zel.util.monotonicMillis
-import io.netty.channel.Channel
-import io.netty.util.AttributeKey
-import io.netty.util.concurrent.EventExecutor
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor

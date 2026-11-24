@@ -1,10 +1,10 @@
 package zel.game.quests
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.players.Player
 import zel.game.players.Players
 import zel.game.rewardtracks.RewardTrackService
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /** A failing counter is skipped. */
 class ActionCounting(

@@ -1,8 +1,8 @@
 package zel.game.players
 
+import org.slf4j.LoggerFactory
 import zel.db.Database
 import zel.db.SqlFailure
-import org.slf4j.LoggerFactory
 
 object UserIgnores {
     private val LOG = LoggerFactory.getLogger(UserIgnores::class.java)

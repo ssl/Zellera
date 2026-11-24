@@ -1,8 +1,8 @@
 package zel.core
 
-import zel.db.writeEach
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.writeEach
 import java.sql.SQLException
 import java.time.Instant
 import javax.sql.DataSource

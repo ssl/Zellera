@@ -1,12 +1,12 @@
 package zel.game.catalog
 
-import zel.game.items.Item
 import it.unimi.dsi.fastutil.ints.Int2IntMap
 import it.unimi.dsi.fastutil.ints.Int2IntMaps
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import zel.game.items.Item
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 

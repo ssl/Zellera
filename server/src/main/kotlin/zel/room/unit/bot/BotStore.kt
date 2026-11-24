@@ -1,5 +1,7 @@
 package zel.room.unit.bot
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.orFallback
 import zel.db.write
@@ -7,8 +9,6 @@ import zel.game.bots.Bot
 import zel.game.bots.BotChatLines
 import zel.game.bots.Bots
 import zel.room.map.Point
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import javax.sql.DataSource
 

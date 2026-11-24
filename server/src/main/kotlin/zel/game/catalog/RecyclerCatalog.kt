@@ -1,9 +1,9 @@
 package zel.game.catalog
 
-import zel.db.rows
-import zel.game.items.Item
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.rows
+import zel.game.items.Item
 import java.sql.Connection
 import java.sql.SQLException
 

@@ -1,10 +1,10 @@
 package zel.net.server
 
+import io.netty.channel.ChannelHandler
 import zel.core.load.ServerGauges
 import zel.net.Listener
 import zel.net.TransportSettings
 import zel.net.clients.ClientConnections
-import io.netty.channel.ChannelHandler
 import java.util.concurrent.atomic.AtomicBoolean
 
 class GamePort(

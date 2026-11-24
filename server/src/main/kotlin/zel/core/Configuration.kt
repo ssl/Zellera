@@ -1,8 +1,8 @@
 package zel.core
 
-import zel.core.config.ConfigRegistry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.core.config.ConfigRegistry
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.sql.DataSource
 

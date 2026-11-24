@@ -1,5 +1,7 @@
 package zel.room.furni.buildpass
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.protocol.generated.BuildPassPlacementWarningOutCodec
 import zel.protocol.generated.ItemAddOutCodec
@@ -28,8 +30,6 @@ import zel.room.map.Point
 import zel.room.persist.FurniData
 import zel.room.tick.Audience
 import zel.room.tick.Lane
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class BuildPassPlacing(
     private val store: BuildPassStore,

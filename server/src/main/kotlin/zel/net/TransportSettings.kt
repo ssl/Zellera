@@ -1,7 +1,7 @@
 package zel.net
 
-import zel.core.Configuration
 import io.netty.channel.WriteBufferWaterMark
+import zel.core.Configuration
 
 /**
  * Unsent output per connection. Above [pauseBytes] a connection counts as behind and is watched until it is back

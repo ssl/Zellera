@@ -1,5 +1,7 @@
 package zel.room.furni
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.items.Item
 import zel.game.items.ProductKind
 import zel.room.Room
@@ -10,8 +12,6 @@ import zel.room.map.Point
 import zel.room.persist.FurniData
 import zel.room.persist.FurniRow
 import zel.room.tick.TickPart
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class FurniPart(
     private val data: FurniData,

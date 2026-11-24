@@ -1,5 +1,6 @@
 package zel.game.catalog.marketplace
 
+import org.slf4j.LoggerFactory
 import zel.db.allOrNothing
 import zel.db.orFallback
 import zel.game.catalog.CatalogServices
@@ -7,7 +8,6 @@ import zel.game.players.Player
 import zel.protocol.generated.FurniListInvalidateOut
 import zel.protocol.generated.FurniListInvalidateOutCodec
 import zel.protocol.outgoing.inventory.AddRoomItem
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 

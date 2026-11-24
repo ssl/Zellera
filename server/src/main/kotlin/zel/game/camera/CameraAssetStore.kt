@@ -1,9 +1,9 @@
 package zel.game.camera
 
+import org.slf4j.LoggerFactory
 import zel.db.Database
 import zel.db.Sql
 import zel.db.SqlFailure
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 
 private val log = LoggerFactory.getLogger(CameraAssetStore::class.java)

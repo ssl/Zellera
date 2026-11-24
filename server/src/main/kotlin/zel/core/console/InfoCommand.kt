@@ -1,8 +1,8 @@
 package zel.core.console
 
+import org.slf4j.LoggerFactory
 import zel.core.ServerState
 import zel.util.TimeStrings
-import org.slf4j.LoggerFactory
 import java.lang.management.ManagementFactory
 import java.time.temporal.ChronoUnit
 

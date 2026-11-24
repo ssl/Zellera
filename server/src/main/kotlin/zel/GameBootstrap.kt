@@ -1,5 +1,6 @@
 package zel
 
+import org.slf4j.LoggerFactory
 import zel.content.ClientStrings
 import zel.content.ImportedContent
 import zel.core.CommandLog
@@ -31,7 +32,6 @@ import zel.protocol.typed.gameAllowedValues
 import zel.server.ServerWiring
 import zel.server.gamePackages
 import zel.util.GameZone
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.time.Duration
 import java.util.concurrent.Executor

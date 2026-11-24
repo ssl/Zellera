@@ -1,14 +1,14 @@
 package zel.protocol.typed
 
+import io.netty.buffer.ByteBufUtil
+import io.netty.channel.ChannelHandler
+import io.netty.channel.ChannelInboundHandlerAdapter
+import org.slf4j.LoggerFactory
 import zel.ext.ExtensionBus
 import zel.net.clients.ClientConnection
 import zel.protocol.generated.MalformedPacketException
 import zel.protocol.generated.OutgoingCodec
 import zel.wired.variable.addon.VariableAddonPackets
-import io.netty.buffer.ByteBufUtil
-import io.netty.channel.ChannelHandler
-import io.netty.channel.ChannelInboundHandlerAdapter
-import org.slf4j.LoggerFactory
 
 class PacketRouter(
     packages: List<PacketPackage>,

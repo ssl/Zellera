@@ -1,7 +1,7 @@
 package zel.game.players.figure
 
-import zel.game.players.Player
 import org.slf4j.LoggerFactory
+import zel.game.players.Player
 import java.util.concurrent.atomic.AtomicReference
 
 /**

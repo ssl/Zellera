@@ -1,5 +1,7 @@
 package zel.game
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.Lifecycle
 import zel.core.Configuration
 import zel.core.DailyTaskPulseUpdater
@@ -83,8 +85,6 @@ import zel.server.GameServices
 import zel.server.RunningGameServices
 import zel.server.ServerWiring
 import zel.util.GameZone
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.Executor
 import java.util.concurrent.ThreadLocalRandom

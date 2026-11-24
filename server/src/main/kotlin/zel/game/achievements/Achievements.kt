@@ -1,13 +1,13 @@
 package zel.game.achievements
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.players.Player
 import zel.game.players.Players
 import zel.game.players.WalletWrites
 import zel.game.players.inventory.BadgeCaches
 import zel.game.players.level.AccountLevels
 import zel.protocol.achievements.AchievementMessages
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class Achievements(

@@ -1,5 +1,7 @@
 package zel.protocol.incoming.catalog
 
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
 import zel.game.catalog.BalanceShortfall
 import zel.game.catalog.BuildPassMembership
 import zel.game.catalog.Catalog
@@ -76,8 +78,6 @@ import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.PacketSession
 import zel.util.SECONDS_PER_DAY
 import zel.util.SECONDS_PER_MINUTE
-import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
 
 private const val PURCHASE_GROUP = "catalog.purchase"
 private const val PURCHASE_GAP_MS = 250L

@@ -1,5 +1,6 @@
 package zel.game.guilds
 
+import org.slf4j.LoggerFactory
 import zel.game.guilds.forums.ForumLists
 import zel.game.guilds.forums.ForumPresenter
 import zel.game.guilds.forums.ForumReadMarks
@@ -11,7 +12,6 @@ import zel.game.players.Player
 import zel.game.players.PlayerProfile
 import zel.protocol.outgoing.guilds.GuildMessages
 import zel.room.port.RoomPort
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource

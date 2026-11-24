@@ -1,10 +1,10 @@
 package zel.protocol
 
+import io.netty.buffer.ByteBufAllocator
 import zel.protocol.generated.OutgoingCodec
 import zel.protocol.generated.PacketWriter
 import zel.protocol.typed.ClientVersion
 import zel.protocol.typed.WireFrame
-import io.netty.buffer.ByteBufAllocator
 
 /** A server message before it meets a client. */
 class Outbound<T>(

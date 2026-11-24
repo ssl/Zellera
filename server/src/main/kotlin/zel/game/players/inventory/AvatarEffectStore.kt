@@ -1,12 +1,12 @@
 package zel.game.players.inventory
 
+import org.slf4j.LoggerFactory
 import zel.db.Params
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.db.first
 import zel.db.write
 import zel.db.writeEach
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException

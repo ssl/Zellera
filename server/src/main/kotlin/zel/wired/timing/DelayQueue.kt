@@ -1,5 +1,7 @@
 package zel.wired.timing
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.room.Room
 import zel.room.RoomPart
 import zel.room.RoomScope
@@ -10,8 +12,6 @@ import zel.wired.WiredStack
 import zel.wired.box.EffectBox
 import zel.wired.firing.Firing
 import zel.wired.usage.WiredError
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /**

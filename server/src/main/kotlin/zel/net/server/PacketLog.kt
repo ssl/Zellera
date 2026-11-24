@@ -1,5 +1,10 @@
 package zel.net.server
 
+import io.netty.channel.ChannelDuplexHandler
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelPromise
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.protocol.InboundFrame
 import zel.protocol.generated.CompleteDiffieHandshakeOutCodec
 import zel.protocol.generated.InitDiffieHandshakeOutCodec
@@ -9,11 +14,6 @@ import zel.protocol.typed.ClientPacket
 import zel.protocol.typed.IncomingPacket
 import zel.protocol.typed.WireFrame
 import zel.util.PacketUtils
-import io.netty.channel.ChannelDuplexHandler
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelPromise
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /** Logs every message both ways at debug level; bodies that carry a secret or an address show as `(hidden)`. */
 class PacketLog : ChannelDuplexHandler() {

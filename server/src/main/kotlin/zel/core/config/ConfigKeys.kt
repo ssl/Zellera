@@ -1,5 +1,6 @@
 package zel.core.config
 
+import io.netty.channel.WriteBufferWaterMark
 import zel.GameBootstrap
 import zel.core.CommandLog
 import zel.core.config.ConfigKey.Kind
@@ -12,7 +13,6 @@ import zel.net.WireLimits
 import zel.net.clients.FailedTickets
 import zel.net.server.WorkerSettings
 import zel.room.RoomCheckpoints
-import io.netty.channel.WriteBufferWaterMark
 
 internal object ConfigKeys {
     private const val DEFAULT_GAME_PORT = 2096

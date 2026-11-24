@@ -1,5 +1,7 @@
 package zel.protocol.handshake
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.threading.GameThreads
 import zel.ext.ExtensionBus
 import zel.ext.ServerEvent
@@ -16,8 +18,6 @@ import zel.protocol.generated.LoginFailedGameClosedOutCodec
 import zel.protocol.generated.MaintenanceStatusOut
 import zel.protocol.generated.MaintenanceStatusOutCodec
 import zel.protocol.outgoing.handshake.DisconnectReason
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /** A newer login of the player replaces the older. */
 class PlayerSessions(

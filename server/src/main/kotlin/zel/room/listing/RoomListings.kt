@@ -1,5 +1,6 @@
 package zel.room.listing
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.db.LikePattern
 import zel.db.Sql
@@ -14,7 +15,6 @@ import zel.game.players.Player
 import zel.room.DoorMode
 import zel.room.port.RoomPort
 import zel.util.SECONDS_PER_MINUTE
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import javax.sql.DataSource
 

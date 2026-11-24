@@ -1,5 +1,7 @@
 package zel.room.furni.behaviour.special
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.items.Item
 import zel.protocol.generated.ItemRemoveOutCodec
 import zel.protocol.generated.ObjectAddOutCodec
@@ -21,8 +23,6 @@ import zel.room.map.Point
 import zel.room.tick.Audience
 import zel.room.tick.Lane
 import zel.room.tick.TickPart
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /** Every member runs under the room's lock unless it says otherwise. */

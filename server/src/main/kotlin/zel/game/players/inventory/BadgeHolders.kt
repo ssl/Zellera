@@ -1,9 +1,9 @@
 package zel.game.players.inventory
 
-import zel.db.Database
-import zel.db.SqlFailure
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Database
+import zel.db.SqlFailure
 
 class BadgeHolders(
     private val database: Database,

@@ -1,10 +1,10 @@
 package zel.game.players.inventory
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.db.writeEach
 import zel.game.players.PlayerSaveQueue
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.TreeMap
 

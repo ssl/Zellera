@@ -1,5 +1,6 @@
 package zel.room.tick
 
+import io.netty.channel.Channel
 import zel.ext.ExtensionBus
 import zel.net.clients.ClientConnections
 import zel.protocol.Outbound
@@ -7,7 +8,6 @@ import zel.protocol.generated.OutgoingCodec
 import zel.protocol.typed.ClientVersion
 import zel.protocol.typed.ClientVersions
 import zel.protocol.typed.WireFrame
-import io.netty.channel.Channel
 
 class ClientChannels(
     private val clients: ClientConnections,

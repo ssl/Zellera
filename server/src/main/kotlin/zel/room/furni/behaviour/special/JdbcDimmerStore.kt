@@ -1,12 +1,12 @@
 package zel.room.furni.behaviour.special
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.allOrNothing
 import zel.db.orFallback
 import zel.db.write
 import zel.db.writeEach
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class JdbcDimmerStore(

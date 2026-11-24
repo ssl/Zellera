@@ -1,5 +1,7 @@
 package zel.protocol.incoming.catalog.recycler
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.achievements.AchievementTally
 import zel.game.achievements.GameEvents
 import zel.game.achievements.count
@@ -30,8 +32,6 @@ import zel.protocol.outgoing.catalog.RecyclerResult
 import zel.protocol.outgoing.inventory.AddRoomItem
 import zel.protocol.outgoing.inventory.InventoryUpdateItem
 import zel.util.SECONDS_PER_MINUTE
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class Recycling(
     private val services: CatalogServices,

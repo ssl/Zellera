@@ -1,12 +1,12 @@
 package zel.game.camera
 
 import com.google.gson.JsonParser
-import zel.content.ClientStrings
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.NodeList
 import org.xml.sax.InputSource
+import zel.content.ClientStrings
 import java.awt.image.BufferedImage
 import java.io.IOException
 import java.io.StringReader

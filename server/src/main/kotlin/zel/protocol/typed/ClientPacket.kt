@@ -1,7 +1,7 @@
 package zel.protocol.typed
 
-import zel.protocol.InboundFrame
 import io.netty.buffer.ByteBuf
+import zel.protocol.InboundFrame
 
 /** A frame with the message its client's version means by the wire id; null when that version has no such id. */
 class ClientPacket(

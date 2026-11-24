@@ -1,5 +1,7 @@
 package zel.wired.usage
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.content.ClientStrings
 import zel.protocol.generated.NotificationDialogOut
 import zel.protocol.generated.NotificationDialogOutCodec
@@ -14,8 +16,6 @@ import zel.wired.WiredStack
 import zel.wired.firing.Firing
 import zel.wired.store.RoomLog
 import zel.wired.timing.DelayQueue
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.roundToInt
 

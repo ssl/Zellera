@@ -1,12 +1,12 @@
 package zel.protocol.handshake
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.Texts
 import zel.net.clients.ClientConnection
 import zel.net.clients.ClientConnections
 import zel.net.server.proxy.ClientAddress
 import zel.protocol.outgoing.generic.alerts.Broadcast
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class Login(
     private val gate: LoginAdmission,

@@ -1,9 +1,9 @@
 package zel.game.catalog
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.game.catalog.layouts.PageForm
 import zel.game.catalog.layouts.PageLayoutRow
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /** The layouts the content defines, by lowercase code, minus those a switched-off game rule hides. */

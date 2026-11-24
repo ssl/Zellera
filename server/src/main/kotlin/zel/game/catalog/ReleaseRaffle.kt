@@ -1,8 +1,8 @@
 package zel.game.catalog
 
+import org.slf4j.LoggerFactory
 import zel.game.players.Player
 import zel.protocol.outgoing.catalog.LtdRaffleResult
-import org.slf4j.LoggerFactory
 import java.util.Random
 import kotlin.random.asKotlinRandom
 

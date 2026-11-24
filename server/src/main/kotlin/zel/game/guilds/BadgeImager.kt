@@ -1,9 +1,9 @@
 package zel.game.guilds
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.db.Database
 import zel.db.Sql
-import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO

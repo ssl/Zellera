@@ -1,10 +1,10 @@
 package zel.game.guilds
 
+import org.slf4j.LoggerFactory
 import zel.db.Params
 import zel.db.Sql
 import zel.db.first
 import zel.db.orFallback
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
 import javax.sql.DataSource

@@ -1,12 +1,12 @@
 package zel.core
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.core.threading.GameThreads
 import zel.db.write
 import zel.game.Game
 import zel.protocol.outgoing.users.UserData
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Duration

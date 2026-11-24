@@ -1,11 +1,11 @@
 package zel.game.camera
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.db.noneAsNull
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /** Each submission stays as a row; the newest of a player is the entry that stands. */
 class PhotoCompetition(

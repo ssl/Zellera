@@ -1,5 +1,7 @@
 package zel.game.rewardtracks
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.rules.ActiveRules
 import zel.core.rules.GameRules
 import zel.db.SqlFailure
@@ -16,8 +18,6 @@ import zel.protocol.outgoing.users.UserCredits
 import zel.protocol.outgoing.users.UserCurrency
 import zel.protocol.rewardtracks.RewardTrackEntry
 import zel.protocol.rewardtracks.RewardTrackMessages
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executor
 

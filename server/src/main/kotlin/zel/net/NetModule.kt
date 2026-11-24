@@ -1,5 +1,8 @@
 package zel.net
 
+import io.netty.handler.ssl.SslContext
+import io.netty.handler.ssl.SslContextBuilder
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.net.clients.ClientConnections
 import zel.net.clients.FailedTickets
@@ -13,9 +16,6 @@ import zel.net.server.handlers.AddressSlots
 import zel.net.server.proxy.CloudflareEdge
 import zel.net.server.proxy.ProxyTrust
 import zel.protocol.typed.PacketDispatcher
-import io.netty.handler.ssl.SslContext
-import io.netty.handler.ssl.SslContextBuilder
-import org.slf4j.LoggerFactory
 import java.io.File
 
 class NetModule(

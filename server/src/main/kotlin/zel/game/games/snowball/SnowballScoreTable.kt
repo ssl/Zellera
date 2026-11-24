@@ -2,13 +2,13 @@
 
 package zel.game.games.snowball
 
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.allOrNothing
 import zel.db.orFallback
 import zel.db.writeEach
 import zel.game.games.snowball.SnowballScoreStore.Profile
 import zel.game.games.snowball.SnowballScoreStore.ScoreRow
-import org.slf4j.LoggerFactory
 import java.sql.Date
 import java.sql.ResultSet
 import java.time.Clock

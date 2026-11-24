@@ -1,9 +1,9 @@
 package zel.game.players
 
-import zel.db.Sql
-import zel.db.SqlFailure
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Sql
+import zel.db.SqlFailure
 
 /** Names are handed out by the unique key on `players.name`: of two players after one name, one write fails. */
 class NameClaim(

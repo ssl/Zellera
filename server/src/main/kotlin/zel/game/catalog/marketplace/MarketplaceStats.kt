@@ -1,12 +1,12 @@
 package zel.game.catalog.marketplace
 
+import org.slf4j.LoggerFactory
 import zel.db.Params
 import zel.db.mapRows
 import zel.db.orFallback
 import zel.game.catalog.CatalogServices
 import zel.protocol.generated.PacketWriter
 import zel.util.SECONDS_PER_DAY
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 
 class MarketplaceStats(

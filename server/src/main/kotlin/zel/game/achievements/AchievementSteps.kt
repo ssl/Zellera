@@ -1,5 +1,7 @@
 package zel.game.achievements
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.DeadlockRetry
 import zel.game.achievements.AchievementProgression.Count
 import zel.game.players.Player
@@ -7,8 +9,6 @@ import zel.game.players.PlayerBadge
 import zel.game.players.WalletWrites
 import zel.game.players.inventory.BadgeCaches
 import zel.protocol.achievements.AchievementMessages
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import javax.sql.DataSource
 

@@ -1,5 +1,7 @@
 package zel.core.config
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.content.ContentDirs
 import zel.core.Configuration
 import zel.game.bots.BotLimits
@@ -8,8 +10,6 @@ import zel.game.players.figure.LookValidation
 import zel.game.players.inventory.Inventory
 import zel.game.players.subscriptions.ClubSettings
 import zel.protocol.typed.PacketDispatcher
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.nio.file.Path
 
 internal class GameSettingBindings(

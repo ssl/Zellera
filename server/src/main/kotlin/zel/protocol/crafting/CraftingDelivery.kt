@@ -1,5 +1,7 @@
 package zel.protocol.crafting
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.achievements.GameEvents
 import zel.game.achievements.count
 import zel.game.crafting.Recipe
@@ -16,8 +18,6 @@ import zel.protocol.generated.FurniListRemoveOutCodec
 import zel.protocol.outgoing.inventory.AddRoomItem
 import zel.protocol.typed.PacketSession
 import zel.server.GameServices
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 internal class CraftingDelivery(
     private val services: GameServices,

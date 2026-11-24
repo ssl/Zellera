@@ -1,11 +1,11 @@
 package zel.room.furni.behaviour.use
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.orFallback
 import zel.game.catalog.Catalog
 import zel.game.players.Player
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class GameClothing(

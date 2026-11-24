@@ -1,5 +1,6 @@
 package zel.ext
 
+import org.slf4j.Logger
 import zel.protocol.generated.IncomingCodec
 import zel.protocol.generated.OutgoingCodec
 import zel.room.RoomListener
@@ -9,7 +10,6 @@ import zel.room.entry.ArrivalSpots
 import zel.room.map.Point
 import zel.room.tick.TickPart
 import zel.room.unit.RoomUnit
-import org.slf4j.Logger
 import java.nio.file.Path
 
 interface ExtensionHost {

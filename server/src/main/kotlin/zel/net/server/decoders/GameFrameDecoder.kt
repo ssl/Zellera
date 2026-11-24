@@ -1,12 +1,12 @@
 package zel.net.server.decoders
 
+import io.netty.buffer.ByteBuf
+import io.netty.channel.ChannelHandlerContext
+import io.netty.handler.codec.ByteToMessageDecoder
 import zel.net.WireLimits
 import zel.net.clients.ClientConnection
 import zel.protocol.InboundFrame
 import zel.protocol.typed.ClientVersions
-import io.netty.buffer.ByteBuf
-import io.netty.channel.ChannelHandlerContext
-import io.netty.handler.codec.ByteToMessageDecoder
 
 /**
  * Splits the inbound byte stream into `int length, short id, body` frames. A frame over [ordinaryFrameBytes] is

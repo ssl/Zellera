@@ -1,10 +1,10 @@
 package zel.room.furni.behaviour.state
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.room.RoomScope
 import zel.room.furni.FurniBehaviour
 import zel.room.furni.RoomFurni
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class RandomState(
     private val part: StatePart,

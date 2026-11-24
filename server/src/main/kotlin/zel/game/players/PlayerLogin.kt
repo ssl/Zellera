@@ -1,10 +1,10 @@
 package zel.game.players
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.db.first
 import zel.protocol.outgoing.handshake.DisconnectReason.Companion.CONCURRENT_LOGIN
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(PlayerLogin::class.java)
 

@@ -1,5 +1,7 @@
 package zel.room
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.effects.EffectRoles
 import zel.protocol.navigator.RoomCreation
 import zel.protocol.typed.PacketPackage
@@ -58,8 +60,6 @@ import zel.room.unit.UnitKind
 import zel.room.unit.pet.PetStore
 import zel.wired.effect.user.VisualEntryViews
 import zel.wired.protocol.WiredEntryViews
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicReference
 
 class RoomEngineWiring(

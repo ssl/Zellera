@@ -1,5 +1,7 @@
 package zel.protocol.handshake
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.players.DeviceReading
 import zel.net.clients.ClientConnections
 import zel.net.crypto.DiffieHellman
@@ -22,8 +24,6 @@ import zel.protocol.typed.PacketPackage
 import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.PacketSession
 import zel.util.monotonicMillis
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.security.GeneralSecurityException
 import java.util.concurrent.atomic.AtomicLong
 

@@ -1,5 +1,6 @@
 package zel.game.players.inventory
 
+import org.slf4j.LoggerFactory
 import zel.db.Params
 import zel.db.SqlFailure
 import zel.game.items.OwnedFurni
@@ -7,7 +8,6 @@ import zel.game.items.OwnedFurniRows
 import zel.game.items.ownerGuard
 import zel.game.items.placement
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException

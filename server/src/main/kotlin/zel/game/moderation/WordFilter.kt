@@ -1,12 +1,12 @@
 package zel.game.moderation
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.db.Sql
 import zel.db.orFallback
 import zel.game.permissions.Privilege
 import zel.game.players.Player
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class WordFilter(

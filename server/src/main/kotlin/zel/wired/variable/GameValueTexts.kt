@@ -1,9 +1,9 @@
 package zel.wired.variable
 
-import zel.db.Sql
-import zel.game.icons.IconRoster
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Sql
+import zel.game.icons.IconRoster
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest

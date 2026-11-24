@@ -1,5 +1,7 @@
 package zel.protocol.outgoing.users
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.orFallback
 import zel.game.guilds.Guild
 import zel.game.players.Player
@@ -11,8 +13,6 @@ import zel.protocol.generated.ExtendedProfileOut
 import zel.protocol.generated.ExtendedProfileOutCodec
 import zel.protocol.outgoing.OutgoingMessage
 import zel.util.GameZone
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import java.time.Instant
 import java.time.format.DateTimeFormatter

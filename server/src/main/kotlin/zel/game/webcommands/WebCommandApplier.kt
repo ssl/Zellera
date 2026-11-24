@@ -1,10 +1,10 @@
 package zel.game.webcommands
 
+import org.slf4j.LoggerFactory
 import zel.db.first
 import zel.game.permissions.Privilege
 import zel.game.players.Player
 import zel.room.port.RoomPort
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource

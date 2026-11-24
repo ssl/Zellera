@@ -1,12 +1,12 @@
 package zel.net.clients
 
+import io.netty.channel.Channel
+import io.netty.channel.ChannelId
 import zel.game.players.Player
 import zel.net.crypto.DiffieHellman
 import zel.protocol.Outbound
 import zel.protocol.generated.OutgoingCodec
 import zel.protocol.outgoing.handshake.DisconnectReason
-import io.netty.channel.Channel
-import io.netty.channel.ChannelId
 import java.util.concurrent.ConcurrentHashMap
 
 class ClientConnections(

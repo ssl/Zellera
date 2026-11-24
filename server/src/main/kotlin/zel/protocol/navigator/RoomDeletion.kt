@@ -1,5 +1,6 @@
 package zel.protocol.navigator
 
+import org.slf4j.LoggerFactory
 import zel.db.Database
 import zel.db.DeadlockRetry
 import zel.db.orFallback
@@ -7,7 +8,6 @@ import zel.game.guilds.Guild
 import zel.game.guilds.GuildDirectory
 import zel.net.clients.ClientConnection
 import zel.room.port.RoomPort
-import org.slf4j.LoggerFactory
 
 class RoomDeletion(
     private val guilds: GuildDirectory,

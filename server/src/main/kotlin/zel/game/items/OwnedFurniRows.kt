@@ -1,8 +1,8 @@
 package zel.game.items
 
+import org.slf4j.LoggerFactory
 import zel.db.Params
 import zel.db.write
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import java.sql.SQLException
 import javax.sql.DataSource

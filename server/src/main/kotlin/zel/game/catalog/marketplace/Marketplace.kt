@@ -1,11 +1,11 @@
 package zel.game.catalog.marketplace
 
+import org.slf4j.LoggerFactory
 import zel.db.orFallback
 import zel.game.catalog.CatalogServices
 import zel.game.items.OwnedFurni
 import zel.game.players.Player
 import zel.net.clients.ClientConnection
-import org.slf4j.LoggerFactory
 
 class Marketplace internal constructor(
     private val services: CatalogServices,

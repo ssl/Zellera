@@ -1,8 +1,8 @@
 package zel.net.server.handlers
 
-import zel.net.server.proxy.IpLiteral
 import io.netty.channel.Channel
 import io.netty.util.AttributeKey
+import zel.net.server.proxy.IpLiteral
 import java.util.concurrent.ConcurrentHashMap
 
 /**

@@ -1,10 +1,10 @@
 package zel.game.commands
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.CommandLog
 import zel.game.players.Player
 import zel.net.clients.ClientConnection
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class SpokenCommands(
     roster: List<ChatCommand>,

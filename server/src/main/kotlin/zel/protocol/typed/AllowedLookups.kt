@@ -1,7 +1,7 @@
 package zel.protocol.typed
 
-import zel.net.clients.ClientConnection
 import org.slf4j.LoggerFactory
+import zel.net.clients.ClientConnection
 import java.util.concurrent.ConcurrentHashMap
 
 class AllowedLookups(

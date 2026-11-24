@@ -1,10 +1,10 @@
 package zel.ext
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.protocol.generated.IncomingCodec
 import zel.protocol.generated.OutgoingCodec
 import zel.protocol.generated.PacketReader
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 object ExtensionBus {
     private val log: Logger = LoggerFactory.getLogger(ExtensionBus::class.java)

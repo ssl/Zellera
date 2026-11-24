@@ -1,5 +1,6 @@
 package zel.game.games.snowball
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.core.rules.rules
 import zel.core.threading.GameThreads
@@ -15,7 +16,6 @@ import zel.game.players.Players
 import zel.protocol.misc.ClientWindow
 import zel.protocol.snowball.SnowballPacket
 import zel.util.NANOS_PER_MILLI
-import org.slf4j.LoggerFactory
 import java.time.Clock
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.ThreadLocalRandom

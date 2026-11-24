@@ -1,11 +1,11 @@
 package zel.game.catalog
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.allOrNothing
 import zel.db.insertForId
 import zel.db.orFallback
 import zel.db.writeEach
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class ShopPurchaseRecord(

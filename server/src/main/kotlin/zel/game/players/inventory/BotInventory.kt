@@ -1,12 +1,12 @@
 package zel.game.players.inventory
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.bots.Bot
 import zel.game.bots.Bots
 import zel.game.players.Player
 import zel.server.GameServices
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 class BotInventory(

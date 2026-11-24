@@ -1,12 +1,12 @@
 package zel.game.players
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.icons.IconService
 import zel.game.permissions.PermissionActor
 import zel.game.players.inventory.UnseenItems
 import zel.game.players.inventory.UnseenItemsDatabase
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executor

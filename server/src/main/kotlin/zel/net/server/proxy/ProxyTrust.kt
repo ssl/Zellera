@@ -1,8 +1,8 @@
 package zel.net.server.proxy
 
-import zel.core.Configuration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.core.Configuration
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong

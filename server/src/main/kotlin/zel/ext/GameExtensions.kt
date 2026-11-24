@@ -1,5 +1,7 @@
 package zel.ext
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.net.clients.ClientConnections
 import zel.protocol.generated.IncomingCodec
@@ -14,8 +16,6 @@ import zel.room.map.Point
 import zel.room.tick.TickPart
 import zel.room.unit.RoomUnit
 import zel.room.unit.walk.WalkHooks
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path

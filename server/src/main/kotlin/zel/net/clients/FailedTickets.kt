@@ -1,8 +1,8 @@
 package zel.net.clients
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.net.server.proxy.IpLiteral
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 

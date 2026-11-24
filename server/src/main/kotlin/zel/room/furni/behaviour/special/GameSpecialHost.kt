@@ -1,5 +1,7 @@
 package zel.room.furni.behaviour.special
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.allOrNothing
 import zel.db.first
@@ -16,8 +18,6 @@ import zel.protocol.events.MysteryBoxMessages
 import zel.protocol.generated.FurniListInvalidateOut
 import zel.protocol.generated.FurniListInvalidateOutCodec
 import zel.protocol.outgoing.inventory.AddRoomItem
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class GameSpecialHost(

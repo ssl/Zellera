@@ -3,6 +3,7 @@ package zel
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.LoggerContext
+import org.slf4j.LoggerFactory
 import zel.core.BuildInfo
 import zel.core.Configuration
 import zel.core.ServerState
@@ -12,7 +13,6 @@ import zel.core.log.ConsoleColour
 import zel.core.rules.ActiveRules
 import zel.db.migration.SchemaCommand
 import zel.util.GameZone
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.system.exitProcess
 

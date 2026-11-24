@@ -1,11 +1,11 @@
 package zel.content
 
 import com.google.gson.JsonElement
+import org.slf4j.LoggerFactory
 import zel.db.executeAll
 import zel.db.rows
 import zel.db.write
 import zel.db.writeEach
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Instant

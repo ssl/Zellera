@@ -1,11 +1,11 @@
 package zel.game.treasurehunt
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.items.Items
 import zel.game.players.Player
 import zel.game.players.Players
 import zel.protocol.treasurehunt.TreasureHuntMessages
-import org.slf4j.LoggerFactory
 import java.util.function.IntSupplier
 
 class TreasureHunts(

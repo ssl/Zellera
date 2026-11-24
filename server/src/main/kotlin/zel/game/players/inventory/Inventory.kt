@@ -1,9 +1,9 @@
 package zel.game.players.inventory
 
+import org.slf4j.LoggerFactory
 import zel.game.catalog.marketplace.Marketplace
 import zel.game.players.Player
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(Inventory::class.java)
 

@@ -1,10 +1,10 @@
 package zel.game.players
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.navigation.BlockStyle
 import zel.game.navigation.DisplayMode
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(NavigatorLayouts::class.java)
 

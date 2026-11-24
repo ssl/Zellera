@@ -1,5 +1,6 @@
 package zel.game.moderation
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.db.allOrNothing
 import zel.db.first
@@ -7,7 +8,6 @@ import zel.db.write
 import zel.game.permissions.Privilege
 import zel.game.players.Players
 import zel.util.SECONDS_PER_HOUR
-import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import javax.sql.DataSource
 

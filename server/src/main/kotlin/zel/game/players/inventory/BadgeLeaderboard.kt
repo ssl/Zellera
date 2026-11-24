@@ -1,10 +1,10 @@
 package zel.game.players.inventory
 
+import org.slf4j.LoggerFactory
 import zel.db.Database
 import zel.db.SqlFailure
 import zel.game.players.level.AccountStanding
 import zel.game.players.level.AccountStandings
-import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(BadgeLeaderboard::class.java)
 

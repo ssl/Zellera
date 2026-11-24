@@ -1,10 +1,10 @@
 package zel.protocol.outgoing.inventory
 
+import org.slf4j.LoggerFactory
 import zel.game.items.OwnedFurni
 import zel.protocol.generated.FurniListOut
 import zel.protocol.generated.FurniListOutCodec
 import zel.protocol.outgoing.OutgoingMessage
-import org.slf4j.LoggerFactory
 
 /** Fragments are numbered from 0; an empty inventory is one empty fragment. */
 class InventoryItems(

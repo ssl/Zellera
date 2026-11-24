@@ -1,6 +1,5 @@
 package zel.net.server.codec
 
-import zel.net.server.HttpRefusal
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
@@ -10,6 +9,7 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler.HandshakeComplete
 import io.netty.util.ReferenceCountUtil
+import zel.net.server.HttpRefusal
 
 class WebSocketPayloads(
     private val httpStages: List<String>,

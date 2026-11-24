@@ -1,5 +1,6 @@
 package zel.game.catalog
 
+import org.slf4j.LoggerFactory
 import zel.game.economy.EconomyLedger
 import zel.game.economy.LedgerEntry
 import zel.game.players.Player
@@ -7,7 +8,6 @@ import zel.game.players.WalletWrites
 import zel.protocol.generated.ActivityPointNotificationOut
 import zel.protocol.generated.ActivityPointNotificationOutCodec
 import zel.protocol.outgoing.users.UserCredits
-import org.slf4j.LoggerFactory
 
 object CatalogWallet {
     private val log = LoggerFactory.getLogger(CatalogWallet::class.java)

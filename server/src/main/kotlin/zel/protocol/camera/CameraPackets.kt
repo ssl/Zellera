@@ -1,5 +1,6 @@
 package zel.protocol.camera
 
+import org.slf4j.LoggerFactory
 import zel.game.achievements.GameEvents
 import zel.game.achievements.count
 import zel.game.camera.CameraService
@@ -35,7 +36,6 @@ import zel.protocol.typed.PacketPackage
 import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.PacketSession
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException

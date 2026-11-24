@@ -3,12 +3,12 @@
 
 package zel.game.moderation
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.db.write
 import zel.game.permissions.Privilege
 import zel.game.players.Player
 import zel.util.MINUTES_PER_HOUR
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import javax.sql.DataSource

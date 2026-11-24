@@ -1,5 +1,7 @@
 package zel.game.catalog.marketplace
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Database
 import zel.db.allOrNothing
 import zel.game.earnings.IncomeRewards
@@ -7,8 +9,6 @@ import zel.game.economy.BalanceChange
 import zel.game.economy.EconomyLedger
 import zel.game.economy.LedgerEntry
 import zel.game.economy.LedgerTransaction
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 
 class SaleSettlement(

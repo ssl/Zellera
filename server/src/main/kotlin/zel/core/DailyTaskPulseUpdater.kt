@@ -1,10 +1,10 @@
 package zel.core
 
+import org.slf4j.LoggerFactory
 import zel.core.threading.GameThreads
 import zel.game.players.Players
 import zel.game.quests.DailyTasks
 import zel.game.quests.RoomPosture
-import org.slf4j.LoggerFactory
 import java.util.EnumSet
 
 class DailyTaskPulseUpdater(

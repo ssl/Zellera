@@ -1,5 +1,6 @@
 package zel.room.trade
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.TradeCreditFurni
 import zel.game.achievements.GameEvents
 import zel.game.economy.EconomyLedger
@@ -20,7 +21,6 @@ import zel.room.RoomPart
 import zel.room.RoomScope
 import zel.room.unit.RoomUnit
 import zel.room.unit.walk.Walking
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 /** Every member runs under the room's lock. */

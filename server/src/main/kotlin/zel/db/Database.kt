@@ -3,8 +3,8 @@ package zel.db
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.pool.HikariPool.PoolInitializationException
-import zel.core.Configuration
 import org.flywaydb.core.api.configuration.FluentConfiguration
+import zel.core.Configuration
 import java.time.Duration
 import javax.sql.DataSource
 

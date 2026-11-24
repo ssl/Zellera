@@ -1,10 +1,10 @@
 package zel.game.pets
 
+import org.slf4j.LoggerFactory
 import zel.db.allOrNothing
 import zel.game.items.Item
 import zel.protocol.BodyPart
 import zel.protocol.generated.PacketWriter
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import java.util.Locale

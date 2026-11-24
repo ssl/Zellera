@@ -1,15 +1,15 @@
 package zel.net.server.handlers
 
-import zel.core.Configuration
-import zel.net.server.HttpRefusal
-import zel.net.server.proxy.ClientAddress
-import zel.net.server.proxy.ProxyTrust
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 import io.netty.handler.codec.http.FullHttpRequest
 import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpHeaderValues
 import io.netty.handler.codec.http.HttpHeaders
+import zel.core.Configuration
+import zel.net.server.HttpRefusal
+import zel.net.server.proxy.ClientAddress
+import zel.net.server.proxy.ProxyTrust
 
 /**
  * A direct peer took its slot when it connected; a player behind a proxy takes one here, under the address the

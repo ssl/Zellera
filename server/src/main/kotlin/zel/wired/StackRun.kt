@@ -1,5 +1,7 @@
 package zel.wired
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.room.RoomScope
 import zel.room.event.RoomEvent
 import zel.wired.addon.ExecuteInOrder
@@ -19,8 +21,6 @@ import zel.wired.firing.FlashBatch
 import zel.wired.trigger.LineCapture
 import zel.wired.trigger.SaysSomething
 import zel.wired.usage.WiredError
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class StackRun(
     private val gate: FiringGate,

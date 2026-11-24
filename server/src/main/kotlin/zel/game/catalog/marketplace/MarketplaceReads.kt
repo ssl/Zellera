@@ -1,9 +1,9 @@
 package zel.game.catalog.marketplace
 
+import org.slf4j.LoggerFactory
 import zel.db.orFallback
 import zel.game.catalog.CatalogServices
 import zel.game.players.PlayerStanding
-import org.slf4j.LoggerFactory
 
 /** A failed read logs and answers as if nothing was found. */
 internal class MarketplaceReads(

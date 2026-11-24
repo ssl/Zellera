@@ -1,9 +1,9 @@
 package zel.game.polls
 
-import zel.db.SqlFailure
-import zel.game.players.Player
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.SqlFailure
+import zel.game.players.Player
 import java.util.concurrent.ConcurrentHashMap
 
 class Polls internal constructor(

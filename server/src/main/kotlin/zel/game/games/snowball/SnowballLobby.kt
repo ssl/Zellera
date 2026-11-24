@@ -2,6 +2,7 @@
 
 package zel.game.games.snowball
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.FreeGames
 import zel.core.rules.rules
 import zel.game.games.snowball.SnowballGame.State
@@ -11,7 +12,6 @@ import zel.game.messenger.FriendNotification
 import zel.protocol.gamecenter.GameCenterMessages
 import zel.protocol.snowball.Game2Messages
 import zel.protocol.snowball.SnowballPacket
-import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 

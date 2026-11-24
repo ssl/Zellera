@@ -1,5 +1,7 @@
 package zel.game.catalog.marketplace
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.allOrNothing
 import zel.game.catalog.CatalogServices
 import zel.game.items.OwnedFurni
@@ -8,8 +10,6 @@ import zel.protocol.generated.FurniListInvalidateOut
 import zel.protocol.generated.FurniListInvalidateOutCodec
 import zel.protocol.generated.FurniListRemoveOut
 import zel.protocol.generated.FurniListRemoveOutCodec
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.SQLException
 
 internal class MarketplaceSelling(

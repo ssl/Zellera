@@ -1,12 +1,12 @@
 package zel.net.server.encoders
 
-import zel.net.server.PacketDump
-import zel.protocol.typed.WireFrame
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.ByteBufUtil
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelOutboundHandlerAdapter
 import io.netty.channel.ChannelPromise
+import zel.net.server.PacketDump
+import zel.protocol.typed.WireFrame
 
 class GameFrameEncoder : ChannelOutboundHandlerAdapter() {
     override fun write(

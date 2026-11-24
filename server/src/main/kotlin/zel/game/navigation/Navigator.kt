@@ -1,5 +1,6 @@
 package zel.game.navigation
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.db.Database
 import zel.db.SqlFailure
@@ -7,7 +8,6 @@ import zel.game.players.Player
 import zel.room.listing.ListedRoom
 import zel.room.listing.RoomListings
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 
 class Navigator(
     services: GameServices,

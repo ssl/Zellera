@@ -1,5 +1,6 @@
 package zel.game.icons
 
+import org.slf4j.LoggerFactory
 import zel.content.ClientStrings
 import zel.game.catalog.BalanceShortfall
 import zel.game.catalog.CatalogWallet
@@ -12,7 +13,6 @@ import zel.protocol.outgoing.catalog.CatalogReplies
 import zel.protocol.outgoing.catalog.PurchaseError
 import zel.protocol.outgoing.catalog.PurchasedOffer
 import zel.protocol.outgoing.users.UserCredits
-import org.slf4j.LoggerFactory
 import java.sql.SQLException
 
 object IconShop {

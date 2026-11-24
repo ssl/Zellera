@@ -1,5 +1,6 @@
 package zel.protocol.friends
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.achievements.AchievementTally
 import zel.game.icons.IconAchievements
@@ -63,7 +64,6 @@ import zel.protocol.typed.PacketSession
 import zel.protocol.typed.player
 import zel.room.listing.RoomListings
 import zel.room.port.RoomPort
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ThreadLocalRandom
 
 // one guard clause per refusal the messenger answers, and one handler per message

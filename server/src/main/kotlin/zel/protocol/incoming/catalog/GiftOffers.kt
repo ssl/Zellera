@@ -1,5 +1,7 @@
 package zel.protocol.incoming.catalog
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.game.catalog.CatalogOffer
@@ -12,8 +14,6 @@ import zel.net.clients.ClientConnection
 import zel.protocol.outgoing.catalog.CatalogReplies
 import zel.protocol.outgoing.catalog.PurchaseError
 import zel.protocol.outgoing.catalog.PurchaseNotAllowed
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 internal class GiftOffers(
     private val services: CatalogServices,

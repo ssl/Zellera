@@ -1,5 +1,6 @@
 package zel.game.earnings
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.game.achievements.AchievementEvents
 import zel.game.economy.EconomyLedger
@@ -21,7 +22,6 @@ import zel.protocol.outgoing.inventory.AddRoomItem.UnseenCategory
 import zel.protocol.outgoing.inventory.InventoryUpdateItem
 import zel.protocol.outgoing.users.UserCredits
 import zel.util.MILLIS_PER_SECOND
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Clock

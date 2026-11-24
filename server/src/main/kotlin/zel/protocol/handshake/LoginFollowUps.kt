@@ -1,5 +1,6 @@
 package zel.protocol.handshake
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.core.threading.GameThreads
 import zel.db.Sql
@@ -25,7 +26,6 @@ import zel.protocol.outgoing.catalog.CatalogMessages
 import zel.protocol.outgoing.inventory.BadgePointLimits
 import zel.wired.chest.ChestNotice
 import zel.wired.chest.ChestNotices
-import org.slf4j.LoggerFactory
 
 class LoginFollowUps(
     private val config: Configuration,

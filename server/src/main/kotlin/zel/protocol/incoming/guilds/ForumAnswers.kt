@@ -1,5 +1,7 @@
 package zel.protocol.incoming.guilds
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.guilds.Guild
 import zel.game.guilds.forums.ForumAccess
 import zel.game.guilds.forums.ForumThread
@@ -7,8 +9,6 @@ import zel.game.permissions.isAnyGroupOwner
 import zel.protocol.outgoing.generic.alerts.BubbleAlert
 import zel.protocol.outgoing.generic.alerts.BubbleAlertMessage
 import zel.protocol.outgoing.handshake.ErrorReport
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 internal class ForumAnswers(
     private val services: GuildServices,

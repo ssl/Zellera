@@ -1,5 +1,7 @@
 package zel.net.server.handlers
 
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandlerAdapter
 import zel.net.clients.ClientConnection
 import zel.protocol.InboundFrame
 import zel.protocol.generated.PingOut
@@ -8,8 +10,6 @@ import zel.protocol.generated.PongInCodec
 import zel.protocol.outgoing.handshake.DisconnectReason
 import zel.protocol.typed.ClientPacket
 import zel.util.monotonicMillis
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
 import java.util.concurrent.TimeUnit
 
 class LivenessGuard(

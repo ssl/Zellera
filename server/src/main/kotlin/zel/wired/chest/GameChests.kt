@@ -1,5 +1,7 @@
 package zel.wired.chest
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.game.achievements.GameEvents
 import zel.game.earnings.WiredCreditEarnings
@@ -24,8 +26,6 @@ import zel.protocol.outgoing.users.UserCredits
 import zel.room.RoomScope
 import zel.wired.store.WiredWriter
 import zel.wired.timing.RoomPoster
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.util.concurrent.ConcurrentHashMap
 

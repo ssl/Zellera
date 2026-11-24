@@ -1,5 +1,7 @@
 package zel.game.campaign.calendar
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.content.ClientStrings
 import zel.game.economy.EconomyLedger
 import zel.game.items.Item
@@ -11,8 +13,6 @@ import zel.game.quests.QuestRewards
 import zel.protocol.events.CalendarMessages
 import zel.util.GameZone
 import zel.util.SECONDS_PER_DAY
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.util.Random
 

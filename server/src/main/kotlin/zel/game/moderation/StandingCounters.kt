@@ -1,9 +1,9 @@
 package zel.game.moderation
 
-import zel.db.Sql
-import zel.db.SqlFailure
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Sql
+import zel.db.SqlFailure
 import javax.sql.DataSource
 
 class StandingCounters(

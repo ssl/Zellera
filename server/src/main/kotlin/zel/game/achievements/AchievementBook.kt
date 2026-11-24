@@ -1,8 +1,8 @@
 package zel.game.achievements
 
-import zel.db.orFallback
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.orFallback
 
 internal class AchievementBook(
     private val read: () -> Map<String, Achievement>,

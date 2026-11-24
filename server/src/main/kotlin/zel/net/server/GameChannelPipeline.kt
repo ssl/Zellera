@@ -3,6 +3,16 @@
 
 package zel.net.server
 
+import io.netty.channel.Channel
+import io.netty.channel.ChannelInitializer
+import io.netty.handler.codec.http.HttpMessage
+import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.codec.http.HttpRequest
+import io.netty.handler.codec.http.HttpServerCodec
+import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolConfig
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
+import io.netty.handler.ssl.SslContext
 import zel.core.Configuration
 import zel.net.TransportSettings
 import zel.net.WireLimits
@@ -21,16 +31,6 @@ import zel.net.server.proxy.ClientAddress
 import zel.net.server.proxy.ProxyTrust
 import zel.protocol.typed.PacketDispatcher
 import zel.wired.variable.addon.VariablesBridge
-import io.netty.channel.Channel
-import io.netty.channel.ChannelInitializer
-import io.netty.handler.codec.http.HttpMessage
-import io.netty.handler.codec.http.HttpObjectAggregator
-import io.netty.handler.codec.http.HttpRequest
-import io.netty.handler.codec.http.HttpServerCodec
-import io.netty.handler.codec.http.websocketx.WebSocketFrameAggregator
-import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolConfig
-import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler
-import io.netty.handler.ssl.SslContext
 
 class GameChannelPipeline(
     private val configuration: Configuration,

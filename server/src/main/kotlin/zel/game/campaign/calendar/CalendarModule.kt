@@ -1,11 +1,11 @@
 package zel.game.campaign.calendar
 
+import org.slf4j.LoggerFactory
 import zel.db.Database
 import zel.game.items.Items
 import zel.protocol.events.CalendarMessages
 import zel.protocol.events.CalendarPackets
 import zel.protocol.typed.PacketPackage
-import org.slf4j.LoggerFactory
 import java.util.Random
 
 class CalendarModule(

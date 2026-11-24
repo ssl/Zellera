@@ -1,8 +1,8 @@
 package zel.protocol
 
-import zel.util.PacketUtils
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
+import zel.util.PacketUtils
 
 /** The receiver releases the body when done. */
 open class InboundFrame(

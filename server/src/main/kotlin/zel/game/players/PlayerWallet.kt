@@ -1,12 +1,12 @@
 package zel.game.players
 
+import org.slf4j.LoggerFactory
 import zel.game.economy.EconomyLedger
 import zel.game.economy.LedgerEntry
 import zel.protocol.Outbound
 import zel.protocol.generated.ActivityPointNotificationOut
 import zel.protocol.generated.ActivityPointNotificationOutCodec
 import zel.protocol.outgoing.users.UserCredits
-import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger(PlayerWallet::class.java)
 

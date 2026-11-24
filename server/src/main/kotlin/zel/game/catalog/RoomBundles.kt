@@ -2,6 +2,7 @@
 
 package zel.game.catalog
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.db.allOrNothing
 import zel.db.insertForId
@@ -14,7 +15,6 @@ import zel.game.players.Player
 import zel.protocol.outgoing.generic.alerts.BubbleAlert
 import zel.protocol.outgoing.generic.alerts.BubbleAlertMessage
 import zel.room.listing.ListedRoom
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 
 private val LOGGER = LoggerFactory.getLogger(RoomBundles::class.java)

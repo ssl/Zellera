@@ -1,8 +1,8 @@
 package zel.game.communitygoals
 
-import zel.db.orFallback
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.orFallback
 import java.util.function.IntSupplier
 
 class TieredCommunityGoal(

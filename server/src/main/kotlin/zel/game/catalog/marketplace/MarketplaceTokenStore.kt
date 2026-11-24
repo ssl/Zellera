@@ -1,8 +1,8 @@
 package zel.game.catalog.marketplace
 
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.orFallback
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 /** Written at once, so a charge never outlives its tokens. */

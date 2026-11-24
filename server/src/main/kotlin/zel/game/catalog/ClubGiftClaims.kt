@@ -1,10 +1,10 @@
 package zel.game.catalog
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.game.players.Player
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 /** The stored count moves before anything is handed out, so two claims of the last gift cannot both win. */

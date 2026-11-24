@@ -1,10 +1,10 @@
 package zel.game.featuredlooks
 
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.util.MILLIS_PER_SECOND
-import org.slf4j.LoggerFactory
 import java.util.Random
 import java.util.concurrent.ThreadLocalRandom
 import javax.sql.DataSource

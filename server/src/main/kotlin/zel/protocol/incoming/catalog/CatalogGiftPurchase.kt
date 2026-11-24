@@ -1,5 +1,7 @@
 package zel.protocol.incoming.catalog
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.achievements.GameEvents
 import zel.game.achievements.count
 import zel.game.achievements.countFor
@@ -25,8 +27,6 @@ import zel.protocol.outgoing.catalog.PurchaseError
 import zel.protocol.outgoing.catalog.PurchaseNotAllowed
 import zel.protocol.outgoing.inventory.InventoryUpdateItem
 import zel.util.SECONDS_PER_MINUTE
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class CatalogGiftPurchase(
     private val services: CatalogServices,

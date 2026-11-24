@@ -1,5 +1,6 @@
 package zel.game.items
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.core.threading.GameThreads
 import zel.db.first
@@ -8,7 +9,6 @@ import zel.db.write
 import zel.game.catalog.Catalog
 import zel.game.players.Players
 import zel.protocol.outgoing.inventory.AddRoomItem
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException

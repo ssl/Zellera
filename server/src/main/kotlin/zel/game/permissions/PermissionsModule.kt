@@ -1,8 +1,8 @@
 package zel.game.permissions
 
-import zel.db.Sql
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Sql
 import javax.sql.DataSource
 
 class PermissionsModule(

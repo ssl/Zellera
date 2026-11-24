@@ -1,5 +1,11 @@
 package zel.net.server.decoders
 
+import io.netty.buffer.ByteBuf
+import io.netty.buffer.ByteBufUtil
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandlerAdapter
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.net.server.PacketDump
 import zel.protocol.InboundFrame
 import zel.protocol.generated.SSOTicketInCodec
@@ -7,12 +13,6 @@ import zel.protocol.typed.ClientPacket
 import zel.protocol.typed.ClientVersion
 import zel.protocol.typed.ClientVersions
 import zel.protocol.typed.PacketRouter
-import io.netty.buffer.ByteBuf
-import io.netty.buffer.ByteBufUtil
-import io.netty.channel.ChannelHandlerContext
-import io.netty.channel.ChannelInboundHandlerAdapter
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
 
 /** Names every frame by the ids of the client's version; a first message that is no hello of a known version closes. */

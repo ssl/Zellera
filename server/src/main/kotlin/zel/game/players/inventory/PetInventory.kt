@@ -1,11 +1,11 @@
 package zel.game.players.inventory
 
+import org.slf4j.LoggerFactory
 import zel.db.SqlFailure
 import zel.game.pets.Pet
 import zel.game.pets.PetRows
 import zel.game.players.Player
 import zel.server.GameServices
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 
 private val log = LoggerFactory.getLogger(PetInventory::class.java)

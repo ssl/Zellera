@@ -1,12 +1,12 @@
 package zel.core.console
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.threading.GameThreads
 import zel.game.Game
 import zel.net.server.GamePort
 import zel.protocol.generated.InfoGameClosingOut
 import zel.protocol.generated.InfoGameClosingOutCodec
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.Instant
 

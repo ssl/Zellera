@@ -1,10 +1,10 @@
 package zel.game.moderation
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.orFallback
 import zel.util.MILLIS_PER_SECOND
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import javax.sql.DataSource
 

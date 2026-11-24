@@ -1,12 +1,12 @@
 package zel.protocol.incoming.catalog
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.game.catalog.CatalogServices
 import zel.game.catalog.InventoryRoom
 import zel.game.players.inventory.Inventory
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /** 0 when nobody has the name. */
 internal class GiftReceivers(

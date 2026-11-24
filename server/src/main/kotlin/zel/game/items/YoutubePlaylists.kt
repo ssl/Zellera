@@ -1,10 +1,10 @@
 package zel.game.items
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.threading.GameThreads
 import zel.db.Sql
 import zel.db.orFallback
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit

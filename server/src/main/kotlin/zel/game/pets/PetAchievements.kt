@@ -1,11 +1,11 @@
 package zel.game.pets
 
+import org.slf4j.LoggerFactory
 import zel.db.Params
 import zel.db.Sql
 import zel.db.orFallback
 import zel.game.achievements.Achievement
 import zel.game.achievements.GameEvents
-import org.slf4j.LoggerFactory
 
 /** Turns pet happenings into game events; the pet type id is the detail where the content pack may tell kinds apart. */
 object PetAchievements {

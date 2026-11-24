@@ -1,5 +1,6 @@
 package zel.protocol.outgoing.moderation
 
+import org.slf4j.LoggerFactory
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.game.moderation.Sanctions
@@ -7,7 +8,6 @@ import zel.protocol.generated.ModeratorPlayerInfoOut
 import zel.util.GameZone
 import zel.util.SECONDS_PER_HOUR
 import zel.util.SECONDS_PER_MINUTE
-import org.slf4j.LoggerFactory
 import java.sql.ResultSet
 import java.time.Instant
 import java.time.format.DateTimeFormatter

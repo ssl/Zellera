@@ -1,5 +1,7 @@
 package zel.room.unit.pet
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.Params
 import zel.db.Sql
 import zel.db.allOrNothing
@@ -8,8 +10,6 @@ import zel.db.write
 import zel.game.pets.Pet
 import zel.game.pets.PetRows
 import zel.room.map.Point
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
 import javax.sql.DataSource

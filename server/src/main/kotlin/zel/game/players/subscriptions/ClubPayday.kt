@@ -1,5 +1,6 @@
 package zel.game.players.subscriptions
 
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.db.allOrNothing
 import zel.db.first
@@ -19,7 +20,6 @@ import zel.protocol.generated.ActivityPointNotificationOutCodec
 import zel.server.GameServices
 import zel.util.GameZone
 import zel.util.SECONDS_PER_MINUTE
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLException
 import java.sql.SQLIntegrityConstraintViolationException

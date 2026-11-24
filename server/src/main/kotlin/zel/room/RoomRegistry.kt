@@ -1,5 +1,7 @@
 package zel.room
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.ext.ExtensionBus
 import zel.ext.ServerEvent
 import zel.room.tick.PlayerChannels
@@ -10,8 +12,6 @@ import zel.room.tick.RoomWorkers
 import zel.room.tick.TickOutput
 import zel.room.tick.TickReport
 import zel.room.unit.RoomUnit
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 

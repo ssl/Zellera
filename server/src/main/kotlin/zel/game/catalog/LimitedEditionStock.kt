@@ -1,9 +1,9 @@
 package zel.game.catalog
 
-import zel.game.items.OwnedFurni
-import zel.game.players.Player
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.game.items.OwnedFurni
+import zel.game.players.Player
 import java.sql.Connection
 import java.sql.SQLException
 

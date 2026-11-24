@@ -1,12 +1,12 @@
 package zel.game.camera
 
+import org.slf4j.LoggerFactory
 import zel.content.ClientStrings
 import zel.core.Configuration
 import zel.core.config.GameEnvironment
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.db.noneAsNull
-import org.slf4j.LoggerFactory
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.IOException

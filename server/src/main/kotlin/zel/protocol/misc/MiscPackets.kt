@@ -1,5 +1,6 @@
 package zel.protocol.misc
 
+import io.netty.util.AttributeKey
 import zel.game.achievements.Achievements
 import zel.net.clients.ClientConnection
 import zel.protocol.generated.BadgePointLimitsOutCodec
@@ -27,7 +28,6 @@ import zel.protocol.generated.VersionCheckInCodec
 import zel.protocol.outgoing.inventory.BadgePointLimits
 import zel.protocol.typed.PacketPackage
 import zel.protocol.typed.PacketRoute
-import io.netty.util.AttributeKey
 
 class MiscPackets(
     achievements: () -> Achievements?,

@@ -1,5 +1,7 @@
 package zel.room.furni.buildpass
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.rules.rules
 import zel.db.DeadlockRetry
 import zel.db.Sql
@@ -11,8 +13,6 @@ import zel.db.write
 import zel.room.DoorMode
 import zel.room.furni.BuildPass
 import zel.util.MILLIS_PER_SECOND
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.SQLIntegrityConstraintViolationException
 import javax.sql.DataSource

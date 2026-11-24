@@ -1,12 +1,12 @@
 package zel.game.catalog
 
+import org.slf4j.LoggerFactory
 import zel.game.players.Player
 import zel.game.players.WalletWrites
 import zel.net.clients.ClientConnection
 import zel.protocol.outgoing.catalog.CatalogReplies
 import zel.protocol.outgoing.catalog.VoucherError
 import zel.util.SECONDS_PER_MINUTE
-import org.slf4j.LoggerFactory
 
 class VoucherService(
     private val store: VoucherStore,

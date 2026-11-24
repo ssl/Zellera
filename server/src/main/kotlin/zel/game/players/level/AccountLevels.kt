@@ -1,9 +1,9 @@
 package zel.game.players.level
 
+import org.slf4j.LoggerFactory
 import zel.game.earnings.IncomeRewards
 import zel.game.earnings.LevelProgressionEarnings
 import zel.game.players.Player
-import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.util.concurrent.ConcurrentHashMap
 

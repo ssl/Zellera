@@ -1,10 +1,10 @@
 package zel.game.players
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.moderation.PlayerBanning
 import zel.net.clients.ClientConnection
 import zel.net.server.proxy.ClientAddress
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 
 /** Refuses until moderation runs, then checks account, machine, address and device bans in that order. */

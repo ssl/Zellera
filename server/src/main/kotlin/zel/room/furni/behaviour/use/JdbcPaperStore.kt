@@ -1,10 +1,10 @@
 package zel.room.furni.behaviour.use
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.allOrNothing
 import zel.db.orFallback
 import zel.db.write
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import javax.sql.DataSource
 
 class JdbcPaperStore(

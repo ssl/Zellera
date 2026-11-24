@@ -1,5 +1,7 @@
 package zel.room.entry
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.game.players.Player
 import zel.protocol.generated.CantConnectOut
 import zel.protocol.generated.CantConnectOutCodec
@@ -25,8 +27,6 @@ import zel.room.tick.Audience
 import zel.room.tick.Lane
 import zel.room.tick.RoomClock
 import zel.room.unit.walk.Walking
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class RoomEntry(
     private val registry: RoomRegistry,

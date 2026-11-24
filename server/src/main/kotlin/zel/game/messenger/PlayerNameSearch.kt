@@ -1,10 +1,10 @@
 package zel.game.messenger
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.LikePattern
 import zel.db.Sql
 import zel.db.SqlFailure
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /**
  * Players whose name starts with a text, sorted by name. A prefix is what the unique key on the name answers as a

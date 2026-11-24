@@ -1,5 +1,7 @@
 package zel.room.furni.place
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.db.DeadlockRetry
 import zel.protocol.generated.HeightMapUpdateOutCodec
 import zel.protocol.generated.ItemAddOutCodec
@@ -18,8 +20,6 @@ import zel.room.persist.FurniHandBack
 import zel.room.persist.FurniTransfers
 import zel.room.tick.Audience
 import zel.room.tick.Lane
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.concurrent.CompletableFuture
 
 /** The row and the owner's inventory are written after the room answered, on [writes]. */

@@ -1,8 +1,8 @@
 package zel.game.achievements
 
-import zel.db.Sql
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.Sql
 import java.sql.ResultSet
 import java.sql.SQLException
 import javax.sql.DataSource

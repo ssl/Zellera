@@ -1,0 +1,33 @@
+# Shared by every mode. {args[0]}: the player's address.
+(game) {
+	@ws path /websocket /websocket/*
+	handle @ws {
+		reverse_proxy 127.0.0.1:{$ZEL_WS_PORT} {
+			header_up X-Forwarded-For {args[0]}
+		}
+	}
+	handle {
+		encode zstd gzip
+		reverse_proxy 127.0.0.1:{$ZEL_WEB_PORT} {
+			header_up X-Forwarded-For {args[0]}
+			# a catalog page asks for ~100 icons at once; queue them
+			transport http {
+				max_conns_per_host 32
+			}
+		}
+	}
+}
+
+# Kept when the web already sets one of them.
+(headers) {
+	header {
+		?X-Content-Type-Options nosniff
+		?Referrer-Policy strict-origin-when-cross-origin
+		?X-Frame-Options SAMEORIGIN
+		-Server
+	}
+}
+
+(hsts) {
+	header Strict-Transport-Security "max-age=31536000"
+}

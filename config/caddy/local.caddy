@@ -1,0 +1,17 @@
+# ZEL_PROXY=local: this computer only, signed by Caddy's own authority in .data/caddy (./zel trust).
+{
+	admin off
+	persist_config off
+	auto_https disable_redirects
+	skip_install_trust
+	storage file_system "{$ZEL_ROOT}/.data/caddy"
+}
+
+import "{$ZEL_ROOT}/config/caddy/common.caddy"
+
+https://{$ZEL_HOST}:{$ZEL_HTTPS_PORT} {
+	bind 127.0.0.1
+	tls internal
+	import headers
+	import game {remote_host}
+}

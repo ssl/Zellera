@@ -1,0 +1,16 @@
+# ZEL_PROXY=tunnel: loopback only; cloudflared brings the players and names their address.
+{
+	admin off
+	persist_config off
+	auto_https off
+	storage file_system "{$ZEL_ROOT}/.data/caddy"
+}
+
+import "{$ZEL_ROOT}/config/caddy/common.caddy"
+
+http://:{$ZEL_TUNNEL_PORT} {
+	bind 127.0.0.1
+	import headers
+	import hsts
+	import game {http.request.header.CF-Connecting-IP}
+}

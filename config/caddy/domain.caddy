@@ -1,0 +1,16 @@
+# ZEL_PROXY=domain: ports 80 and 443 for ZEL_DOMAIN, with a certificate Caddy gets and renews itself.
+{
+	admin off
+	persist_config off
+	email {$ZEL_ACME_EMAIL}
+	storage file_system "{$ZEL_ROOT}/.data/caddy"
+}
+
+import "{$ZEL_ROOT}/config/caddy/common.caddy"
+
+{$ZEL_DOMAIN} {
+	bind {$ZEL_BIND}
+	import headers
+	import hsts
+	import game {remote_host}
+}

@@ -1,0 +1,35 @@
+.gb-form { display: grid; gap: var(--space-xs); margin-bottom: var(--space-md); padding-bottom: var(--space-md); border-bottom: 1px dashed var(--color-muted); }
+.gb-form textarea { min-height: 72px; }
+.gb-form__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+.gb-count { font-size: var(--text-xs); color: var(--color-ink-2); font-variant-numeric: tabular-nums; }
+.gb-form .alert { margin: 0; }
+.gb-login { margin: 0 0 var(--space-md); padding-bottom: var(--space-md); border-bottom: 1px dashed var(--color-muted); color: var(--color-ink-2); }
+.gb-top > .notice { margin-bottom: var(--space-md); }
+.gb-top:empty { display: none; }
+
+.gb-list { display: grid; gap: var(--space-md); list-style: none; margin: 0; padding: 0; }
+.gb-entry { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: var(--space-sm); align-items: start; }
+.gb-head { display: flex; justify-content: center; }
+.gb-head--plain { padding-top: var(--space-2xs); }
+.gb-entry__text { min-width: 0; display: grid; gap: var(--space-2xs); }
+.gb-bubble {
+  position: relative; justify-self: start; max-width: 100%; margin: 0; padding: var(--space-xs) var(--space-sm);
+  background: var(--color-paper-2); border-radius: var(--radius-stock); overflow-wrap: anywhere;
+}
+.gb-bubble::before {
+  content: ""; position: absolute; left: -6px; top: 16px; width: 12px; height: 12px; background: inherit; transform: rotate(45deg);
+}
+.gb-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2xs) var(--space-sm); margin: 0; padding-left: var(--space-sm); font-size: var(--text-sm); color: var(--color-ink-2); }
+.gb-delete { margin-left: auto; font-size: var(--text-sm); color: var(--color-ink-2); }
+.gb-delete:hover { color: var(--color-error); }
+.gb-delete:active { color: var(--color-ink); }
+.gb-delete:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.gb-empty { margin: 0; }
+.gb-more:not(:empty) { margin-top: var(--space-md); text-align: center; }
+
+@media (max-width: 880px) {
+  .gb-entry { grid-template-columns: 40px minmax(0, 1fr); gap: var(--space-xs); }
+  .gb-head .avatar--head { width: 40px; height: 46px; }
+  .gb-form__row { flex-wrap: wrap; }
+  .gb-form__row .btn { flex: 1 1 auto; }
+}

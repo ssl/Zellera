@@ -1,0 +1,22 @@
+{
+  "name": "guestbook",
+  "version": "1.0.0",
+  "description": "Short messages players leave on each other's profile.",
+  "server": "server.mjs",
+  "needs": {
+    "tables": ["entries"],
+    "lookups": ["players", "blocks", "filter"],
+    "permissions": ["moderation.tickets"]
+  },
+  "theme": {
+    "slots": {
+      "profile": { "styles": ["css/guestbook.css"], "scripts": ["js/profile.js"] }
+    },
+    "pages": {
+      "hk/ext/guestbook": {
+        "path": "/housekeeping/ext/guestbook", "perm": "moderation.tickets", "title": "Guestbook", "nav": "Guestbook",
+        "scripts": ["js/hk.js"]
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+package zel.wired.effect.bot
+
+import zel.game.players.figure.LookValidation
+import zel.protocol.generated.RoomUnitChangeOut
+import zel.protocol.generated.RoomUnitChangeOutCodec
+import zel.room.tick.Audience
+import zel.room.tick.Lane
+import zel.room.unit.bot.RoomBots
+import zel.wired.box.BoxSettings
+import zel.wired.box.EffectBox
+import zel.wired.firing.Firing
+import java.util.Locale
+
+class BotClothes(
+    override val furniId: Int,
+    override val settings: BoxSettings,
+    private val bots: RoomBots,
+    private val normalized: (String) -> String = LookValidation::normalizeFigure,
+) : EffectBox {
+    override val negative = false
+    override val needsUser = false
+
+    override fun run(firing: Firing) {
+        val saved = BotChoice.rest(settings.text)
+        if (!valid(saved)) return
+        val figure = normalized(saved)
+        BotChoice.bots(firing, this, bots).forEach { (bot, unit) ->
+            bot.bot.figure = figure
+            bots.changed(firing.scope, bot)
+            firing.scope.out.send(
+                Lane.Now,
+                Audience.Room,
+                RoomUnitChangeOutCodec,
+                RoomUnitChangeOut(
+                    unit.index,
+                    figure,
+                    bot.bot.gender.name
+                        .lowercase(Locale.ROOT),
+                    bot.bot.motto,
+                    0,
+                    "",
+                    emptyList(),
+                    0,
+                ),
+            )
+        }
+    }
+
+    companion object {
+        private val FIGURE = Regex("""[a-z]{2}-\d+(-\d+)*(\.[a-z]{2}-\d+(-\d+)*)*""")
+
+        fun valid(figure: String): Boolean = FIGURE.matches(figure)
+    }
+}

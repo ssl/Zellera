@@ -81,5 +81,5 @@ Ready-made examples: [proxy-nginx.conf](proxy-nginx.conf) and [proxy-traefik.yml
 ## Your own additions to Caddy
 
 `config/Caddyfile.local`, when it is there, is imported at the end of the Caddy configuration: other sites and
-snippets go there. It is not in git, so an upgrade leaves it alone. The game's own sites are
+snippets go there. It is yours, so an upgrade leaves it alone. The game's own sites are
 `config/caddy/<mode>.caddy`.

@@ -55,7 +55,8 @@ A setting's default can be changed with a row `extensions.<name>.<key>` in the `
 
 ## Writing one
 
-Build against the server's jar (`server/build/libs/zellera-server-<version>-all.jar`, `./gradlew shadowJar`) as a
+Build against the server's jar (the bundle's `zellera-server-<version>-all.jar`, or
+`server/build/libs/zellera-server-<version>-all.jar` after `./gradlew shadowJar` in a source checkout) as a
 compile-only dependency; the server brings Kotlin and its libraries at run time.
 
 ```kotlin

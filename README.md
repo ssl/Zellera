@@ -23,14 +23,17 @@ what everything in it is called. `./zel start` runs it all on your own computer,
 
 | Part | From | What it is | Where it goes |
 |---|---|---|---|
-| **Server** | this repository | the room engine and every game system (Kotlin, JDK 25) | built by `./zel start` |
-| **Web** | this repository | the site, housekeeping and the public Web API, with their themes and extensions (Node.js 22) | started by `./zel start` |
-| **Database** | this repository | the schema; the server makes and upgrades the tables itself | `.data/` |
+| **Server** | the release bundle | the room engine and every game system, built into one jar that runs on Java 25 | the bundle's top folder; a source checkout builds it ([Build from source](#build-from-source)) |
+| **Web** | the release bundle | the site, housekeeping and the public Web API, with their themes and extensions (Node.js 22) | `web/`, started by `./zel start` |
+| **Database** | the release bundle | the schema; the server makes and upgrades the tables itself | `.data/` |
+| **Your own** | you | your settings, game rules, themes, web extensions and game extensions | `config/*.local.*` and `custom/` |
 | **Client** | you bring | the game client, a built folder that is ready to serve | `client/` (`ZEL_CLIENT_DIR`) |
 | **Content pack** | you bring | the world: furni, rooms, the navigator, the catalogue, currencies, achievements, badges and every text | `./zel import <pack.zip>` |
 | **Images** | you bring, with the pack | the pictures the pack names | `.data/assets/` (`ZEL_ASSET_DIR`) or a host (`ZEL_ASSET_URL`) |
 
-The server has no furni, rooms, texts or names built in, so it does not start without a pack.
+The server has no furni, rooms, texts or names built in, so it does not start without a pack. A pack is imported into
+the database and `.data/assets/` rather than unpacked next to the game, so there is no content folder; `client/` is
+the folder you put the client in.
 
 ## Content packs
 
@@ -123,17 +126,26 @@ The pack format is versioned; `./zel import` refuses a pack it cannot read and s
 
 ## Requirements
 
-JDK 25, Node.js 22 or newer and MariaDB 11 or newer. Caddy 2 unless you bring your own proxy; `cloudflared` only for a
-Cloudflare Tunnel. `./zel doctor` checks this computer against your configuration.
+Java 25 (a runtime is enough), Node.js 22 or newer and MariaDB 11 or newer. Caddy 2 unless you bring your own proxy;
+`cloudflared` only for a Cloudflare Tunnel; `unzip` for upgrades. `./zel doctor` checks this computer against your
+configuration.
 
 ## Start
 
+Download `zellera-<version>.zip` from the [releases](https://github.com/ssl/zellera/releases), then:
+
 ```
+unzip zellera-<version>.zip
+cd zellera-<version>
+./zel doctor              # what this computer still needs
 ./zel import <pack.zip>   # once, before the first start
 ./zel start               # on this computer; --public adds a quick tunnel to the internet
 ./zel status
 ./zel stop
 ```
+
+The server comes built, so nothing is compiled. Your settings go in `config/zellera.local.env`, your themes and
+extensions in `custom/`; `./zel upgrade` replaces the bundle's own files and leaves yours alone.
 
 `./zel help` lists the rest: `logs`, `backup`, `restore`, `upgrade` ([UPGRADING.md](docs/UPGRADING.md)) and
 `install-service`, which runs the game under systemd on Linux. Everything the game makes stays in `.data/`.
@@ -160,13 +172,25 @@ Three ways to add your own without changing the code here:
 | **Web extension** | a feature of the site that needs its own routes and tables | `web/extensions/<name>/`, yours in `custom/extensions/<name>/` | `ZEL_WEB_EXTENSIONS` | [EXTENSIONS.md](web/docs/EXTENSIONS.md) |
 | **Game extension** | a jar that runs inside the game server's rooms: it hears what happens in a room, acts every tick and can take over walking | `custom/game-extensions/<name>/` | `ZEL_GAME_EXTENSIONS` | [GAME-EXTENSIONS.md](docs/GAME-EXTENSIONS.md) |
 
-Git ignores `custom/`, so an upgrade leaves your own themes and extensions alone.
+An upgrade never touches `custom/`, so your own themes and extensions stay as they are.
 
-## Build
+## Build from source
+
+For working on the engine itself. A git checkout runs like the bundle, but `./zel start` first builds the server from
+`server/` (a JDK 25; a few minutes the first time) and installs the web's packages with npm:
 
 ```
-cd server && ./gradlew build
+git clone https://github.com/ssl/zellera.git
+cd zellera
+./zel doctor
+./zel import <pack.zip>
+./zel start
 ```
+
+`cd server && ./gradlew build` builds and checks the server on its own. A checkout that sits exactly on a release tag
+can take that release's jar instead of building (`ZEL_BUILD` in `config/zellera.env`), and `./zel upgrade` moves a
+checkout to the next tag ([UPGRADING.md](docs/UPGRADING.md)). `lib/bundle.sh` makes the release bundle from a
+checkout, after `./gradlew shadowJar`.
 
 ## Server sizing
 

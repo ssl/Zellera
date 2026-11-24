@@ -11,7 +11,7 @@ absolute path; unset means `default`. Files and route entries your theme lacks c
 replace one stylesheet or every page. Restart the web after changing the setting; theme files are read on every
 request.
 
-Keep your own theme in `custom/themes/<name>/` (next to `zel`): that folder is not in git, so an upgrade never
+Keep your own theme in `custom/themes/<name>/` (next to `zel`): that folder is yours, so an upgrade never
 touches it, and a theme there wins over one of the same name in `web/themes/`.
 
 ## Pages: one layout and a route table

@@ -14,7 +14,7 @@ convenience, not a boundary against a hostile one.
 `ZEL_WEB_EXTENSIONS` in `config/zellera.env` (or `zellera.local.env`): a comma list of folder names under
 `custom/extensions/` or `web/extensions/`, or absolute folders of your own (the folder's last part is the extension's
 name). Unset means `guestbook`; empty means none. Keep your own in `custom/extensions/<name>/` (next to `zel`):
-that folder is not in git, so an upgrade never touches it, and an extension there wins over one of the same name in
+that folder is yours, so an upgrade never touches it, and an extension there wins over one of the same name in
 `web/extensions/`. Only this list decides what is loaded: the settings row can turn a loaded extension off, never
 load another one. `./zel start` checks the list, writes it into the settings row `site.extensions` and
 grants the web's database account its rights on the extensions' tables; the web loads them at start. Restart after a

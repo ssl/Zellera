@@ -21,11 +21,14 @@ what everything in it is called. `./zel start` runs it all on your own computer,
 
 ## What is in it and what you bring
 
-| | |
-|---|---|
-| **This repository** | the server (Kotlin, JDK 25), the web (Node.js 22), its database schema, themes and extensions |
-| **You bring: a client** | the game client, in `client/` (`ZEL_CLIENT_DIR`) |
-| **You bring: a content pack** | furni, catalogue, rooms, texts and the rest of the world, imported with `./zel import <pack.zip>`; its images go in `.data/assets/` (`ZEL_ASSET_DIR`) or on a host (`ZEL_ASSET_URL`) |
+| Part | From | What it is | Where it goes |
+|---|---|---|---|
+| **Server** | this repository | the room engine and every game system (Kotlin, JDK 25) | built by `./zel start` |
+| **Web** | this repository | the site, housekeeping and the public Web API, with their themes and extensions (Node.js 22) | started by `./zel start` |
+| **Database** | this repository | the schema; the server makes and upgrades the tables itself | `.data/` |
+| **Client** | you bring | the game client, a built folder that is ready to serve | `client/` (`ZEL_CLIENT_DIR`) |
+| **Content pack** | you bring | the world: furni, rooms, the navigator, the catalogue, currencies, achievements, badges and every text | `./zel import <pack.zip>` |
+| **Images** | you bring, with the pack | the pictures the pack names | `.data/assets/` (`ZEL_ASSET_DIR`) or a host (`ZEL_ASSET_URL`) |
 
 The server has no furni, rooms, texts or names built in, so it does not start without a pack.
 

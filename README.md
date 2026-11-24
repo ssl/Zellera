@@ -74,6 +74,8 @@ The pack format is versioned; `./zel import` refuses a pack it cannot read and s
 - **Snowball**: a team game with its own lobby and arenas, free or daily games and tokens.
 - Room games: **Tile Claim**, **Freeze**, **football** and **tag** fields, with clocks, team gates and scoreboards, all
   usable from wired.
+- **Game extensions**: a jar that runs inside the rooms, for game modes that need more than wired, such as vehicles,
+  role-play rules or a whole game of your own ([GAME-EXTENSIONS.md](docs/GAME-EXTENSIONS.md)).
 
 ### Players and social
 
@@ -105,8 +107,8 @@ The pack format is versioned; `./zel import` refuses a pack it cannot read and s
   theme, keep the game.
 - Housekeeping API ([HK-API.md](web/docs/HK-API.md)) and a **public Web API** for other sites, documented on
   `/api/public/api-docs/`.
-- Server **extensions** in `web/extensions/<name>/` ([EXTENSIONS.md](web/docs/EXTENSIONS.md)), with a guestbook as
-  example.
+- **Web extensions** in `web/extensions/<name>/` ([EXTENSIONS.md](web/docs/EXTENSIONS.md)): a site feature with its
+  own routes and tables, with a guestbook as example.
 - Avatar imager, asset mirror (fetches missing images from a host once and keeps them) and a client profile.
 - Signed `HttpOnly` session cookies and rate limits; production mode refuses dev logins.
 
@@ -150,10 +152,15 @@ traffic from someone reading the websocket in a browser.
 
 ## Themes and extensions
 
-The site is a theme in `web/themes/<name>/` on top of the site and housekeeping APIs
-([THEMES.md](web/docs/THEMES.md), [SITE-API.md](web/docs/SITE-API.md), [HK-API.md](web/docs/HK-API.md)). Extra server
-features are extensions in `web/extensions/<name>/` ([EXTENSIONS.md](web/docs/EXTENSIONS.md)). Keep your own in
-`custom/themes/<name>/` and `custom/extensions/<name>/`: git ignores that folder, so an upgrade leaves it alone.
+Three ways to add your own without changing the code here:
+
+| Kind | What it is | Where it lives | Turned on by | Guide |
+|---|---|---|---|---|
+| **Theme** | the look of the site: static files on top of the site and housekeeping APIs | `web/themes/<name>/`, yours in `custom/themes/<name>/` | `ZEL_WEB_THEME` | [THEMES.md](web/docs/THEMES.md), [SITE-API.md](web/docs/SITE-API.md), [HK-API.md](web/docs/HK-API.md) |
+| **Web extension** | a feature of the site that needs its own routes and tables | `web/extensions/<name>/`, yours in `custom/extensions/<name>/` | `ZEL_WEB_EXTENSIONS` | [EXTENSIONS.md](web/docs/EXTENSIONS.md) |
+| **Game extension** | a jar that runs inside the game server's rooms: it hears what happens in a room, acts every tick and can take over walking | `custom/game-extensions/<name>/` | `ZEL_GAME_EXTENSIONS` | [GAME-EXTENSIONS.md](docs/GAME-EXTENSIONS.md) |
+
+Git ignores `custom/`, so an upgrade leaves your own themes and extensions alone.
 
 ## Build
 

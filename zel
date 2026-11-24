@@ -12,7 +12,8 @@
 #   ./zel restore <file>       put a backup back
 #   ./zel doctor               check this computer against what the configuration needs
 #   ./zel trust                how to make this computer's browsers trust the local address
-#   ./zel upgrade [--to vX.Y.Z] [--yes]   move to a released version (docs/UPGRADING.md)
+#   ./zel upgrade [--to vX.Y.Z | <zellera-x.y.z.zip>] [--yes] [--force]
+#                              move to a released version (docs/UPGRADING.md)
 #   ./zel install-service      Linux: run under systemd, so the game survives a crash and a reboot
 #   ./zel uninstall-service
 #   ./zel version
@@ -205,12 +206,17 @@ cmd_restore() {
 }
 
 cmd_upgrade() {
-  local target="" yes=""
+  local target="" yes="" zip="" force=""
   while [ $# -gt 0 ]; do
     case $1 in
       --to) target=${2:?--to needs a version, like v1.2.0}; shift ;;
       --yes) yes=1 ;;
-      *) fail "upgrade takes --to <version> and --yes" ;;
+      --force) force=1 ;;
+      -*) fail "upgrade takes --to <version> or a bundle zip, --yes and --force" ;;
+      *)
+        [ -z "$zip" ] || fail "upgrade takes one bundle zip"
+        [ -f "$1" ] || fail "no such bundle: $1"
+        zip=$(cd "$(dirname "$1")" && pwd)/$(basename "$1") ;;
     esac
     shift
   done
@@ -218,7 +224,10 @@ cmd_upgrade() {
   resolve_mode
   lock_take
   prepare_data
-  upgrade "$target" "$yes"
+  if is_bundle; then upgrade_bundle "$target" "$zip" "$yes" "$force"
+  elif [ -n "$zip$force" ]; then fail "a bundle zip and --force are for a release bundle; this folder is a git checkout (docs/UPGRADING.md)"
+  else upgrade "$target" "$yes"
+  fi
 }
 
 main() {

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The console, and under logging/ a file of every error and one of the debug lines; all histories stay under 1 GB. -->
+<configuration>
+    <variable name="DIR" value="logging" />
+    <variable name="FILE_LINE" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{32} [%thread] %msg%n" />
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="zel.core.log.ConsoleLine" />
+        </encoder>
+    </appender>
+
+    <appender name="debug-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${DIR}/debug.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${DIR}/debug.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>32MB</maxFileSize>
+            <maxHistory>5</maxHistory>
+            <totalSizeCap>256MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder><pattern>${FILE_LINE}</pattern></encoder>
+    </appender>
+
+    <appender name="error-file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${DIR}/errors.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${DIR}/errors.%d{yyyy-MM-dd}.%i.gz</fileNamePattern>
+            <maxFileSize>32MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>256MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder><pattern>${FILE_LINE}</pattern></encoder>
+    </appender>
+
+    <!-- Game threads never wait on logging; only errors are never dropped under load. -->
+    <appender name="to-console" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>4096</queueSize>
+        <discardingThreshold>25</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="console" />
+    </appender>
+
+    <appender name="to-debug-file" class="ch.qos.logback.classic.AsyncAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <queueSize>8192</queueSize>
+        <discardingThreshold>25</discardingThreshold>
+        <neverBlock>true</neverBlock>
+        <appender-ref ref="debug-file" />
+    </appender>
+
+    <appender name="to-error-file" class="ch.qos.logback.classic.AsyncAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="error-file" />
+    </appender>
+
+    <logger name="io.netty" level="INFO" />
+    <logger name="com.zaxxer.hikari" level="ERROR" />
+    <logger name="org.mariadb.jdbc" level="WARN" />
+    <logger name="org.mariadb.jdbc.message.server.ErrorPacket" level="ERROR" />
+
+    <root level="INFO">
+        <appender-ref ref="to-console" />
+        <appender-ref ref="to-debug-file" />
+        <appender-ref ref="to-error-file" />
+    </root>
+</configuration>

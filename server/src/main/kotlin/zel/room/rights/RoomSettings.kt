@@ -1,0 +1,30 @@
+package zel.room.rights
+
+data class RoomSettings(
+    val ownerId: Int,
+    val name: String,
+    val description: String,
+    val doorMode: Int,
+    /** As typed in a save request; as stored (sealed) when read back. */
+    val password: String,
+    val maxUsers: Int,
+    val categoryId: Int,
+    val tags: List<String>,
+    val tradeMode: Int,
+    val allowPets: Boolean,
+    val allowPetsEat: Boolean,
+    val allowWalkThrough: Boolean,
+    val hideWalls: Boolean,
+    val wallThickness: Int,
+    val floorThickness: Int,
+    val floodFilter: Int,
+    val leaveOnDoorTile: Boolean,
+    val idleSleep: Boolean,
+    val idleSleepSeconds: Int,
+    val idleKick: Boolean,
+    val idleKickSeconds: Int,
+    val muteAllPets: Boolean,
+    val whoCanMute: Int,
+    val whoCanKick: Int,
+    val whoCanBan: Int,
+)

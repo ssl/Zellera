@@ -1,0 +1,26 @@
+# Operator files and runtime data.
+/client/
+/secrets/
+/.data/
+/config/*.local.*
+/config/Caddyfile.local
+/custom/
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
+
+# Builds, packages and editor files.
+node_modules/
+/server/.gradle/
+/server/.kotlin/
+/server/build/
+/server/bin/
+/server/logging/
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store

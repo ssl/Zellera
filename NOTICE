@@ -1,0 +1,27 @@
+Zellera
+Copyright (C) 2026 the Zellera authors
+Source: https://github.com/ssl/zellera
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General
+Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+details.
+
+You should have received a copy of the GNU Affero General Public License along with this program, in the file
+LICENSE. If not, see <https://www.gnu.org/licenses/>.
+
+If you run a modified version for players over a network, offer them its source (section 13 of the license).
+
+The default site theme includes the Ubuntu fonts, Copyright 2010, 2011 Canonical Ltd., under the Ubuntu Font
+Licence, Version 1.0 (web/themes/default/fonts/UFL.txt).
+
+
+Additional term under section 7(b) of the license
+
+Every version of Zellera, modified or not, keeps the attribution and legal notices that the game's :about window
+shows: the copyright line, the name Zellera, the license, the no-warranty notice and the link to the Zellera
+source. They stay where players can see them in the game. You may add your own credits and a link to your own source
+next to them.

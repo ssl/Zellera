@@ -1,0 +1,88 @@
+package zel.room.chat
+
+import zel.protocol.generated.ExpressionOut
+import zel.protocol.generated.ExpressionOutCodec
+import zel.protocol.generated.PlayerTypingOut
+import zel.protocol.generated.PlayerTypingOutCodec
+import zel.protocol.generated.SpecialSystemChatOut
+import zel.protocol.generated.SpecialSystemChatOutCodec
+import zel.room.RoomScope
+import zel.room.event.PlayerAction
+import zel.room.event.RoomEvent
+import zel.room.tick.Audience
+import zel.room.tick.Lane
+import zel.room.unit.RoomUnit
+import zel.room.unit.UnitStatus
+
+class Gestures(
+    private val dances: Dances,
+    private val active: (RoomScope, RoomUnit) -> Unit,
+    private val showNow: (RoomScope, RoomUnit) -> Unit,
+    private val sleep: (RoomScope, RoomUnit) -> Unit = { _, _ -> },
+) {
+    fun dance(
+        scope: RoomScope,
+        unit: RoomUnit,
+        id: Int,
+    ) {
+        if (id !in 0..LAST_DANCE) return
+        active(scope, unit)
+        dances.dance(scope, unit, id)
+        if (id > 0) scope.raise(RoomEvent.Action(unit.index, PlayerAction.DANCE, id.toString()))
+    }
+
+    fun expression(
+        scope: RoomScope,
+        unit: RoomUnit,
+        id: Int,
+    ) {
+        if (id <= 0) return
+        if (id != IDLE) active(scope, unit)
+        if (id == SIXTY_SEVEN) dances.stop(scope, unit)
+        scope.out.send(Lane.Now, Audience.Room, ExpressionOutCodec, ExpressionOut(unit.index, id))
+        if (id == IDLE) sleep(scope, unit)
+        if (id == SIXTY_SEVEN) {
+            val line = SpecialSystemChatOut(unit.index, id)
+            scope.out.send(Lane.Now, Audience.Room, SpecialSystemChatOutCodec, line)
+        }
+        ACTIONS[id]?.let { scope.raise(RoomEvent.Action(unit.index, it, "")) }
+    }
+
+    fun sign(
+        scope: RoomScope,
+        unit: RoomUnit,
+        id: Int,
+    ) {
+        if (id < 0) return
+        active(scope, unit)
+        unit.setStatus(UnitStatus.SIGN, id.toString())
+        showNow(scope, unit)
+        unit.statuses.remove(UnitStatus.SIGN)
+        scope.raise(RoomEvent.Action(unit.index, PlayerAction.SIGN, id.toString()))
+    }
+
+    fun typing(
+        scope: RoomScope,
+        unit: RoomUnit,
+        typing: Boolean,
+    ) {
+        val message = PlayerTypingOut(unit.index, if (typing) 1 else 0)
+        scope.out.send(Lane.Now, Audience.Room, PlayerTypingOutCodec, message)
+    }
+
+    private companion object {
+        const val LAST_DANCE = 4
+        const val IDLE = 5
+        const val SIXTY_SEVEN = 67
+
+        val ACTIONS =
+            mapOf(
+                1 to PlayerAction.WAVE,
+                2 to PlayerAction.BLOW_KISS,
+                3 to PlayerAction.LAUGH,
+                7 to PlayerAction.THUMBS_UP,
+                IDLE to PlayerAction.IDLE,
+                SIXTY_SEVEN to PlayerAction.SIXTY_SEVEN,
+            )
+    }
+}

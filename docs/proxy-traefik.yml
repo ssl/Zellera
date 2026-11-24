@@ -1,0 +1,37 @@
+# Traefik (file provider) in front of a game that runs with ZEL_PROXY=none. Replace game.example.org, the entry
+# point and certificate resolver names of your own Traefik and, when you changed them, the two ports (ZEL_WS_PORT,
+# ZEL_WEB_PORT). Traefik drops an X-Forwarded-For that a player sends and writes its own, unless you told the entry
+# point to trust forwarded headers.
+http:
+  routers:
+    zel-websocket:
+      rule: "Host(`game.example.org`) && PathPrefix(`/websocket`)"
+      entryPoints: [websecure]
+      service: zel-server
+      middlewares: [zel-headers]
+      tls:
+        certResolver: letsencrypt
+    zel-web:
+      rule: "Host(`game.example.org`)"
+      entryPoints: [websecure]
+      service: zel-web
+      middlewares: [zel-headers]
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    zel-server:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:2076"
+    zel-web:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:8760"
+
+  middlewares:
+    zel-headers:
+      headers:
+        stsSeconds: 31536000
+        contentTypeNosniff: true
+        referrerPolicy: strict-origin-when-cross-origin

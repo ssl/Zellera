@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account</title>
+  <link rel="stylesheet" href="/theme/css/play.css">
+  <link rel="stylesheet" href="/theme/css/me.css">
+  <script src="/theme/js/me.js" defer></script>
+</head>
+<body class="account">
+  <main class="card">
+    <p class="card__logo">Zellera</p>
+    <h1>Account</h1>
+    <p class="card__who">Playing as <strong id="who">…</strong></p>
+
+    <form id="password-form" novalidate>
+      <h2>Password</h2>
+      <p class="card__hint" id="password-hint">Set a password to come back to this account from any computer.</p>
+      <label id="current-row" for="current" hidden>Current password
+        <input id="current" name="current" type="password" autocomplete="current-password" maxlength="128">
+      </label>
+      <label for="password">New password
+        <input id="password" name="password" type="password" autocomplete="new-password" maxlength="128">
+      </label>
+      <label for="password2">New password again
+        <input id="password2" name="password2" type="password" autocomplete="new-password" maxlength="128">
+      </label>
+      <p class="card__msg" id="password-msg" role="status"></p>
+      <button type="submit">Save password</button>
+    </form>
+
+    <form id="switch-form" novalidate>
+      <h2>Switch account</h2>
+      <p class="card__hint" id="switch-hint">Log in as someone else.</p>
+      <label for="login">Username
+        <input id="login" name="login" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254">
+      </label>
+      <label for="switch-password">Password
+        <input id="switch-password" name="password" type="password" autocomplete="current-password" maxlength="128">
+      </label>
+      <p class="card__msg" id="switch-msg" role="status"></p>
+      <button type="submit">Switch</button>
+    </form>
+
+    <p class="card__back"><a href="/">Back to the game</a></p>
+  </main>
+  <noscript><p class="card__msg">This page needs JavaScript.</p></noscript>
+</body>
+</html>

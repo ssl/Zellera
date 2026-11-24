@@ -1,0 +1,17 @@
+body.account { height: auto; min-height: 100%; }
+.card { max-width: 24rem; margin: 0 auto; padding: 2rem 1rem 3rem; color: #c9ced9; }
+.card__logo { margin: 0 0 1rem; text-align: center; font-size: 1.6rem; font-weight: 700; letter-spacing: -.02em; color: #fff; }
+.card h1 { margin: 0 0 .25rem; font-size: 1.4rem; color: #fff; text-align: center; font-weight: 600; }
+.card h2 { margin: 2rem 0 .5rem; font-size: 1rem; color: #fff; font-weight: 600; }
+.card__who { margin: 0; text-align: center; }
+.card__hint { margin: 0 0 .75rem; color: #8a8f9c; }
+.card label { display: block; margin: .6rem 0; font-size: .85rem; color: #8a8f9c; }
+.card label[hidden] { display: none; }
+.card input { display: block; box-sizing: border-box; width: 100%; margin-top: .25rem; padding: .6rem .7rem; font: inherit; color: #fff; background: #11131a; border: 1px solid #2a2f3d; border-radius: 6px; }
+.card input:focus { outline: 2px solid #6d8cff; outline-offset: 1px; }
+.card button { margin-top: .5rem; padding: .6rem 1.4rem; font: inherit; font-weight: 600; color: #fff; background: #4a6ae0; border: 0; border-radius: 6px; cursor: pointer; }
+.card button:disabled { opacity: .5; cursor: default; }
+.card__msg { min-height: 1.2em; margin: .5rem 0 0; color: #ffb4b4; }
+.card__msg[data-ok] { color: #9be39b; }
+.card__back { margin-top: 2.5rem; text-align: center; }
+.card__back a { color: #8aa2ff; }

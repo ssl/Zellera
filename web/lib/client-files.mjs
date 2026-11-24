@@ -17,7 +17,7 @@ export const readClientManifest = (folder) => {
   const clientDir = normalize(folder);
   const fail = (msg) => { throw new ClientError(`no usable client at ${clientDir} (ZEL_CLIENT_DIR): ${msg}`); };
   const file = safeJoin(clientDir, CLIENT_MANIFEST);
-  if (!file || !existsSync(file)) fail(`it has no ${CLIENT_MANIFEST}; put a built client there`);
+  if (!file || !existsSync(file)) fail(`it has no ${CLIENT_MANIFEST}; import a pack that holds a client, or put a built client there`);
   let m;
   try { m = JSON.parse(readFileSync(file, 'utf8')); } catch (e) { fail(`${CLIENT_MANIFEST} is not JSON (${e.message})`); }
   if (!m || typeof m !== 'object' || Array.isArray(m)) fail(`${CLIENT_MANIFEST} is not an object`);

@@ -42,7 +42,7 @@ These are not in git, so `git checkout` never touches them:
 | `config/game-rules.local.conf` | your game rules, over `config/game-rules.conf`: only the lines you change |
 | `config/Caddyfile.local` | your own additions to Caddy ([PROXY.md](PROXY.md)) |
 | `custom/` | your own themes and extensions |
-| `client/`, `secrets/`, `.data/` | the client, the passwords and keys, the database, backups, logs and files |
+| `client/`, `secrets/`, `.data/` | the client (a pack's import fills it), the passwords and keys, the database, backups, logs and files |
 
 A theme or extension of your own goes in `custom/` and is named by its full path:
 

@@ -7,7 +7,10 @@
 #   ./zel status               each process: pid, port, health and version
 #   ./zel logs [name] [-f]     a log in .data/logs (db, server, web, proxy, tunnel, build, migrate); none: the
 #                              processes' logs
-#   ./zel import <pack.zip>    import a content pack (stops the game, backs up, imports, starts it again)
+#   ./zel import [--no-client | --client-only] <pack.zip>
+#                              import a content pack, and the client it holds, into the client folder
+#                              (stops the game, backs up, imports, starts it again); --no-client leaves the client
+#                              alone, --client-only installs only the client: no content, no backup
 #   ./zel backup               dump the database into .data/backups
 #   ./zel restore <file>       put a backup back
 #   ./zel doctor               check this computer against what the configuration needs
@@ -149,15 +152,36 @@ cmd_logs() {
 }
 
 cmd_import() {
-  local pack=${1:-} was_running="" public=""
-  [ $# = 1 ] || fail "import takes one content pack: ./zel import <pack.zip>"
+  local pack="" was_running="" public="" client_flag=() client_only="" no_client=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --no-client) client_flag=(--no-client); no_client=1 ;;
+      --client-only) client_flag=(--client-only); client_only=1 ;;
+      -*) fail "import takes a content pack, --no-client and --client-only: ./zel import [--no-client | --client-only] <pack.zip>" ;;
+      *) [ -z "$pack" ] || fail "import takes one content pack: ./zel import [--no-client | --client-only] <pack.zip>"; pack=$1 ;;
+    esac
+    shift
+  done
+  [ -n "$pack" ] || fail "import takes one content pack: ./zel import [--no-client | --client-only] <pack.zip>"
   [ -f "$pack" ] || fail "no such pack: $pack"
+  [ -z "$client_only" ] || [ -z "$no_client" ] || fail "--no-client and --client-only exclude each other"
   pack=$(cd "$(dirname "$pack")" && pwd)/$(basename "$pack")
   load_env
   resolve_mode
   public=$PUBLIC_MARK
   lock_take
   prepare_data
+  if [ -n "$client_only" ]; then
+    build_server
+    install_jar
+    step "installing the client from $pack"
+    jar_tool none content import --client-only "$pack" || fail "the client of $pack could not be installed"
+    if process_alive web; then
+      stop_or_fail web
+      start_game "$public"
+    else note "installed; the web reads the client when it starts"; fi
+    return 0
+  fi
   doctor_or_fail
   db_secrets
   if process_alive server || process_alive web; then
@@ -180,7 +204,7 @@ cmd_import() {
     backup_make
   fi
   step "importing $pack"
-  jar_tool owner content import "$pack" || fail "the import of $pack failed"
+  jar_tool owner content import ${client_flag[@]+"${client_flag[@]}"} "$pack" || fail "the import of $pack failed"
   db_grants
   if [ -n "$was_running" ]; then start_game "$public"; else note "imported; ./zel start starts the game"; fi
 }

@@ -60,6 +60,10 @@ export const createAssetMirror = ({
   const notFound = new Map();
   const gate = createGate(maxFetches, maxQueue);
   const headers = { 'cache-control': 'public, max-age=86400', 'access-control-allow-origin': '*', 'x-content-type-options': 'nosniff' };
+  // rev-pathed assets (…/hof_furni/<rev>/…) never change at their URL, so cache them hard: a revisited cell is instant
+  // from disk cache instead of re-downloading a ~1MB picture over the tunnel.
+  const immutableHeaders = { ...headers, 'cache-control': 'public, max-age=31536000, immutable' };
+  const REV_ASSET = /\/hof_furni\/\d+\//;
 
   const knownMissing = (rel) => {
     const until = notFound.get(rel);
@@ -181,11 +185,11 @@ export const createAssetMirror = ({
   const handle = async (req, res, rawRel, ip) => {
     const rel = canonicalAssetPath(typeof rawRel === 'string' ? rawRel.replace(/\/{2,}/g, '/') : rawRel);
     if (!rel) return sendText(res, 404, 'not found');
-    const sent = extname(rel).toLowerCase() === '.xml' ? { ...headers, ...XML_HEADERS } : headers;
+    const sent = extname(rel).toLowerCase() === '.xml' ? { ...headers, ...XML_HEADERS } : (REV_ASSET.test(rel) ? immutableHeaders : headers);
     const own = ownDir && safeJoin(ownDir, rel);
-    if (own && isFile(own)) return sendFile(req, res, own, sent);
+    if (own && isFile(own)) return sendFile(req, res, own, sent, { revalidate: true });
     const target = join(cacheDir, rel);
-    if (isFile(target)) return sendFile(req, res, target, sent);
+    if (isFile(target)) return sendFile(req, res, target, sent, { revalidate: true });
     if (existsSync(target)) return sendText(res, 404, 'not found');
     const fixedSet = furni(rel) || (pageIconFurniId(rel) && furniById?.(pageIconFurniId(rel)));
     if (!knownMissing(rel) && limiter && !isLoopbackIp(ip) && !fixedSet) {
@@ -203,7 +207,7 @@ export const createAssetMirror = ({
       return sendText(res, 503, 'busy, try again soon', 'text/plain; charset=utf-8', { 'retry-after': '5', 'cache-control': 'no-store' });
     }
     if (!file) return sendText(res, 404, 'not found');
-    return sendFile(req, res, file, sent);
+    return sendFile(req, res, file, sent, { revalidate: true });
   };
 
   return { handle, fetchAsset };

@@ -225,14 +225,18 @@ export function createAvatarRenderer({ readRenderLib, readAsset, readFiguredata,
     return dataJob;
   };
 
+  // A library that is not there (yet) is not remembered: the next render asks again, so an avatar is whole as soon as
+  // its files arrive, without a restart.
   const loadLib = (name) => {
     if (!libs.has(name)) {
-      libs.set(name, (async () => {
+      const job = (async () => {
         const buf = await readAsset(`${name}${bundleExtension()}`);
-        if (!buf) return null;
-        const files = bundleFiles(buf);
+        const files = buf && bundleFiles(buf);
         const jsonName = files && [...files.keys()].find((k) => k.endsWith('.json'));
-        if (!jsonName) return null;
+        if (!jsonName) {
+          if (libs.get(name) === job) libs.delete(name);
+          return null;
+        }
         const doc = JSON.parse(files.get(jsonName).toString('utf8'));
         const sheet = doc.spritesheet;
         const png = sheet?.meta?.image && files.get(sheet.meta.image) ? decodePng(files.get(sheet.meta.image)) : null;
@@ -246,7 +250,8 @@ export function createAvatarRenderer({ readRenderLib, readAsset, readFiguredata,
           assets.set(assetName, { offsetX: a.x ?? 0, offsetY: a.y ?? 0, frame: f.frame, trim, sheet: png, flipH: Boolean(a.flipH), shades: SHADES[name] ?? null });
         }
         return assets;
-      })().catch((e) => { libs.delete(name); throw e; }));
+      })().catch((e) => { if (libs.get(name) === job) libs.delete(name); throw e; });
+      libs.set(name, job);
     }
     return libs.get(name);
   };
@@ -418,7 +423,10 @@ export function createAvatarRenderer({ readRenderLib, readAsset, readFiguredata,
       for (const p of set?.parts ?? []) for (const n of data.figuremap.get(`${p.type}:${p.id}`) ?? []) libNames.add(n);
     }
     const assets = new Map();
-    for (const lib of await Promise.all([...libNames].map(loadLib))) for (const [k, v] of lib ?? []) if (!assets.has(k)) assets.set(k, v);
+    const loaded = await Promise.all([...libNames].map(loadLib));
+    // false: a library was missing, so the picture lacks parts and must not be kept
+    const complete = loaded.every((lib) => lib != null);
+    for (const lib of loaded) for (const [k, v] of lib ?? []) if (!assets.has(k)) assets.set(k, v);
 
     const list = [{ type: 'std', param: '' }, ...actions.map((a) => ({ type: a.type, param: a.param ?? '' }))];
     if (gesture) list.push({ type: gesture, param: '' });
@@ -466,7 +474,7 @@ export function createAvatarRenderer({ readRenderLib, readAsset, readFiguredata,
       if (j !== -1) sorted.splice(j + 1, 0, a);
     }
     const headSet = data.geometry.avatarSets.get('head') ?? [];
-    const out = { width: canvas.width, height: canvas.height, rgba: Buffer.alloc(canvas.width * canvas.height * 4), geometryType, regX: canvas.regX };
+    const out = { width: canvas.width, height: canvas.height, rgba: Buffer.alloc(canvas.width * canvas.height * 4), geometryType, regX: canvas.regX, complete };
     for (let i = sorted.length - 1; i >= 0; i--) {
       const id = sorted[i];
       const dir = headSet.includes(id) ? headDir : bodyDir;

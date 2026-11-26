@@ -82,7 +82,7 @@ export const renderAvatarPng = async (renderer, query) => {
     : canvas;
   if (size === 'l') img = double(img);
   for (let i = 0; i < img.rgba.length; i += 4) if (img.rgba[i + 3] === 0) img.rgba.fill(255, i, i + 3);
-  return encodePng(img.width, img.height, img.rgba);
+  return { png: encodePng(img.width, img.height, img.rgba), complete: canvas.complete !== false };
 };
 
 const pictureKey = (version, query) => createHash('sha1').update(`${version}\n${query}`).digest('hex');
@@ -145,12 +145,13 @@ export const createAvatarImager = ({ renderer, limiter, cacheDir = null, diskMax
 
   const draw = (key, query) => {
     if (inflight.has(key)) return inflight.get(key);
-    const job = renderAvatarPng(renderer, query).then((png) => {
-      if (png) {
-        remember(key, png);
-        toDisk(key, png);
+    // a picture with parts still missing is sent but never kept: the next request draws it again
+    const job = renderAvatarPng(renderer, query).then((drawn) => {
+      if (drawn?.complete) {
+        remember(key, drawn.png);
+        toDisk(key, drawn.png);
       }
-      return png;
+      return drawn;
     }).finally(() => inflight.delete(key));
     inflight.set(key, job);
     return job;
@@ -184,14 +185,15 @@ export const createAvatarImager = ({ renderer, limiter, cacheDir = null, diskMax
     }
     const allowed = limiter.hit(`avatarimage:${ip}`, ...MISS_LIMIT);
     if (!allowed.ok) return text(req, res, 429, 'too many new avatars, try again soon', { 'retry-after': String(allowed.retryAfter) });
-    let png;
+    let drawn;
     try {
-      png = await draw(key, n.query);
+      drawn = await draw(key, n.query);
     } catch (e) {
       log(`avatar imager: ${e?.message ?? e}`);
       return text(req, res, 503, 'avatar imager unavailable');
     }
-    if (!png) return text(req, res, 404, 'not found');
-    return ok(png);
+    if (!drawn) return text(req, res, 404, 'not found');
+    if (!drawn.complete) return send(req, res, 200, drawn.png, 'image/png', { 'cache-control': 'no-store', 'access-control-allow-origin': '*' });
+    return ok(drawn.png);
   };
 };

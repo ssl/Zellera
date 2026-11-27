@@ -35,12 +35,12 @@ const overview = async (ctx) => ({ ok: true, keySet: YOUTUBE_KEY_SET, playlists:
 
 const listPage = async (req, res, ctx) => ctx.send.json(res, 200, await overview(ctx));
 
-const rewrite = (ctx, codes) => async () => {
-  await ctx.db.remove(sql`DELETE FROM youtube_playlists WHERE position >= 0`);
+const rewrite = (ctx, codes) => ctx.db.transaction(async (tx) => {
+  await tx.remove(sql`DELETE FROM youtube_playlists WHERE position >= 0`);
   for (const [i, code] of codes.entries()) {
-    await ctx.db.write(sql`INSERT INTO youtube_playlists (position, playlist_code) VALUES (${i}, ${code})`);
+    await tx.write(sql`INSERT INTO youtube_playlists (position, playlist_code) VALUES (${i}, ${code})`);
   }
-};
+});
 
 const reload = async (ctx) => {
   try {
@@ -56,7 +56,7 @@ const change = (how) => async (req, res, ctx) => {
   const next = how(ctx, codes);
   if (typeof next === 'string') return ctx.send.error(res, 400, 'Not saved', next, { field: 'playlist' });
   try {
-    await rewrite(ctx, next.codes)();
+    await rewrite(ctx, next.codes);
   } catch (e) {
     if (e instanceof DbRefused) return ctx.send.error(res, 503, 'Not saved', 'This server can not save changes right now.');
     throw e;

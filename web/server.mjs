@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { pagesHmac, safeEqual } from './cms/auth.mjs';
 import { PROD } from './cms/config.mjs';
 import { productionProblems, readDevSettings } from './lib/production-check.mjs';
-import { query, READ_ONLY, settings } from './cms/db.mjs';
+import { query, transaction, READ_ONLY, settings } from './cms/db.mjs';
 import { gameRules, gameRulesFile, gameRulesLocalFile, ruledVariables } from './lib/game-rules.mjs';
 import { gameName, startGameName } from './cms/game-name.mjs';
 import { displayNames, startDisplayNames } from './cms/display-names.mjs';
@@ -222,7 +222,7 @@ const canSee = async (req, area) => (await access.on(area))
   || Boolean(await Promise.resolve().then(() => cms.currentUser(req)).catch(() => null));
 
 const pages = await createPages({
-  SITE, gameName, displayNames, PROD, query, access, theme, extensions,
+  SITE, gameName, displayNames, PROD, query, transaction, access, theme, extensions,
   readOnly: READ_ONLY,
   onAudit: (row) => console.error(`pages audit (read-only server, not written): ${JSON.stringify(row)}`),
   session: async (req) => {

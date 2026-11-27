@@ -200,6 +200,8 @@ export const createUser = ({ password, mail, ip, mayChangeName = false, ...avata
 
 export const createAvatar = (accountId, avatar) => inTransaction((conn) => insertAvatar(conn, accountId, avatar));
 
+export const transaction = (fn) => inTransaction((conn) => fn((text, params = []) => conn.query(text, params)));
+
 export const activeBan = async (userId, ip) => (await query(
   `SELECT b.reason, b.ends_at AS expires_at, b.player_id = p.id AS own
    FROM players p JOIN player_accounts a ON a.id = p.account_id JOIN bans b ON b.ends_at > UNIX_TIMESTAMP() AND (

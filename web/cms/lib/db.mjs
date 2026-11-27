@@ -49,6 +49,24 @@ export const makeDb = (deps, { canWrite = false, commands = null, inserts = [], 
     if (deps.readOnly) throw new DbRefused('ctx.db.insert: this server runs read-only');
     return deps.query(q.text, q.params);
   },
+  transaction: async (fn) => {
+    if (!canWrite) throw new DbRefused('ctx.db.transaction: only housekeeping POST routes write');
+    if (deps.readOnly) throw new DbRefused('ctx.db.transaction: this server runs read-only');
+    if (typeof deps.transaction !== 'function') throw new DbRefused('ctx.db.transaction: not available on this server');
+    return deps.transaction(async (run) => fn({
+      write: async (q) => {
+        checked(q);
+        if (!WRITE.test(q.text)) throw new DbRefused('ctx.db.write: INSERT or UPDATE only');
+        return run(q.text, q.params);
+      },
+      remove: async (q) => {
+        checked(q);
+        const table = DELETE_FROM.exec(q.text)?.[1];
+        if (!table || !deletes.includes(table)) throw new DbRefused(`ctx.db.remove: this module deletes no rows of ${table ?? 'that table'}`);
+        return run(q.text, q.params);
+      },
+    }));
+  },
   command: async ({ userId, type, payload = {}, createdBy = null } = {}) => {
     if (commands !== 'staff' && commands !== 'self') {
       throw new DbRefused('ctx.db.command: only housekeeping POST routes and public POST routes marked write: true send commands');

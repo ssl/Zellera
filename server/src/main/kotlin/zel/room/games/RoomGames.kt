@@ -32,6 +32,8 @@ class RoomGames(
 
     private val tags = HashMap<TagKind, TagGame>()
 
+    private val fieldsPlaced = HashSet<Int>()
+
     private val shownAtTick = LinkedHashSet<RoomFurni>()
 
     private val atTick = ArrayList<(RoomScope) -> Unit>()
@@ -68,6 +70,8 @@ class RoomGames(
     fun wiredOrNew(): WiredTeams = wired ?: WiredTeams(context, this).also { wired = it }
 
     fun tagOrNew(kind: TagKind): TagGame = tags.getOrPut(kind) { TagGame(context, this, kind) }
+
+    fun firstFieldPlacement(furniId: Int): Boolean = fieldsPlaced.add(furniId)
 
     fun fieldGames(): List<RoomGame> = listOfNotNull(freeze, tileclaim)
 

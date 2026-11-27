@@ -57,7 +57,11 @@ class TagField(
     override fun onPlaced(
         scope: RoomScope,
         furni: RoomFurni,
-    ) = part.context.hooks.progress(furni.ownerId, event(GameEvents.GAME_TAG_PLACED), 1)
+    ) {
+        if (part.of(scope.room).firstFieldPlacement(furni.id)) {
+            part.context.hooks.progress(furni.ownerId, event(GameEvents.GAME_TAG_PLACED), 1)
+        }
+    }
 
     private fun event(name: String): String = GameEvents.of(name, kind.detail)
 }

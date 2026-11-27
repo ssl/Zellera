@@ -11,16 +11,16 @@ private const val SAVE_SQL =
     "UPDATE player_stats s INNER JOIN player_preferences pr ON pr.player_id = s.player_id " +
         "INNER JOIN player_standing st ON st.player_id = s.player_id " +
         "SET s.achievement_score = GREATEST(s.achievement_score, ?), s.respect_received = ?, " +
-        "s.respect_given = ?, s.daily_respect_left = ?, pr.block_following = ?, pr.block_friend_requests = ?, " +
+        "s.respect_given = ?, s.daily_respect_left = ?, " +
         "s.online_seconds = s.online_seconds + ?, s.favourite_guild_id = ?, s.daily_pet_respect_left = ?, " +
         "s.login_streak = ?, s.rented_space_furni_id = ?, s.rented_space_ends_at = ?, pr.volume_system = ?, " +
-        "pr.volume_furni = ?, pr.volume_music = ?, pr.block_room_invites = ?, pr.old_chat = ?, " +
+        "pr.volume_furni = ?, pr.volume_music = ?, pr.old_chat = ?, " +
         "pr.block_camera_follow = ?, pr.chat_color = ?, s.hall_of_fame_points = ?, pr.ignore_bots = ?, " +
         "pr.ignore_pets = ?, st.welcome_gift_taken = ?, st.muted_until = ?, st.may_change_name = ?, " +
         "st.can_trade = ?, " +
         "s.forum_post_count = ?, pr.ui_flags = ?, pr.saved_searches_seeded = ?, st.max_friends = ?, " +
         "st.max_rooms = ?, s.last_club_payday_at = ?, s.club_gifts_claimed = ?, s.build_pass_bonus_furni = ?, " +
-        "s.marketplace_tokens = ?, s.new_additions_seen = ?, pr.hide_online = ? WHERE s.player_id = ?"
+        "s.marketplace_tokens = ?, s.new_additions_seen = ? WHERE s.player_id = ?"
 
 private const val SAVE_OFFER_PURCHASE =
     "UPDATE player_target_offers SET state = ?, bought = ?, last_bought_at = ? WHERE player_id = ? AND target_offer_id = ?"
@@ -62,8 +62,6 @@ internal class PlayerStatsStore(
             tally.respectsReceived,
             tally.respectsGiven,
             tally.respectsLeft,
-            settings.noFollowing,
-            settings.noFriendRequests,
             onlineSeconds,
             noneAsNull(stats.favouriteGuild),
             tally.petRespectsLeft,
@@ -73,7 +71,6 @@ internal class PlayerStatsStore(
             settings.volumes.system,
             settings.volumes.furni,
             settings.volumes.trax,
-            settings.noRoomInvites,
             settings.classicChat,
             settings.noCameraFollow,
             settings.bubble.type,
@@ -94,7 +91,6 @@ internal class PlayerStatsStore(
             club.buildPassBonusFurni,
             tally.marketplaceTokens,
             tally.newAdditionsSeen,
-            settings.appearOffline,
             playerId,
         )
     }

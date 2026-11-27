@@ -13,6 +13,7 @@ import zel.net.server.GameChannelPipeline
 import zel.net.server.GamePort
 import zel.net.server.WorkerSettings
 import zel.net.server.handlers.AddressSlots
+import zel.net.server.handlers.PreUpgradeCap
 import zel.net.server.proxy.CloudflareEdge
 import zel.net.server.proxy.ProxyTrust
 import zel.protocol.typed.PacketDispatcher
@@ -34,6 +35,7 @@ class NetModule(
         val transport = TransportSettings.read(configuration)
         val packetPool = workers.packetPool()
         val bridgePool = workers.bridgePool()
+        val limits = WireLimits.from(configuration)
         val pipeline =
             GameChannelPipeline(
                 configuration,
@@ -45,8 +47,9 @@ class NetModule(
                 ProxyTrust(configuration, CloudflareEdge.configured(configuration)),
                 transport,
                 loadTls(),
-                WireLimits.from(configuration),
+                limits,
                 slots = AddressSlots(configuration.getInt("network.connections.per_address", DEFAULT_PER_ADDRESS)),
+                pending = PreUpgradeCap(limits.pendingPerProxy),
                 perConnectionBytes = workers.perConnectionBytes,
             )
         return GamePort(

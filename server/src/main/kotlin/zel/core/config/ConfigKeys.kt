@@ -283,6 +283,16 @@ internal object ConfigKeys {
                 "Seconds a new connection has to log in before it closes.",
             )
             int(
+                "upgrade.timeout.seconds",
+                WireLimits.DEFAULT_UPGRADE_TIMEOUT_SECONDS,
+                "Seconds a proxied connection has to upgrade to WebSocket before it closes.",
+            )
+            int(
+                "connections.pending_per_proxy",
+                WireLimits.DEFAULT_PENDING_PER_PROXY,
+                "Most un-upgraded sockets one trusted proxy address holds at a time; 0 is no cap.",
+            )
+            int(
                 "upgrade.max.bytes",
                 WireLimits.DEFAULT_UPGRADE_BYTES,
                 "Largest request that opens a game connection.",

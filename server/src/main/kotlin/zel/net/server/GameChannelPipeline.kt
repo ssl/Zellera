@@ -25,6 +25,8 @@ import zel.net.server.encoders.GameFrameEncoder
 import zel.net.server.handlers.AddressSlots
 import zel.net.server.handlers.HealthAnswer
 import zel.net.server.handlers.LivenessGuard
+import zel.net.server.handlers.PreUpgradeCap
+import zel.net.server.handlers.PreUpgradeGuard
 import zel.net.server.handlers.UpgradeGate
 import zel.net.server.handlers.WriteStallGuard
 import zel.net.server.proxy.ClientAddress
@@ -44,12 +46,14 @@ class GameChannelPipeline(
     private val tls: SslContext?,
     private val limits: WireLimits = WireLimits(),
     private val slots: AddressSlots = AddressSlots(0),
+    private val pending: PreUpgradeCap = PreUpgradeCap(0),
     private val perConnectionBytes: Long = WorkerSettings.defaultPerConnectionBytes(),
 ) : ChannelInitializer<Channel>() {
     enum class Stage(
         val handlerName: String,
     ) {
         TLS("tls"),
+        PRE_UPGRADE("pre-upgrade"),
         HEALTH("health"),
         UPGRADE_GATE("upgrade-gate"),
         BRIDGE_INTAKE("bridge-intake"),
@@ -75,6 +79,10 @@ class GameChannelPipeline(
         tls?.let { pipeline.addLast(Stage.TLS.handlerName, it.newHandler(channel.alloc())) }
         pipeline.addLast(HttpServerCodec())
         pipeline.addLast(RequestAggregator(limits.upgradeBytes, limits.bridgeBytes))
+        pipeline.addLast(
+            Stage.PRE_UPGRADE.handlerName,
+            PreUpgradeGuard(trust, pending, limits.upgradeTimeoutSeconds),
+        )
         pipeline.addLast(Stage.HEALTH.handlerName, HealthAnswer())
         pipeline.addLast(Stage.UPGRADE_GATE.handlerName, UpgradeGate(configuration, trust, slots))
         pipeline.addLast(Stage.BRIDGE_INTAKE.handlerName, BridgeAdmission(bridge, VariablesBridge.PATH))
@@ -136,6 +144,6 @@ class GameChannelPipeline(
     private companion object {
         const val PATH = "/websocket"
         const val SUBPROTOCOL = "zellera"
-        val HTTP_ONLY = listOf(Stage.HEALTH, Stage.UPGRADE_GATE, Stage.BRIDGE_INTAKE, Stage.BRIDGE)
+        val HTTP_ONLY = listOf(Stage.PRE_UPGRADE, Stage.HEALTH, Stage.UPGRADE_GATE, Stage.BRIDGE_INTAKE, Stage.BRIDGE)
     }
 }

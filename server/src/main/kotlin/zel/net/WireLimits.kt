@@ -19,6 +19,8 @@ data class WireLimits(
     val pingGapSeconds: Int = DEFAULT_PING_GAP_SECONDS,
     val pingTimeoutSeconds: Int = DEFAULT_PING_TIMEOUT_SECONDS,
     val loginSeconds: Int = DEFAULT_LOGIN_SECONDS,
+    val upgradeTimeoutSeconds: Int = DEFAULT_UPGRADE_TIMEOUT_SECONDS,
+    val pendingPerProxy: Int = DEFAULT_PENDING_PER_PROXY,
     val rateWindowMillis: Long = 1_000,
     val perMessagePerWindow: Int = rules.limits.messagesPerKindPerSecond,
     val totalPerWindow: Int = rules.limits.messagesPerSecond,
@@ -29,6 +31,8 @@ data class WireLimits(
         const val DEFAULT_PING_GAP_SECONDS = 60
         const val DEFAULT_PING_TIMEOUT_SECONDS = 120
         const val DEFAULT_LOGIN_SECONDS = 120
+        const val DEFAULT_UPGRADE_TIMEOUT_SECONDS = 10
+        const val DEFAULT_PENDING_PER_PROXY = 256
         const val DEFAULT_UPGRADE_BYTES = 16 * 1024
         const val DEFAULT_BRIDGE_BYTES = 256 * 1024
 
@@ -49,6 +53,11 @@ data class WireLimits(
                 pingGapSeconds = positive("ping.gap.seconds", DEFAULT_PING_GAP_SECONDS),
                 pingTimeoutSeconds = positive("ping.timeout.seconds", DEFAULT_PING_TIMEOUT_SECONDS),
                 loginSeconds = positive("login.timeout.seconds", DEFAULT_LOGIN_SECONDS),
+                upgradeTimeoutSeconds = positive("upgrade.timeout.seconds", DEFAULT_UPGRADE_TIMEOUT_SECONDS),
+                pendingPerProxy =
+                    configuration
+                        .getInt("network.connections.pending_per_proxy", DEFAULT_PENDING_PER_PROXY)
+                        .takeIf { it >= 0 } ?: DEFAULT_PENDING_PER_PROXY,
                 upgradeBytes = positive("upgrade.max.bytes", DEFAULT_UPGRADE_BYTES),
                 bridgeBytes = positive("bridge.request.max.bytes", DEFAULT_BRIDGE_BYTES),
             )

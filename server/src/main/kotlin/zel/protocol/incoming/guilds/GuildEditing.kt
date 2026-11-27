@@ -39,8 +39,12 @@ internal class GuildEditing(
         val guild = caller.managedGroup(guildId) ?: return
         val badge = GuildBadgeCode.fromEditor(parts) ?: return
         if (guild.badge.equals(badge, ignoreCase = true)) return
+        val previous = guild.badge
         guild.show(guild.face.copy(badge = badge))
-        if (services.config.getBoolean("groups.badges.are_drawn")) services.badgeImager().generate(guild)
+        if (services.config.getBoolean("groups.badges.are_drawn")) {
+            services.badgeImager().generate(guild)
+            services.badgeImager().deleteBadge(previous, guild.id)
+        }
         refreshRoom(guild)
         refreshCards(guild)
         services.live().groupLookChanged(guild.roomId, guild.id)
@@ -81,7 +85,9 @@ internal class GuildEditing(
         guildId: Int,
     ) {
         val guild = caller.managedGroup(guildId) ?: return
+        val badge = guild.badge
         guilds.delete(guild).forEach { messages.broadcastFavourite(it, null) }
+        if (services.config.getBoolean("groups.badges.are_drawn")) services.badgeImager().deleteBadge(badge, guild.id)
         val live = services.live()
         live.playersIn(guild.roomId).forEach { playerId ->
             services.players.find(playerId)?.client?.let { target ->

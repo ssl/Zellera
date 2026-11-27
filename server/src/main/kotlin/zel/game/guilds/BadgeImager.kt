@@ -142,6 +142,25 @@ class BadgeImager(
         }
     }
 
+    fun deleteBadge(
+        badge: String,
+        keptByGuild: Int,
+    ) {
+        if (usedByAnother(badge, keptByGuild)) return
+        val file = File(outputDir(), "$badge.png")
+        if (file.exists() && !file.delete()) {
+            logger.warn("badge imager: cannot delete {}", file)
+        }
+    }
+
+    private fun usedByAnother(
+        badge: String,
+        exceptGuild: Int,
+    ): Boolean =
+        Sql(database.dataSource)
+            .select("SELECT 1 FROM guilds WHERE badge_code = ? AND id <> ? LIMIT 1", badge, exceptGuild)
+            .first { true } != null
+
     /** The layers of one badge part, or null when the part or one of its images is missing. */
     private fun layersOf(code: GuildBadgeCode.Part): List<Layer>? {
         val part =

@@ -87,6 +87,32 @@ class RoomBoxForms(
         held(forms, box)
     }
 
+    /** Every box's saved settings, kept by a reload point; a box never saved is kept fresh. */
+    fun kept(room: Room): Map<Int, StoredBox> {
+        val forms = forms(room)
+        val kept = HashMap<Int, StoredBox>()
+        for (box in room.furni.all()) {
+            val spec = dialogs[Interactions.of(box.definition)] ?: continue
+            settings(room, box)
+            kept[box.id] = forms.boxes[box.id] ?: StoredBox(spec.form.fresh, true)
+        }
+        return kept
+    }
+
+    /** A rollback: each box still in the room takes the settings [kept] held, saved the way a save is; extras stay. */
+    fun restore(
+        room: Room,
+        kept: Map<Int, StoredBox>,
+    ) {
+        val forms = forms(room)
+        kept.forEach { (id, row) ->
+            val box = room.furni[id] ?: return@forEach
+            forms.known[id] = box
+            forms.boxes[id] = row.copy(extras = forms.boxes[id]?.extras)
+            held(forms, box)
+        }
+    }
+
     private fun placed(
         forms: Forms,
         box: RoomFurni,

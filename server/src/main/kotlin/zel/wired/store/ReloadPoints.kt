@@ -8,8 +8,13 @@ import zel.room.furni.StoredValues
 import zel.room.map.Point
 import java.util.concurrent.ConcurrentHashMap
 
-/** A room's reload point; it lasts until the room unloads by itself, the reload's own unload keeps it. */
-class ReloadPoints : RoomPart {
+/**
+ * A room's reload point: furni positions and states and every wired box's settings. It lasts until the room unloads by
+ * itself, the reload's own unload keeps it.
+ */
+class ReloadPoints(
+    private val boxes: () -> RoomBoxForms? = { null },
+) : RoomPart {
     private data class FurniPoint(
         val anchor: Point?,
         val direction: Int,
@@ -18,7 +23,12 @@ class ReloadPoints : RoomPart {
         val wallPosition: String?,
     )
 
-    private val points = ConcurrentHashMap<Int, Map<Int, FurniPoint>>()
+    private class RoomPoint(
+        val furni: Map<Int, FurniPoint>,
+        val boxes: Map<Int, StoredBox>,
+    )
+
+    private val points = ConcurrentHashMap<Int, RoomPoint>()
 
     private val reloading = ConcurrentHashMap.newKeySet<Int>()
 
@@ -32,12 +42,15 @@ class ReloadPoints : RoomPart {
     }
 
     fun keep(room: Room) {
-        points[room.info.id] =
+        val furni =
             room.furni.all().associate { it.id to FurniPoint(it.anchor, it.direction, it.z, it.state, it.wallPosition) }
+        points[room.info.id] = RoomPoint(furni, boxes()?.kept(room).orEmpty())
     }
 
     fun restore(room: Room) {
-        points[room.info.id]?.forEach { (id, point) -> room.furni[id]?.let { restore(room, it, point) } }
+        val point = points[room.info.id] ?: return
+        point.furni.forEach { (id, kept) -> room.furni[id]?.let { restore(room, it, kept) } }
+        boxes()?.restore(room, point.boxes)
     }
 
     private fun restore(

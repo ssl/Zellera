@@ -67,7 +67,7 @@ internal class WiredEngineWiring(
     val poster = RoomPoster { roomId, delay, block -> core.rooms.get()?.post(roomId, delay, block) == true }
     private val boxForms = AtomicReference<RoomBoxForms>()
     val userEffects = AtomicReference<UserEffectState>()
-    val reloadPoints = ReloadPoints()
+    val reloadPoints = ReloadPoints(boxForms::get)
 
     fun roomLog(
         room: Room,

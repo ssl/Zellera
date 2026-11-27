@@ -26,24 +26,32 @@ object SettingsCheck {
         current: RoomSettings,
         staffTags: Set<String>,
         categoryAllowed: Boolean,
+        filter: (String) -> String = { it },
     ): SettingsAnswer {
-        if (!inRanges(wanted) || !categoryAllowed) return SettingsAnswer.Ignored
-        if (wanted.name.isBlank()) return SettingsAnswer.Refused(ERROR_NAME, "")
-        if (wanted.doorMode == PASSWORD_DOOR && wanted.password.length !in 1..DoorSecret.MAX_LENGTH) {
+        val cleaned =
+            wanted.copy(
+                name = filter(wanted.name),
+                description = filter(wanted.description).take(DESCRIPTION_LENGTH),
+                tags = wanted.tags.map { filter(it).take(TAG_LENGTH) },
+            )
+        if (wanted.description.length > DESCRIPTION_LENGTH) return SettingsAnswer.Ignored
+        if (!inRanges(cleaned) || !categoryAllowed) return SettingsAnswer.Ignored
+        if (cleaned.name.isBlank()) return SettingsAnswer.Refused(ERROR_NAME, "")
+        if (cleaned.doorMode == PASSWORD_DOOR && cleaned.password.length !in 1..DoorSecret.MAX_LENGTH) {
             return SettingsAnswer.Refused(ERROR_PASSWORD, "")
         }
-        val tags = wanted.tags.distinct().filter { it.isNotEmpty() }
-        if (tags.any { it.length > TAG_LENGTH || ';' in it }) return SettingsAnswer.Refused(ERROR_TAG, "")
+        if (wanted.tags.any { it.length > TAG_LENGTH || ';' in it }) return SettingsAnswer.Refused(ERROR_TAG, "")
+        val tags = cleaned.tags.distinct().filter { it.isNotEmpty() }
         if (tags.any { it in staffTags }) return SettingsAnswer.Refused(ERROR_STAFF_TAG, STAFF_TAG_TEXT)
         return SettingsAnswer.Saved(
-            wanted.copy(
+            cleaned.copy(
                 ownerId = current.ownerId,
-                name = wanted.name.take(NAME_LENGTH),
-                maxUsers = wanted.maxUsers.coerceAtLeast(MIN_USERS),
-                password = if (wanted.doorMode == PASSWORD_DOOR) wanted.password else current.password,
+                name = cleaned.name.take(NAME_LENGTH),
+                maxUsers = cleaned.maxUsers.coerceAtLeast(MIN_USERS),
+                password = if (cleaned.doorMode == PASSWORD_DOOR) cleaned.password else current.password,
                 tags = tags,
-                idleSleepSeconds = if (wanted.idleSleep) wanted.idleSleepSeconds else 0,
-                idleKickSeconds = if (wanted.idleKick) wanted.idleKickSeconds else 0,
+                idleSleepSeconds = if (cleaned.idleSleep) cleaned.idleSleepSeconds else 0,
+                idleKickSeconds = if (cleaned.idleKick) cleaned.idleKickSeconds else 0,
             ),
         )
     }

@@ -24,6 +24,7 @@ class SettingsEditor(
     private val store: RightsStore,
     private val infos: (Int) -> RoomInfo?,
     private val staffTags: () -> Set<String>,
+    private val filter: (Int, String) -> String = { _, text -> text },
     private val settled: (RoomScope, RoomSettings) -> Unit = { _, _ -> },
 ) {
     fun get(
@@ -51,7 +52,7 @@ class SettingsEditor(
         val tags = if (staff) emptySet() else staffTags()
         val category =
             wanted.categoryId == current.categoryId || store.categoryOpenTo(wanted.categoryId, rank, staff)
-        when (val answer = SettingsCheck.check(wanted, current, tags, category)) {
+        when (val answer = SettingsCheck.check(wanted, current, tags, category) { filter(playerId, it) }) {
             SettingsAnswer.Ignored -> {}
 
             is SettingsAnswer.Refused -> {

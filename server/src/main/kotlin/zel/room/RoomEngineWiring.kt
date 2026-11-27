@@ -85,7 +85,15 @@ class RoomEngineWiring(
                     views,
                     areas.pickups::ejectFurniOf,
                 ),
-                SettingsEditor(registry, core.rightsStore, core.roomStore::load, ::staffTags) { scope, settings ->
+                SettingsEditor(
+                    registry,
+                    core.rightsStore,
+                    core.roomStore::load,
+                    ::staffTags,
+                    { playerId, text ->
+                        services.wordFilter()?.filter(text, services.clients.onlinePlayer(playerId)) ?: text
+                    },
+                ) { scope, settings ->
                     core.units.pets.switched(scope, PetStore.RoomSwitches(settings.allowPets, settings.muteAllPets))
                 },
                 RoomSidePackets(registry, core.entryStore, moderation, core.nowSeconds),

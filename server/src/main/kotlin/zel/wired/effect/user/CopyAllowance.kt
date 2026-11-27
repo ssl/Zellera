@@ -26,6 +26,7 @@ class CopyAllowance {
 
         /** Copies a room holds at once; Remove furni makes room again. */
         const val MAX_LIVE = 200
+        const val MAX_LIVE_KEY = "wired.place_furni.max_copies"
         private const val PER_MILLI = PER_SECOND / 1000.0
     }
 }

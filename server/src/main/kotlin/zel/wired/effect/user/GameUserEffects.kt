@@ -35,6 +35,7 @@ class GameUserEffects(
         val travel: (RoomScope, Int, Int, Int, () -> Unit) -> Boolean,
         val teleportLandMillis: () -> Long = { Teleports.LAND_MILLIS },
         val rewards: RewardLog? = null,
+        val maxCopies: () -> Int = { CopyAllowance.MAX_LIVE },
     )
 
     /** Kept apart from the box so a rebuilt box keeps its count; dropped when the box's room unloads. */
@@ -91,6 +92,8 @@ class GameUserEffects(
     }
 
     override fun teleportLandMillis(): Long = services.teleportLandMillis()
+
+    override fun maxCopies(): Int = services.maxCopies()
 
     override fun travel(
         scope: RoomScope,

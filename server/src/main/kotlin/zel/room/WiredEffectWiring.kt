@@ -13,6 +13,7 @@ import zel.wired.effect.bot.BotEffectBoxes
 import zel.wired.effect.bot.BotEffectRules
 import zel.wired.effect.bot.BotErrands
 import zel.wired.effect.bot.BotTalks
+import zel.wired.effect.user.CopyAllowance
 import zel.wired.effect.user.GameUserEffects
 import zel.wired.effect.user.RewardLog
 import zel.wired.effect.user.Teleports
@@ -51,6 +52,7 @@ internal class WiredEffectWiring(
                         travel,
                         { services.config.getInt(WIRED_TELEPORT_KEY, Teleports.LAND_MILLIS.toInt()).toLong() },
                         RewardLog(services.dataSource),
+                        { services.config.getInt(CopyAllowance.MAX_LIVE_KEY, CopyAllowance.MAX_LIVE) },
                     ),
                 ),
                 core.unitsOnTiles,

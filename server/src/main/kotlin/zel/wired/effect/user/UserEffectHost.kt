@@ -39,6 +39,8 @@ interface UserEffectHost {
 
     fun teleportLandMillis(): Long = Teleports.LAND_MILLIS
 
+    fun maxCopies(): Int = CopyAllowance.MAX_LIVE
+
     /**
      * Moves the player into [roomId] on the server, past any door mode, arriving on [furniId]; false when gone.
      * [afterwards] runs off the room's thread once the entry is answered, whatever the answer.

@@ -181,7 +181,8 @@ class RoomEngineWiring(
                 furni.behaviours + games.behaviours + boxes.behaviours + use.behaviours,
                 furni.state.fallback,
             ).also(behaviours::set)
-        val furniPart = FurniPart(core.furniData, services.definitions, furniBehaviours, core.furniSaves)
+        val furniPart =
+            FurniPart(core.furniData, services.definitions, furniBehaviours, core.furniSaves, core.copies::clearRoom)
         val checkpoints =
             RoomCheckpoints(core.roomSaveMillis) { room ->
                 core.furniSaves.saveDirty(room)

@@ -18,6 +18,7 @@ class FurniPart(
     private val definitions: (Int) -> Item?,
     private val behaviours: FurniBehaviours,
     private val saves: FurniSaves,
+    private val clearCopies: (Int) -> Unit = {},
 ) : RoomPart {
     val tick: TickPart =
         TickPart { scope ->
@@ -27,6 +28,7 @@ class FurniPart(
         }
 
     override fun load(room: Room) {
+        clearCopies(room.info.id)
         data.roomFurni(room.info.id).forEach { row ->
             val definition = definitions(row.definitionId)
             if (definition == null) {

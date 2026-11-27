@@ -14,6 +14,7 @@ import zel.net.WireLimits
 import zel.net.clients.FailedTickets
 import zel.net.server.WorkerSettings
 import zel.room.RoomCheckpoints
+import zel.wired.effect.user.CopyAllowance
 
 internal object ConfigKeys {
     private const val DEFAULT_GAME_PORT = 2096
@@ -429,6 +430,11 @@ internal object ConfigKeys {
                 description =
                     "Wired usage allowance of every room, whatever its owner's level; 0 follows the owner's " +
                         "account level.",
+            )
+            int(
+                CopyAllowance.MAX_LIVE_KEY.removePrefix("wired."),
+                default = CopyAllowance.MAX_LIVE,
+                description = "Place furni copies a room may hold at once; a reload of the room removes them.",
             )
         }
         area("furni") {

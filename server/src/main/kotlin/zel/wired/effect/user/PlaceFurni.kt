@@ -69,7 +69,7 @@ class PlaceFurni(
         val landing = FloorLanding.place(room, source.definition, tile, source.direction)
         if (landing !is FloorLanding.Result.Lands) return
         val kept = state.of(room)
-        if (kept.copies.size >= CopyAllowance.MAX_LIVE || !kept.copyAllowance.take(scope.now())) {
+        if (kept.copies.size >= host.maxCopies() || !kept.copyAllowance.take(scope.now())) {
             failed(scope)
             return
         }

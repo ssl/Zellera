@@ -44,6 +44,8 @@ class CopyStore(
 
     fun ofRoom(roomId: Int): Set<Int> = sql.select(MARKED) { int(roomId) }.rows { it.getInt(1) }.toSet()
 
+    fun clearRoom(roomId: Int) = destroy(sql.select(OF_ROOM) { int(roomId) }.rows { it.getInt(1) })
+
     fun destroy(rowIds: List<Int>) {
         if (rowIds.isEmpty()) return
         val marks = marks(rowIds)
@@ -94,6 +96,7 @@ class CopyStore(
         const val MARKED =
             "SELECT COALESCE(bc.client_id, s.furni_id) FROM wired_spawned_furni s " +
                 "LEFT JOIN build_pass_furni bc ON bc.furni_id = s.furni_id WHERE s.room_id = ?"
+        const val OF_ROOM = "SELECT furni_id FROM wired_spawned_furni WHERE room_id = ?"
         const val IS_MARKED = "SELECT 1 FROM wired_spawned_furni WHERE furni_id = ?"
         const val MARKED_AMONG = "SELECT furni_id FROM wired_spawned_furni WHERE furni_id IN"
         val DELETES =

@@ -526,7 +526,8 @@ class FriendsPackets(
             return
         }
         // A friend who appears offline answers exactly like one who is.
-        val friend = players.find(friendId)?.takeIf { entry.shownOnline }
+        val friend =
+            players.find(friendId)?.takeIf { entry.shownOnline && !it.stats.contacts.userBlocked(player.profile.id) }
         if (friend == null) {
             session.followFailed(FRIEND_OFFLINE)
             return

@@ -293,6 +293,9 @@ class RoomListings(
     fun modelExists(name: String): Boolean =
         single("SELECT 1 FROM room_models WHERE name = ?", listOf(name)) { true } == true
 
+    fun modelClubOnly(name: String): Boolean? =
+        single("SELECT club_only FROM room_models WHERE name = ?", listOf(name)) { it.getBoolean("club_only") }
+
     fun create(
         owner: Player,
         request: NewRoomRow,

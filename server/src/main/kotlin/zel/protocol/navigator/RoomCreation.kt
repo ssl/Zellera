@@ -18,7 +18,7 @@ class RoomCreation(
     ): RoomCreationResult {
         val categoryId = categoryFor(player, request.categoryId)
         val refused =
-            !rooms.modelExists(request.modelName) ||
+            !modelAllowed(player, request.modelName) ||
                 categoryId == null ||
                 !withinBounds(request) ||
                 !textAccepted(player, request)
@@ -55,6 +55,14 @@ class RoomCreation(
     ): Boolean =
         category.minRank <= player.profile.rank.id &&
             (!category.isStaffOnly || player.hasPermission(Privilege.MODERATION_TOOL))
+
+    private fun modelAllowed(
+        player: Player,
+        modelName: String,
+    ): Boolean {
+        val clubOnly = rooms.modelClubOnly(modelName) ?: return false
+        return !clubOnly || player.stats.club.isMember
+    }
 
     private fun withinBounds(request: NewRoom): Boolean =
         request.maxUsers in MIN_CAPACITY..MAX_CAPACITY && request.tradeMode in 0..MAX_TRADING

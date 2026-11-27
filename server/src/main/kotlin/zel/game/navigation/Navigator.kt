@@ -48,11 +48,11 @@ class Navigator(
             "with_rights" to Block { rooms.withRights(it.profile.id) },
             "official-root" to Block { rooms.publicRooms() },
             "popular" to Block { rooms.popular(popularAmount()) },
-            "hot" to Block(ranked = false) { hottest(popularAmount()) },
+            "hot" to Block(ranked = false) { rooms.visibleTo(it, hottest(popularAmount())) },
             "recommended" to Block { rooms.staffPicked() },
             "categories" to Block { rooms.promoted() },
-            "with_friends" to Block { rooms.friendsNow(it, LISTED_ROOMS) },
-            "highest_score" to Block { rooms.topRated(LISTED_ROOMS) },
+            "with_friends" to Block { rooms.visibleTo(it, rooms.friendsNow(it, LISTED_ROOMS)) },
+            "highest_score" to Block { rooms.visibleTo(it, rooms.topRated(LISTED_ROOMS)) },
         )
 
     fun load() {

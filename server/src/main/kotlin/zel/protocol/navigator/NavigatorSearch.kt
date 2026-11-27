@@ -144,7 +144,7 @@ class NavigatorSearch(
     ): List<ListedRoom>? =
         when (view) {
             "popular" -> rooms.popularPadded()
-            "hot" -> navigator.hottest(Int.MAX_VALUE)
+            "hot" -> rooms.visibleTo(player, navigator.hottest(Int.MAX_VALUE))
             else -> navigator.blockRooms(view, player)
         }
 

@@ -380,7 +380,7 @@ class RoomVariables(
 
     private fun sourceStands(source: SharedToken): Boolean =
         sources.getOrPut(SharedKey(source.roomId, source.boxId)) {
-            store.sharedBoxExists(source.roomId, source.boxId)
+            store.sharedBoxInts(source.roomId, source.boxId)?.getOrNull(0) == Availability.SHARED
         }
 
     /** A source box without settings counts as holding a value. */

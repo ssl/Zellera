@@ -209,16 +209,6 @@ class JdbcVariableStore(
         )
     }
 
-    override fun sharedBoxExists(
-        roomId: Int,
-        boxId: Int,
-    ): Boolean =
-        sql
-            .select("SELECT 1 FROM furni WHERE id = ? AND room_id = ?") {
-                int(boxId)
-                int(roomId)
-            }.first { true } ?: false
-
     override fun sharedBoxInts(
         roomId: Int,
         boxId: Int,

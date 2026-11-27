@@ -34,20 +34,13 @@ class MatchSnapshot(
                 val targets = Targets.furni(firing, this)
                 if (targets.isEmpty() && Quantified.noFurniPass(this)) return Quantified.emptyHolds(settings, negative)
                 Quantified.holds(targets, settings) { target ->
-                    paired(firing, target)?.let { looksLike(it, target) } == true
+                    paired(target)?.let { looksLike(it, target) } == true
                 }
             }
         return positive != negative
     }
 
-    private fun paired(
-        firing: Firing,
-        furni: RoomFurni,
-    ): FurniSnapshot? {
-        val room = firing.scope.room
-        val sameType = snapshots.filter { room.furni[it.furniId]?.definition?.id == furni.definition.id }
-        return sameType.firstOrNull { MatchToSnapshot.sameState(furni, it.state) } ?: sameType.firstOrNull()
-    }
+    private fun paired(furni: RoomFurni): FurniSnapshot? = snapshots.firstOrNull { it.furniId == furni.id }
 
     private fun looksLike(
         snapshot: FurniSnapshot,

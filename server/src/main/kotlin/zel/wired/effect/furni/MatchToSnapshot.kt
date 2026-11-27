@@ -44,7 +44,7 @@ class MatchToSnapshot(
 
     override fun run(firing: Firing) {
         Targets.furni(firing, resolved).forEach { furni ->
-            snapshotOf(firing.scope.room, furni)?.let { apply(firing, furni, it) }
+            settings.snapshots.firstOrNull { it.furniId == furni.id }?.let { apply(firing, furni, it) }
         }
     }
 
@@ -57,17 +57,6 @@ class MatchToSnapshot(
 
     private fun picksForTriggering(source: Int): Int =
         if (source == FurniSource.TRIGGERING && settings.picks.isNotEmpty()) FurniSource.PICKED else source
-
-    private fun snapshotOf(
-        room: Room,
-        furni: RoomFurni,
-    ): FurniSnapshot? {
-        val snapshots = settings.snapshots
-        snapshots.firstOrNull { it.furniId == furni.id }?.let { return it }
-        val sameType =
-            snapshots.filter { room.furni[it.furniId]?.definition?.id == furni.definition.id }
-        return sameType.firstOrNull { sameState(furni, it.state) } ?: sameType.firstOrNull()
-    }
 
     private fun apply(
         firing: Firing,

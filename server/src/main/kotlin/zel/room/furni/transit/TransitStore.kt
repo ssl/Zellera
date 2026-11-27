@@ -98,6 +98,8 @@ class TransitStore(
                 "WHERE i.room_id = ? AND d.behaviour IN ('transit.door', 'transit.tile', 'transit.tile.club')"
         const val OTHER_HOPPER =
             "SELECT ${BuildPassRowIds.CLIENT_FACING}, i.room_id FROM furni i ${BuildPassRowIds.JOIN} " +
-                "WHERE i.definition_id = ? AND i.room_id <> ? ORDER BY RAND() LIMIT 1"
+                "JOIN rooms r ON r.id = i.room_id " +
+                "WHERE i.definition_id = ? AND i.room_id <> ? AND r.door_mode = 'open' AND r.player_count > 0 " +
+                "ORDER BY RAND() LIMIT 1"
     }
 }

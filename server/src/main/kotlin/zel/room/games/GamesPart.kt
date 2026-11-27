@@ -45,6 +45,7 @@ class GamesPart(
 
     val listener =
         RoomListener { scope, event ->
+            if (event is RoomEvent.Leaving) scope.room.units[event.unitIndex]?.let(::forget)
             if (event is RoomEvent.Left) left(scope, event.unitIndex)
         }
 
@@ -88,6 +89,11 @@ class GamesPart(
     }
 
     fun holds(unit: RoomUnit): Boolean = unit in held
+
+    private fun forget(unit: RoomUnit) {
+        release(unit)
+        waitingEffects.remove(unit)
+    }
 
     /** A team effect a frozen unit gets waits until its unfreeze; the freeze effect stays on view meanwhile. */
     private val waitingEffects: MutableMap<RoomUnit, Int> = Collections.synchronizedMap(IdentityHashMap())
@@ -219,7 +225,6 @@ class GamesPart(
         unitIndex: Int,
     ) {
         val games = of(scope.room)
-        synchronized(waitingEffects) { waitingEffects.keys.removeIf { it.index == unitIndex } }
         games.steps.remove(unitIndex)
         games.gateLooks.remove(unitIndex)?.let { context.host.wear(scope, it.playerId, it.look) }
         val entry = games.playing.entries.firstOrNull { (id, game) -> game.memberOf(id)?.unit?.index == unitIndex }

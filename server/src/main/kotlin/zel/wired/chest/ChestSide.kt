@@ -106,7 +106,7 @@ class ChestSide(
                 deals,
                 ChestWithdrawals(chests, deals, moves, notices, host) { masks(it.room) },
                 ChestLogs(store, persist),
-                ContractWindow(contracts, rules, masks),
+                ContractWindow(contracts, rules, masks, host::filtered),
                 chests,
             )
         return ChestPackets(registry, desk, masks, levelOf)

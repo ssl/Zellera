@@ -20,6 +20,7 @@ class ContractWindow(
     private val contracts: ChestContracts,
     private val rules: ContractRules,
     private val masks: (Room) -> WiredMasks,
+    private val filtered: (Int, String) -> String = { _, text -> text },
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     fun open(
@@ -61,7 +62,7 @@ class ContractWindow(
         val furni = scope.room.furni[save.id] ?: return
         val kind = ContractKind.fromCode(Interactions.of(furni.definition)) ?: return
         if (!masks(scope.room).mayModify(level)) return scope.refuseChestUse(playerId, NO_WRITE)
-        when (val outcome = rules.check(kind, save)) {
+        when (val outcome = rules.check(kind, save.copy(text = filtered(playerId, save.text)))) {
             ContractOutcome.Broken -> {
                 report(scope, playerId, BROKEN_REPORT)
             }

@@ -28,6 +28,7 @@ import zel.protocol.outgoing.inventory.InventoryPet
 import zel.room.Room
 import zel.room.RoomPart
 import zel.room.RoomScope
+import zel.room.RoomWrites
 import zel.room.chat.ChatKind
 import zel.room.chat.ChatText
 import zel.room.event.RoomEvent
@@ -53,6 +54,7 @@ class RoomPets(
     val walking: Walking,
     val host: UnitHost,
     private val persist: (Runnable) -> Unit,
+    private val writes: RoomWrites,
     private val maxPetsInRoom: () -> Int,
     val tuning: PetTuning = PetTuning(),
 ) : RoomPart {
@@ -128,7 +130,7 @@ class RoomPets(
                 jumps.clear(pet)
                 rowOf(pet.pet, unitOf(scope, pet), scope.room.info.id).also { scope.room.units.remove(pet.unitIndex) }
             }
-        persist(Runnable { store.saveAll(rows) })
+        writes.write(scope.room.info.id, Runnable { store.saveAll(rows) })
     }
 
     /** Read off the lock, so placing and speaking never query them. */
@@ -364,7 +366,7 @@ class RoomPets(
         }
         placed.rider?.let { rider -> scope.room.units[rider]?.let { walking.dismount(scope, it) } }
         remove(scope, placed)
-        persist(Runnable { store.save(rowOf(pet, null, 0)) })
+        writes.write(scope.room.info.id, Runnable { store.save(rowOf(pet, null, 0)) })
         if (receiver == null) return
         receiver.inventory.pets.put(pet)
         val added = inventoryEntry(pet, receiver === player)
@@ -380,7 +382,7 @@ class RoomPets(
             placed.rider?.let { rider -> scope.room.units[rider]?.let { walking.dismount(scope, it) } }
             remove(scope, placed)
             val pet = placed.pet
-            persist(Runnable { store.save(rowOf(pet, null, 0)) })
+            writes.write(scope.room.info.id, Runnable { store.save(rowOf(pet, null, 0)) })
             val owner = host.player(playerId) ?: return@forEach
             owner.inventory.pets.put(pet)
             val added = inventoryEntry(pet, true)
@@ -488,8 +490,9 @@ class RoomPets(
         scope: RoomScope,
         placed: RoomPet,
     ) {
-        val row = rowOf(placed.pet, unitOf(scope, placed), scope.room.info.id)
-        persist(Runnable { store.save(row) })
+        val roomId = scope.room.info.id
+        val row = rowOf(placed.pet, unitOf(scope, placed), roomId)
+        writes.write(roomId, Runnable { store.save(row) })
     }
 
     private fun putDown(

@@ -26,6 +26,7 @@ internal class BotsAndPets(
     private val walking: Walking,
     private val roomLife: RoomLife,
     heads: HeadTurns,
+    writes: RoomWrites,
 ) {
     private val units = services.units
     val bots = RoomBots(BotStore(services.dataSource), walking, units, heads::heard, services.persist)
@@ -35,6 +36,7 @@ internal class BotsAndPets(
             walking,
             units,
             services.persist,
+            writes,
             { rules.roomMaxPets },
             petTuning(rules.pets),
         )

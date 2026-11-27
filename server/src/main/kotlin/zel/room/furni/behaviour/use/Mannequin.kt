@@ -2,6 +2,7 @@ package zel.room.furni.behaviour.use
 
 import zel.game.items.StateFields
 import zel.game.players.Gender
+import zel.game.players.Player
 import zel.game.players.figure.Figure
 import zel.protocol.generated.StuffData
 import zel.room.RoomScope
@@ -13,6 +14,7 @@ import zel.room.furni.place.StuffOnWire
 
 class Mannequin(
     private val look: LookChanges,
+    private val filter: (String, Player) -> String = { text, _ -> text },
 ) : Usable,
     StuffOnWire {
     interface LookChanges {
@@ -78,12 +80,13 @@ class Mannequin(
 
     fun rename(
         scope: RoomScope,
+        player: Player,
         furni: RoomFurni,
         name: String,
     ) {
         if (name.length > MAX_NAME) return
         val outfit = outfitOf(furni) ?: Outfit(UNDRESSED_GENDER, emptyList(), "")
-        StateShow.whole(scope, furni, outfit.copy(name = name).state())
+        StateShow.whole(scope, furni, outfit.copy(name = filter(name, player)).state())
     }
 
     fun dress(

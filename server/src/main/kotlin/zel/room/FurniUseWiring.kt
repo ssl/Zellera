@@ -70,7 +70,10 @@ internal class FurniUseWiring(
             furni.state::later,
             core.nowSeconds,
         ) { behaviourOf(ItemInteraction.DEFAULT) }
-    private val mannequin = Mannequin(MannequinLooks(services.clients::onlinePlayer, port))
+    private val mannequin =
+        Mannequin(MannequinLooks(services.clients::onlinePlayer, port)) { text, player ->
+            services.wordFilter()?.filter(text, player) ?: text
+        }
     val postIts =
         PostIts({ text, player -> services.wordFilter()?.filter(text, player) ?: text }) { roomId, rowId ->
             furni.deleteSpent(roomId, rowId)

@@ -74,9 +74,9 @@ class FurniUsePackets(
                 }
             },
             PacketRoute(SetMannequinNameInCodec) { session, m ->
-                inRoom(session) { scope, _, level ->
+                inRoom(session) { scope, player, level ->
                     val furni = scope.room.furni[m.itemId]?.takeIf { it.behaviour === mannequin }
-                    if (furni != null && level >= DoorCheck.OWNER) mannequin.rename(scope, furni, m.name)
+                    if (furni != null && level >= DoorCheck.OWNER) mannequin.rename(scope, player, furni, m.name)
                 }
             },
             PacketRoute(SetMannequinFigureInCodec) { session, m ->

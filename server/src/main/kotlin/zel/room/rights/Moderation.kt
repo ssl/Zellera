@@ -101,7 +101,8 @@ class Moderation(
         targetId: Int,
         roomId: Int,
     ) {
-        if (player.hasPermission(Privilege.MODERATION_TOOL)) host.player(targetId)?.liftMute()
+        val mayLift = player.hasPermission(Privilege.MODERATION_PLAYER_MUTE) && host.reaches(player, targetId)
+        if (mayLift && targetId != player.profile.id) host.player(targetId)?.liftMute()
         inRoomOf(player) { scope, level ->
             val mayMute = ModerationSetting.mayMute(level, scope.room.info)
             if (scope.room.info.id == roomId && mayMute) unmute(scope, targetId)

@@ -3,6 +3,7 @@ package zel.room
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import zel.game.effects.EffectRoles
+import zel.game.players.Player
 import zel.protocol.navigator.RoomCreation
 import zel.protocol.typed.PacketPackage
 import zel.room.chat.ChatCommands
@@ -534,6 +535,13 @@ class RoomEngineWiring(
             ) = services.persistInOrder(key, job)
 
             override fun nowSeconds(): Int = core.nowSeconds()
+
+            override fun reaches(
+                staff: Player,
+                targetId: Int,
+            ) = staff.services.game.moderationService
+                ?.reach
+                ?.canModerate(staff, targetId) == true
 
             override fun walkOut(
                 scope: RoomScope,

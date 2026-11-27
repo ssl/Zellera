@@ -15,6 +15,11 @@ interface ModerationHost {
 
     fun nowSeconds(): Int
 
+    fun reaches(
+        staff: Player,
+        targetId: Int,
+    ): Boolean = false
+
     fun walkOut(
         scope: RoomScope,
         unit: RoomUnit,

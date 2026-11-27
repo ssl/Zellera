@@ -116,6 +116,7 @@ internal object ContentSections {
                 "guild_members",
                 ImportMode.ROOMS,
                 roomScope = "guild_id IN (SELECT id FROM guilds WHERE room_id IN (%s))",
+                keep = "(guild_id, player_id) NOT IN (SELECT guild_id, player_id FROM %s)",
                 refs = mapOf("guild_id" to GROUP, "player_id" to PLAYER),
             ),
             rooms("rooms/furni-labels", "furni_labels", ITEMS_OF_ROOMS, "furni_id" to FURNI),
@@ -148,7 +149,8 @@ internal object ContentSections {
                 "furni_id" to FURNI,
             ).copy(textRefs = setOf("variable_ids")),
             rooms("rooms/wired-chest-furni", "wired_chest_furni", "chest_id IN ($FURNI_OF_ROOMS)", "chest_id" to FURNI),
-            rooms("rooms/wired-chests", "wired_chests", ITEMS_OF_ROOMS, "furni_id" to FURNI),
+            rooms("rooms/wired-chests", "wired_chests", ITEMS_OF_ROOMS, "furni_id" to FURNI)
+                .copy(live = setOf("furni_id", "credits")),
             rooms(
                 "rooms/wired-contract-terms",
                 "wired_contract_terms",

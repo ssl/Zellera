@@ -153,11 +153,26 @@ internal class ContentImporter(
     ) {
         val scope =
             when (section.mode) {
-                ImportMode.REPLACE -> section.keep?.let { "NOT ($it)" }
-                ImportMode.ROOMS -> section.roomScope?.format(Locale.ROOT, roomIds)
-                ImportMode.MERGE, ImportMode.PLAYERS, ImportMode.SEED -> return
+                ImportMode.REPLACE -> {
+                    section.keep?.let { "NOT ($it)" }
+                }
+
+                ImportMode.ROOMS -> {
+                    if (section.live.isNotEmpty()) return
+                    val base = section.roomScope?.format(Locale.ROOT, roomIds) ?: return
+                    if (section.keep != null) {
+                        if (!declared) return
+                        "$base AND NOT (${section.keep.format(Locale.ROOT, stageName(section.id))})"
+                    } else {
+                        if (!declared && roomIds == "NULL") return
+                        base
+                    }
+                }
+
+                ImportMode.MERGE, ImportMode.PLAYERS, ImportMode.SEED -> {
+                    return
+                }
             }
-        if (section.mode == ImportMode.ROOMS && !declared && roomIds == "NULL") return
         connection.executeAll("DELETE FROM `${section.table}`" + scope?.let { " WHERE $it" }.orEmpty())
     }
 
@@ -174,6 +189,11 @@ internal class ContentImporter(
         if (section.mode == ImportMode.PLAYERS) {
             val updates = columns.filter { it != "id" }.joinToString(",") { "`$it` = VALUES(`$it`)" }
             connection.executeAll("INSERT INTO `${section.table}` ($list) $from ON DUPLICATE KEY UPDATE $updates")
+        } else if (section.live.isNotEmpty()) {
+            val updates = columns.filter { it !in section.live }.joinToString(",") { "`$it` = VALUES(`$it`)" }
+            val upsert = if (updates.isEmpty()) "" else " ON DUPLICATE KEY UPDATE $updates"
+            val insert = if (updates.isEmpty()) "INSERT IGNORE" else "INSERT"
+            connection.executeAll("$insert INTO `${section.table}` ($list) $from$upsert")
         } else if (section.skip != null) {
             connection.executeAll("INSERT INTO `${section.table}` ($list) $from WHERE NOT (${section.skip})")
         } else {

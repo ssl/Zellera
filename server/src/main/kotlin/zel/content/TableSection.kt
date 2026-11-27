@@ -7,6 +7,7 @@ internal data class TableSection(
     val keep: String? = null,
     val skip: String? = null,
     val roomScope: String? = null,
+    val live: Set<String> = emptySet(),
     val retired: Set<String> = emptySet(),
     val owns: IdSpace? = null,
     val refs: Map<String, IdSpace> = emptyMap(),

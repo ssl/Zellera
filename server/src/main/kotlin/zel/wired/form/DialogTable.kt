@@ -23,7 +23,7 @@ internal object DialogTable {
         wf_trg_receive_message 29 f=100:100/200
         wf_trg_recv_signal 17 f=100:100/200/201
         wf_trg_room_initializes 28
-        wf_trg_says_something 0 i=0,0,1
+        wf_trg_says_something 0 i=0,0,1 text=1000
         wf_trg_score_achieved 10 i=100,0
         wf_trg_state_changed 4 f=100:100/200 wall
         wf_trg_stuff_state 20 i=1 f=100:100/200 wall

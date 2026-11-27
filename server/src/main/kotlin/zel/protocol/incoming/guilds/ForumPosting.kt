@@ -28,7 +28,13 @@ internal class ForumPosting(
         val typedMessage = GuildForumInput.normalize(rawMessage)
         val wellFormed =
             GuildForumInput.isMessage(typedMessage) && (!opensThread || GuildForumInput.isSubject(typedSubject))
-        if (!wellFormed || !rate.mayPost(caller.userId, System.currentTimeMillis())) return
+        if (!wellFormed ||
+            !caller.player.stats.standing
+                .mayTalk() ||
+            !rate.mayPost(caller.userId, System.currentTimeMillis())
+        ) {
+            return
+        }
         val guild = guilds.byId(guildId) ?: return
         val message = services.wordFilter.filter(typedMessage, caller.player)
         if (opensThread) {

@@ -73,7 +73,7 @@ internal class PlayerStatsLoader(
     }
 
     private fun Connection.readLists(stats: PlayerStats) {
-        each("SELECT guild_id FROM guild_members WHERE player_id = ? AND level < 3 LIMIT 100") {
+        each("SELECT guild_id FROM guild_members WHERE player_id = ? AND level < 3") {
             stats.guildIds.add(it.getInt("guild_id"))
         }
         stats.guildIds.sort()

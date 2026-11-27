@@ -24,7 +24,7 @@ backup_make() {
 
 # Replaces the database with a backup. The server and the web stop first, and what is there now is backed up.
 backup_restore() { # file, 1 when --yes was given
-  local file=$1 word=""
+  local file=$1 word="" BACKUP_FILE=""
   [ -f "$file" ] || fail "no such backup: $file"
   gzip -t "$file" 2>/dev/null || fail "$file is not a gzip file"
   if [ -z "${2:-}" ]; then
@@ -44,6 +44,6 @@ backup_restore() { # file, 1 when --yes was given
   step "restoring $file"
   sql -e "DROP DATABASE IF EXISTS \`$ZEL_DB_NAME\`"
   db_accounts | sql
-  gunzip -c "$file" | sql "$ZEL_DB_NAME" || fail "the restore failed; the backup made just before it is $BACKUP_FILE"
+  gunzip -c "$file" | sql "$ZEL_DB_NAME" || fail "the restore failed${BACKUP_FILE:+; the backup made just before it is $BACKUP_FILE}"
   note "restored; ./zel start brings the game back (and applies the migrations this version has)"
 }

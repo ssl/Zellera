@@ -28,4 +28,6 @@ data class Quest(
 
     /** Seconds until the deadline at [now]; none without a deadline, zero once it has passed. */
     fun countdown(now: Int): Int? = if (hasDeadline) (deadline - now).coerceAtLeast(0) else null
+
+    fun expired(now: Int): Boolean = hasDeadline && now >= deadline
 }

@@ -52,6 +52,10 @@ class Quests(
                         Acceptance.REFUSED
                     }
 
+                    quest.expired(now) -> {
+                        Acceptance.REFUSED
+                    }
+
                     row?.accepted == true -> {
                         Acceptance.ALREADY
                     }
@@ -125,7 +129,7 @@ class Quests(
             withQuests(player) { mine ->
                 mine.accepted.mapNotNull { row ->
                     val quest =
-                        book[row.quest]?.takeIf { it.goal.type == goal && it.goal.admits(subject) }
+                        book[row.quest]?.takeIf { it.goal.type == goal && it.goal.admits(subject) && !it.expired(now) }
                             ?: return@mapNotNull null
                     val progress = minOf(row.progress + amount, quest.goal.count)
                     val finished = progress >= quest.goal.count

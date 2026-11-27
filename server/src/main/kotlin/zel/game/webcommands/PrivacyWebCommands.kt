@@ -43,7 +43,9 @@ internal class PrivacyWebCommands(
                 given.forEach { boolean(it.second) }
             }
         }
-        services.online(command.userId)?.stats?.settings?.let { settings ->
+        services.online(command.userId)?.let { player ->
+            val settings = player.stats.settings
+            val wasOffline = settings.appearOffline
             given.forEach { (choice, stored) ->
                 when (choice) {
                     Choice.PROFILE_VISIBLE -> settings.privateProfile = stored
@@ -52,6 +54,9 @@ internal class PrivacyWebCommands(
                     Choice.FRIEND_REQUEST_ENABLED -> settings.noFriendRequests = stored
                     Choice.ROOM_INVITES_ENABLED -> settings.noRoomInvites = stored
                 }
+            }
+            if (settings.appearOffline != wasOffline) {
+                player.messenger.connectionChanged(player, player.isOnline, player.inRoom)
             }
         }
         return WebCommandResult.done("Privacy saved: ${given.joinToString { it.first.key }}.")

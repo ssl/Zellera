@@ -78,6 +78,18 @@ class FreezeGame(
         super.leave(scope, member)
     }
 
+    override fun switchAway(
+        scope: RoomScope,
+        member: TeamMember,
+    ) {
+        part.release(member.unit)
+        (member as? FreezeMember)?.takeIf { it.isFrozen }?.let {
+            it.thaw()
+            context.hooks.giveEffect(scope, it.unit, it.effect(), null)
+        }
+        super.switchAway(scope, member)
+    }
+
     fun begin(scope: RoomScope) {
         if (run != GameRun.Idle) return
         members().forEach { equip(scope, it) }

@@ -37,7 +37,6 @@ import zel.util.MILLIS_PER_MINUTE
 import zel.util.MILLIS_PER_SECOND
 import java.util.concurrent.ConcurrentHashMap
 
-/** Per-room state is owned by the room's lock; playlist writes run on the room's write lane, in order. */
 class Jukebox(
     private val items: () -> Items?,
     private val store: JukeboxStore,
@@ -267,7 +266,6 @@ class Jukebox(
         inventories(scope)
     }
 
-    /** Runs on the room's write lane after the disc's row left the jukebox. */
     private fun giveBack(disc: Disc) {
         val owner = player(disc.ownerId) ?: return
         val item: OwnedFurni = items()?.loadFurni(disc.itemId) ?: return

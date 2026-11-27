@@ -1,7 +1,6 @@
 package zel.room.persist
 
 interface FurniTransfers {
-    /** Takes the row from [ownerId]'s inventory; in the room it is [keeperId]'s (a sticky note: the room owner's). */
     fun putInRoom(
         roomId: Int,
         ownerId: Int,

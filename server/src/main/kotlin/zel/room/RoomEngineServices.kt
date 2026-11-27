@@ -37,7 +37,6 @@ data class RoomEngineServices(
     val guildFields: (Int) -> List<String>? = { null },
     val accountLevels: () -> AccountLevels? = { null },
     val leaderboard: () -> BadgeLeaderboard? = { null },
-    /** Whether the game has that badge code ([zel.game.players.inventory.KnownBadges]). */
     val badgeExists: (String) -> Boolean = { false },
     val catalog: () -> Catalog? = { null },
     val listings: RoomListings,

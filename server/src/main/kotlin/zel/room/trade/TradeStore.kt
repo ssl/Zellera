@@ -122,7 +122,6 @@ class TradeStore(
     }
 
     private companion object {
-        /** A disc in a room's playlist is not in the inventory, whatever its room_id says. */
         const val IN_INVENTORY =
             " AND player_id = ? AND room_id IS NULL" +
                 " AND NOT EXISTS (SELECT 1 FROM room_playlist_discs WHERE furni_id = furni.id)"

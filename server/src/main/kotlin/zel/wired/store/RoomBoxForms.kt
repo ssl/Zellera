@@ -87,7 +87,6 @@ class RoomBoxForms(
         held(forms, box)
     }
 
-    /** Every box's saved settings, kept by a reload point; a box never saved is kept fresh. */
     fun kept(room: Room): Map<Int, StoredBox> {
         val forms = forms(room)
         val kept = HashMap<Int, StoredBox>()
@@ -99,7 +98,6 @@ class RoomBoxForms(
         return kept
     }
 
-    /** A rollback: each box still in the room takes the settings [kept] held, saved the way a save is; extras stay. */
     fun restore(
         room: Room,
         kept: Map<Int, StoredBox>,

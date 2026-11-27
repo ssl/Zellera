@@ -79,7 +79,6 @@ class FurniPlacing(
         if (!limits.notesLeft(room)) return FurniOut.error(scope, player, PlaceError.MaxStickies)
         if (!inventory.take(player, itemId)) return
         val state = item.state.takeUnless { it.isEmpty() || it == "0" } ?: NOTE_COLOUR
-        // As in Habbo, a note becomes the room owner's whoever sticks it up; an ownerless room leaves it the placer's.
         val keeper = room.info.takeIf { it.ownerId > 0 }
         val ownerId = keeper?.ownerId ?: item.ownerId
         val furni = furniOf(item, null, 0.0, 0, state, position, ownerId, keeper?.ownerName ?: item.ownerName)
@@ -198,7 +197,6 @@ class FurniPlacing(
             placerName = item.ownerName,
         )
 
-    /** Moves the row from the placer's inventory into the room, as its owner's, outside the lock. */
     @Suppress("TooGenericExceptionCaught") // logged; the room keeps the furni
     private fun write(
         room: Room,

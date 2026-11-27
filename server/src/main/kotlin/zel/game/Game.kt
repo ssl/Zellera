@@ -113,7 +113,6 @@ class Game(
         private set
     val badgeCaches: BadgeCaches by lazy { BadgeCaches(core.database) }
 
-    /** The badges staff may give, from housekeeping and the give-reward wired. */
     val knownBadges: KnownBadges by lazy {
         val texts = BadgeTexts.installed()
         KnownBadges(

@@ -7,11 +7,6 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 
-/**
- * The badge codes the game's texts name: a `badge_name_<code>` or `badge_name_al_<code>` line that is not empty, in
- * external_texts or its override file (a line there replaces the pack's). The files are read again when one changes,
- * looked at no more than every ten seconds.
- */
 class BadgeTexts(
     private val files: () -> List<Path>,
     private val clock: () -> Long = System::currentTimeMillis,
@@ -24,7 +19,6 @@ class BadgeTexts(
     private var known = Known("", emptySet())
     private var lookedAt: Long? = null
 
-    /** Whether the texts name exactly [code], as written. */
     fun names(code: String): Boolean = current().contains(code)
 
     @Synchronized
@@ -74,7 +68,6 @@ class BadgeTexts(
         private const val TEXTS = "external_texts"
         private const val OVERRIDES = "overrides/external_texts.txt"
 
-        /** The texts the web serves the client: ZEL_GAMEDATA_DIR's external_texts, then its override file. */
         fun installed(): BadgeTexts = BadgeTexts(::installedFiles)
 
         private fun installedFiles(): List<Path> {

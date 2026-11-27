@@ -34,7 +34,6 @@ internal class AssetBundle private constructor(
         val height: Int,
     )
 
-    // sheet, cache, imageBytes and greyShades are guarded by this object.
     private var sheet: BufferedImage? = null
     private val cache =
         object : LinkedHashMap<String, Image?>(INITIAL_CACHE_CAPACITY, CACHE_LOAD_FACTOR, true) {
@@ -46,10 +45,8 @@ internal class AssetBundle private constructor(
         }
     private var imageBytes = 0L
 
-    /** What the sheet takes once decoded, read from its PNG header: 4 bytes a pixel. */
     val sheetBytes: Long = sheetPng?.let(::pngExtent)?.let(::argbBytes) ?: 0L
 
-    /** The most this bundle holds before its images are cut: its files, and its sheet decoded. */
     val plannedBytes: Long get() = storedBytes + sheetBytes
 
     /** Opaque grey pixels whose level is a key are drawn with the value's level instead. */
@@ -60,7 +57,6 @@ internal class AssetBundle private constructor(
             imageBytes = 0
         }
 
-    /** The heap this bundle holds now: its files, its sheet once decoded and the images cut from it. */
     @Synchronized
     fun heldBytes(): Long = storedBytes + (if (sheet == null) 0 else sheetBytes) + imageBytes
 
@@ -87,7 +83,6 @@ internal class AssetBundle private constructor(
     fun image(asset: String): Image? {
         if (asset in cache) return cache[asset]
         val found = find(asset)
-        // A name the bundle does not have is not remembered, so made-up names in a frame cannot fill the cache.
         if (found != null || has(asset)) {
             imageBytes += ownBytes(found)
             cache[asset] = found
@@ -95,13 +90,11 @@ internal class AssetBundle private constructor(
         return found
     }
 
-    // a cut of the sheet shares its pixels; a restored, shaded or turned copy has its own
     private fun ownBytes(image: Image?): Long {
         val own = image?.image?.takeIf { it.raster.dataBuffer !== sheet?.raster?.dataBuffer } ?: return 0L
         return argbBytes(Extent(own.width, own.height))
     }
 
-    /** The size [image] draws [asset] at, from the bundle's index alone: nothing is decoded. */
     fun extent(asset: String): Extent? {
         pngEntries[asset]?.let { return pngExtent(it) }
         val frame = sheetFrame(asset)?.first?.takeIf { sheetPng != null }
@@ -111,7 +104,6 @@ internal class AssetBundle private constructor(
 
     private fun find(asset: String): Image? = pngEntries[asset]?.let { Image(readPng(it), false) } ?: sheetImage(asset)
 
-    /** The sheet frame [asset] is cut from, and whether it is drawn mirrored. */
     private fun sheetFrame(asset: String): Pair<JsonObject, Boolean>? {
         val alias = assets[asset]?.takeIf { it.isJsonObject }?.asJsonObject
         val source = alias?.get("source")?.asString ?: asset
@@ -203,7 +195,6 @@ internal class AssetBundle private constructor(
         private const val MAGIC_END = "\u0000"
         private const val MAX_RESTORED_SIDE = 4096
 
-        /** Images one bundle keeps, the least recently used going first: more than a photo takes from one bundle. */
         internal const val MAX_CACHED_IMAGES = 1024
         private const val INITIAL_CACHE_CAPACITY = 64
         private const val CACHE_LOAD_FACTOR = 0.75f
@@ -217,14 +208,12 @@ internal class AssetBundle private constructor(
         private const val PNG_WIDTH_AT = 16
         private const val PNG_HEADER_END = 24
 
-        /** About what a parsed library index takes on the heap per byte of its text. */
         private const val JSON_HEAP_FACTOR = 4
 
         private fun channel(value: Byte): Int = value.toInt() and 0xFF
 
         private fun argbBytes(extent: Extent): Long = extent.width.toLong() * extent.height * ARGB_BYTES
 
-        /** Width and height from a PNG's IHDR chunk; null for anything shorter. */
         private fun pngExtent(png: ByteArray): Extent? {
             if (png.size < PNG_HEADER_END) return null
             val header = ByteBuffer.wrap(png, PNG_WIDTH_AT, PNG_HEADER_END - PNG_WIDTH_AT)

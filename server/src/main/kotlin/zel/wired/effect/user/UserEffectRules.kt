@@ -19,7 +19,6 @@ class UserEffectRules(
     private val filterText: (Int, String) -> String = { _, text -> text },
     private val maxMessage: () -> Int = { MAX_MESSAGE },
     private val maxLines: () -> Int = { MAX_LINES },
-    /** Whether the game has that badge code ([zel.game.players.inventory.KnownBadges]). */
     private val badgeExists: (String) -> Boolean = { false },
 ) {
     val validations: Map<String, BoxValidation> =
@@ -53,10 +52,6 @@ class UserEffectRules(
             ints = listOf(settings.ints.getOrElse(0) { 0 }.takeIf { it in 0..WriteLog.MAX_LEVEL } ?: 0),
         )
 
-    /**
-     * Staff only; the box gives badges only, so a row with any other reward is refused, and so is a badge the game
-     * does not have.
-     */
     private fun giveReward(
         settings: BoxSettings,
         request: SaveRequest,

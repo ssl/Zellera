@@ -98,7 +98,6 @@ class BadgeLeaderboard(
         private const val KEY_LEVEL = "level"
         private val ACHIEVEMENT_BADGE = Regex("^ACH_(.*?)(\\d+)$")
 
-        // a longer level is no real one (a badge given by hand): it counts nothing, as on the site
         private const val MAX_LEVEL_DIGITS = 4
 
         fun key(

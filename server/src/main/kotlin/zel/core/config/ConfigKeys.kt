@@ -375,10 +375,7 @@ internal object ConfigKeys {
             int(
                 CameraAssets.KEY.removePrefix("camera."),
                 default = CameraAssets.DEFAULT_MAX_BYTES,
-                description =
-                    "Bytes the photo renderer may keep of furni and avatar art, decoded sheets and their files; " +
-                        "past it the least used go, and a bundle bigger than all of it is not drawn. Read when the " +
-                        "renderer is rebuilt, hourly; 0 or less takes the default.",
+                description = "Bytes of furni and avatar art the photo renderer may keep in memory.",
             )
             int(
                 "competition.entries_per_day",
@@ -387,7 +384,6 @@ internal object ConfigKeys {
             )
         }
 
-    /** Game settings the code reads with a default of its own. */
     private fun MutableList<ConfigKey>.game() {
         camera()
         area("respect") {

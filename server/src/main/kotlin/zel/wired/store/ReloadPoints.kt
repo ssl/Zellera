@@ -8,10 +8,6 @@ import zel.room.furni.StoredValues
 import zel.room.map.Point
 import java.util.concurrent.ConcurrentHashMap
 
-/**
- * A room's reload point: furni positions and states and every wired box's settings. It lasts until the room unloads by
- * itself, the reload's own unload keeps it.
- */
 class ReloadPoints(
     private val boxes: () -> RoomBoxForms? = { null },
 ) : RoomPart {
@@ -60,7 +56,6 @@ class ReloadPoints(
     ) {
         point.anchor?.let { room.furni.move(furni, it, point.direction) }
         furni.z = point.z
-        // Hits, engravings, rents and the like are saved data of the furni, not a state: a rollback leaves them.
         if (!StoredValues.holds(furni)) furni.state = point.state
         furni.wallPosition = point.wallPosition
         furni.dirty = true

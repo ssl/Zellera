@@ -70,7 +70,6 @@ class ToggleState(
             return changed
         }
 
-        /** Toggle, toggle-to-random, match-to-snapshot and the furni-state variable all write through this. */
         fun toggles(furni: RoomFurni): Boolean {
             val type = Interactions.of(furni.definition)
             return !BoxCodes.isBox(type) &&
@@ -79,7 +78,6 @@ class ToggleState(
                 NEVER_PREFIXES.none(type::startsWith)
         }
 
-        /** Look states wired leaves to the furni's own use: walkers, rides, games, pets and the like. */
         private val NEVER =
             setOf(
                 "wf_link",

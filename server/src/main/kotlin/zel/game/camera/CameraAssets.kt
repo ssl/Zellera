@@ -28,10 +28,6 @@ class CameraAssets(
         val roomContent: String,
     )
 
-    /**
-     * What one frame may still fetch: bundles neither loaded nor known missing, at most [bytes] of them all told, of
-     * the furni in [furni] only (null: any furni). One per frame, one thread.
-     */
     internal class Fetches(
         private var left: Int = MAX_FRAME_FETCHES,
         private var bytes: Long = Long.MAX_VALUE,
@@ -39,7 +35,6 @@ class CameraAssets(
     ) {
         fun take(): Boolean = (left > 0).also { if (it) left-- }
 
-        /** Past its bytes the frame takes no new bundle at all. */
         fun spend(planned: Long): Boolean =
             (planned <= bytes).also { fits ->
                 if (fits) bytes -= planned else left = 0
@@ -48,7 +43,6 @@ class CameraAssets(
         fun mayShow(furniClass: String): Boolean = furni == null || furniClass in furni
     }
 
-    /** A frame's fetches: no more new bundles than the whole cache may hold, and only of the [furni] it may show. */
     internal fun frameFetches(furni: Set<String>? = null): Fetches = Fetches(MAX_FRAME_FETCHES, maxBytes, furni)
 
     private val furniRevisions = furniRevisions(furnidata)
@@ -77,7 +71,6 @@ class CameraAssets(
         }.also { trim() }
     }
 
-    /** The size [sprite] draws [name] at, without decoding any sheet; null when there is no such sprite. */
     internal fun spriteExtent(
         name: String,
         fetches: Fetches = frameFetches(),
@@ -122,10 +115,6 @@ class CameraAssets(
         fetches: Fetches,
     ): AssetBundle? = bundle("${locations.figure}$library${AssetBundle.extension()}", fetches)
 
-    /**
-     * A furni of the furnidata the frame may show, else a library the gamedata names in the figure folder; else
-     * none, unfetched.
-     */
     private fun libraryBundle(
         library: String,
         fetches: Fetches,
@@ -186,7 +175,6 @@ class CameraAssets(
         return if (fetches.take()) fetched(path, fetches) else null
     }
 
-    /** A bundle bigger than the whole cache counts as missing; one past what the frame may still take, as unfetched. */
     private fun fetched(
         path: String,
         fetches: Fetches,
@@ -211,10 +199,8 @@ class CameraAssets(
             if (!fits) log.info("Camera library {} needs {} bytes, more than {} allows", path, bundle.plannedBytes, KEY)
         }
 
-    /** What the cached bundles hold on the heap. */
     internal fun heldBytes(): Long = synchronized(this) { bundles.values.sumOf { it.heldBytes() } }
 
-    /** Pushes out the least recently used bundles until what they hold fits [maxBytes]. */
     private fun trim() {
         synchronized(this) {
             var held = heldBytes()
@@ -251,19 +237,10 @@ class CameraAssets(
         private const val PET_TYPES = "pet.configuration"
         private const val MAX_BUNDLES = 400
 
-        /** The setting that sizes the cache, in bytes; read when the renderer is built. */
         const val KEY: String = "camera.assets.max.bytes"
 
-        /**
-         * Most of the assets fit in far less: half of all bundles decode to under 64 KB, 99 in 100 to under 2 MB. The
-         * few room backgrounds past it (one is 144 MB decoded) are not drawn.
-         */
         const val DEFAULT_MAX_BYTES: Int = 64 * 1024 * 1024
 
-        /**
-         * New bundles one frame may fetch: a photo shows a few avatars (some ten figure libraries each, most shared)
-         * and the furni in view, so this is plenty with an empty cache; what is left out comes on the next photo.
-         */
         internal const val MAX_FRAME_FETCHES = 128
         private const val INITIAL_CAPACITY = 64
         private const val LOAD_FACTOR = 0.75f

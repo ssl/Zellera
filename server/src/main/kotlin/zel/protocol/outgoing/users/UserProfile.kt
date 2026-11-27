@@ -17,10 +17,6 @@ import java.sql.ResultSet
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
-/**
- * A hidden profile shows others only name, look, motto and level.
- * A player who appears offline shows others no last-online time, as on the site and in the public API.
- */
 class UserProfile private constructor(
     val profile: PlayerProfile,
     val player: Player?,

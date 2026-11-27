@@ -95,7 +95,6 @@ class PhotoRenderer(
         }
     }
 
-    /** [furni]: the furni classes the photo may show (those in the room), null for any. */
     fun render(
         frame: PhotoFrame,
         furni: Set<String>? = null,
@@ -190,7 +189,6 @@ class PhotoRenderer(
         }
     }
 
-    /** Whether an asset sprite at [left], [top] reaches into the canvas: off it, its sheet is never decoded. */
     private fun showsOn(
         canvas: Canvas,
         left: Int,

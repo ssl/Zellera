@@ -26,7 +26,6 @@ class WebApiBoxes(
     private val sealKey: ByteArray? =
         secret.takeIf { it.isNotEmpty() }?.let { sha256("wired-api-keys:$it") }
 
-    /** The last unsaved key of each box and kind: a new one replaces it, as the dialog only shows the last. */
     private val pending = ConcurrentHashMap<Slot, Waiting>()
 
     fun generate(

@@ -57,7 +57,6 @@ start_game() { # 1 when --public was given
   db_secrets
   build_server
   web_packages
-  # The units' environment files carry the site's address; a quick tunnel only knows its own once it is open.
   export_site_url
   service_sync
   db_up

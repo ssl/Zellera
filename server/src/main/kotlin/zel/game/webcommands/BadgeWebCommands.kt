@@ -5,10 +5,6 @@ import zel.db.write
 import zel.game.players.inventory.KnownBadges
 import java.sql.SQLException
 
-/**
- * `giveBadge` / `takeBadge`: through the badge case when the player is online, on the table otherwise. Any badge the
- * game has may be given ([KnownBadges]).
- */
 internal class BadgeWebCommands(
     private val services: WebCommandApplier.Services,
 ) {

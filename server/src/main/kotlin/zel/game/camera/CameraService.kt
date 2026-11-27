@@ -87,10 +87,6 @@ class CameraService(
         drawing.remove(userId)
     }
 
-    /**
-     * Null when refused, rate-limited or both render slots are taken. [furni] names the furni classes the photo may
-     * show, those in the room (null: any); it is asked only for a frame that is drawn.
-     */
     fun render(
         userId: Int,
         roomId: Int,

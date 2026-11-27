@@ -4,7 +4,7 @@ import zel.protocol.typed.PacketIds
 
 internal object GuildInput {
     const val MAX_NAME_LENGTH = 29
-    const val MAX_DESCRIPTION_LENGTH = 254
+    const val MAX_DESCRIPTION_LENGTH = 250
 
     fun areIds(vararg ids: Int): Boolean = ids.all(PacketIds::isId)
 

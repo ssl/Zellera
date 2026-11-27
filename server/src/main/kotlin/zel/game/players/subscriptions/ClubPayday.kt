@@ -94,6 +94,7 @@ object ClubPayday {
      */
     fun run(
         services: GameServices,
+        roundKey: Int,
         dueAt: Int,
     ): Boolean {
         val now = services.unixTimestamp()
@@ -107,7 +108,7 @@ object ClubPayday {
             val members =
                 services.database.dataSource.connection
                     .use { membersAt(it, now) }
-            if (currency != null) members.forEach { payMember(services, Round(dueAt, now, currency), it) }
+            if (currency != null) members.forEach { payMember(services, Round(roundKey, dueAt, now, currency), it) }
             true
         } catch (e: SQLException) {
             log.error("the pay day did not run", e)
@@ -116,6 +117,7 @@ object ClubPayday {
     }
 
     internal class Round(
+        val key: Int,
         val dueAt: Int,
         val paidAt: Int,
         val currency: Int,
@@ -185,7 +187,7 @@ object ClubPayday {
         try {
             connection.write(LOG_ROUND) {
                 int(playerId)
-                int(round.dueAt)
+                int(round.key)
                 int(round.paidAt)
                 int(forecast.streakDays)
                 int(forecast.spentSincePayday)
@@ -200,7 +202,7 @@ object ClubPayday {
             IncomeRewards.insert(connection, playerId, IncomeRewards.CLUB, earnings, forecast.total, "", round.paidAt)
             return 0
         }
-        val key = "payday/${round.dueAt}/$playerId"
+        val key = "payday/${round.key}/$playerId"
         return LedgerTransaction(connection)
             .post(LedgerEntry(key, playerId, round.currency, forecast.total, LEDGER_CAUSE))
             .after

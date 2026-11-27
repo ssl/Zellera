@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class MembershipWatch(
     private val services: GameServices,
     private val rounds: PaydayRounds = PaydayRounds(services.database.dataSource),
-    private val payday: (GameServices, Int) -> Boolean = ClubPayday::run,
+    private val payday: (GameServices, Int, Int) -> Boolean = ClubPayday::run,
 ) {
     private val paying = AtomicBoolean()
 
@@ -54,13 +54,18 @@ class MembershipWatch(
         if (!rules.clubPayday || !paying.compareAndSet(false, true)) return
         try {
             val now = services.unixTimestamp()
-            val due = PaydaySchedule.latestAtOrBefore(now, ClubSettings.payday.dayOfMonth, GameZone.current)
-            val settled = settledRound ?: rounds.latest() ?: opening(due, now)
-            if (due > settled) {
-                if (!payday(services, due)) return
-                rounds.settle(due, services.unixTimestamp())
+            val day = ClubSettings.payday.dayOfMonth
+            val dueAt = PaydaySchedule.latestAtOrBefore(now, day, GameZone.current)
+            val dueKey = PaydaySchedule.monthKey(now, day, GameZone.current)
+            val settled =
+                settledRound
+                    ?: rounds.latest()?.let { PaydaySchedule.asMonthKey(it, day, GameZone.current) }
+                    ?: opening(dueKey, now)
+            if (dueKey > settled) {
+                if (!payday(services, dueKey, dueAt)) return
+                rounds.settle(dueKey, services.unixTimestamp())
             }
-            settledRound = maxOf(due, settled)
+            settledRound = maxOf(dueKey, settled)
         } catch (failure: SQLException) {
             LOG.error("the pay day rounds were not read or written", failure)
         } finally {

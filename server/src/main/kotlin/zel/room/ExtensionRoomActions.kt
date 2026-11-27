@@ -329,8 +329,10 @@ internal class ExtensionRoomActions(
             heightTiles += furni.tiles()
             heightTiles += Footprint.tiles(tile, furni.definition.width, furni.definition.length, direction)
             placed += {
-                scope.room.furni.move(furni, tile, direction)
-                furni.z = z
+                if (scope.room.furni[furni.id] === furni) {
+                    scope.room.furni.move(furni, tile, direction)
+                    furni.z = z
+                }
             }
             entries +=
                 Movement.FurniMove(

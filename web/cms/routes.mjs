@@ -24,6 +24,7 @@ const PASSWORD_MIN = 8;
 // One answer whichever of the two is taken, so registering does not say whose e-mail address has an account.
 const NOT_AVAILABLE = 'That username or e-mail address can not be used. Try another username, or log in if you have an account already.';
 const EMAIL_NOT_AVAILABLE = 'That e-mail address can not be used. Enter another one.';
+const NAME_UNFIT = 'That name can not be used. Choose another one.';
 
 export const LOGIN_CLIENT_LIMIT = Object.freeze([10, 600]);
 const LOGIN_SLOWDOWN = Object.freeze({ failures: 50, windowSec: 600, delayMs: 2000 });
@@ -201,6 +202,7 @@ export const createCms = ({
     }
     const nameProblem = usernameProblem(username);
     if (nameProblem) return fail(res, 400, nameProblem, 'username');
+    if (!(await db.nameAllowed(username))) return fail(res, 400, NAME_UNFIT, 'username');
     const weak = newPasswordProblem(password, password2);
     if (weak) return fail(res, 400, weak[1], weak[0]);
 
@@ -377,6 +379,7 @@ export const createCms = ({
     const name = str(body.name, 64).trim();
     const problem = usernameProblem(name);
     if (problem) return json(res, 200, { ok: true, available: false, reason: problem });
+    if (!(await db.nameAllowed(name))) return json(res, 200, { ok: true, available: false, reason: NAME_UNFIT });
     const taken = await db.usernameTaken(name);
     return json(res, 200, { ok: true, available: !taken, reason: taken ? 'That name is taken. Try another one.' : null });
   };
@@ -389,6 +392,7 @@ export const createCms = ({
     const name = str(body.name, 64).trim();
     const problem = usernameProblem(name);
     if (problem) return fail(res, 400, problem, 'name');
+    if (!(await db.nameAllowed(name))) return fail(res, 400, NAME_UNFIT, 'name');
     const ban = await db.addressBan(clientIp(req));
     if (ban) return fail(res, 403, banNotice(ban));
     const avatar = await newAvatar(name, clientIp(req));

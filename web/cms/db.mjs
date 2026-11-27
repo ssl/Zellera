@@ -5,6 +5,7 @@ import { gameRules } from '../lib/game-rules.mjs';
 import { currencyIds } from './display-names.mjs';
 import { settingOn } from '../lib/production-check.mjs';
 import { SECONDS_PER_DAY } from '../lib/time.mjs';
+import { createWordFilter } from './word-filter.mjs';
 
 let pool = null;
 const getPool = () => {
@@ -98,6 +99,13 @@ export const firstAvatar = async (accountId) => Number((await query(
 
 export const usernameTaken = async (username) =>
   (await query('SELECT 1 FROM players WHERE name = ? LIMIT 1', [username])).length > 0;
+
+let nameFilter = null;
+export const nameAllowed = async (name) => {
+  nameFilter ??= createWordFilter(query);
+  const { text, hidden } = await nameFilter.filter(name);
+  return !hidden && text.toLowerCase() === String(name).toLowerCase();
+};
 
 export const emailTaken = async (email) =>
   (await query('SELECT 1 FROM player_accounts WHERE email = ? LIMIT 1', [email])).length > 0;

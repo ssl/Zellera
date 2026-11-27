@@ -229,14 +229,9 @@ class ShopCheckout(
     ) {
         val bundle = page.offers.values.firstOrNull() ?: return failed()
         if (!roomBundleAllowed(bundle, payer)) return
-        if (!bundle.price.takeFrom(payer)) return notAllowed()
-        var copied = false
-        try {
-            copied = roomBundles.copyFor(page, payer)
-        } finally {
-            if (!copied) bundle.price.returnTo(payer)
-        }
-        if (copied) CatalogReplies.purchaseOk(client, CatalogMessages.purchaseOk(null)) else failed()
+        if (!roomBundles.copyFor(page, payer, bundle.price)) return failed()
+        CatalogWallet.show(payer, bundle.price.credits, bundle.price.pointsType, -bundle.price.points)
+        CatalogReplies.purchaseOk(client, CatalogMessages.purchaseOk(null))
     }
 
     private fun roomBundleAllowed(

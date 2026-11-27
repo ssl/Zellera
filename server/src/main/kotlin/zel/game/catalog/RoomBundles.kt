@@ -4,18 +4,19 @@ package zel.game.catalog
 
 import org.slf4j.LoggerFactory
 import zel.core.rules.rules
-import zel.db.allOrNothing
 import zel.db.insertForId
 import zel.db.orFallback
 import zel.db.rows
 import zel.db.write
 import zel.game.bots.BotChatLines
+import zel.game.economy.LedgerEntry
 import zel.game.items.ProductKind
 import zel.game.players.Player
 import zel.protocol.outgoing.generic.alerts.BubbleAlert
 import zel.protocol.outgoing.generic.alerts.BubbleAlertMessage
 import zel.room.listing.ListedRoom
 import java.sql.Connection
+import java.sql.SQLException
 
 private val LOGGER = LoggerFactory.getLogger(RoomBundles::class.java)
 
@@ -83,16 +84,18 @@ open class RoomBundles(
     private val services: CatalogServices,
 ) {
     private val listings get() = services.game.roomListings
+    private val ledger = CatalogPurchaseLedger(services.database)
 
     open fun copyFor(
         page: CatalogPage,
         buyer: Player,
+        price: OfferPrice,
     ): Boolean {
         val roomId = page.info.templateRoomId
         val template = listings.room(roomId) ?: return false
         services.game.rooms.saveFurni(roomId)
 
-        val copyId = copyInTransaction(template.id, buyer.profile.id)
+        val copyId = copyAndCharge(template.id, buyer, price)
         if (copyId == 0) return false
 
         @Suppress("TooGenericExceptionCaught") // a failure after the commit must never fail the purchase
@@ -104,13 +107,16 @@ open class RoomBundles(
         return true
     }
 
-    private fun copyInTransaction(
+    private fun copyAndCharge(
         templateId: Int,
-        userId: Int,
+        buyer: Player,
+        price: OfferPrice,
     ): Int =
-        LOGGER.orFallback("copying room bundle room $templateId for player $userId", 0) {
-            services.database.dataSource.connection.use { connection ->
-                connection.allOrNothing { copyRows(connection, templateId, userId).takeIf { it != 0 } } ?: 0
+        LOGGER.orFallback("copying room bundle room $templateId for player ${buyer.profile.id}", 0) {
+            ledger.settle(buyer, LedgerEntry.newKey("shop/${buyer.profile.id}")) { connection ->
+                val copyId = copyRows(connection, templateId, buyer.profile.id)
+                if (copyId == 0) throw SQLException("room bundle room $templateId copied no room")
+                PurchaseCharge(copyId, price.credits, price.points, price.pointsType)
             }
         }
 

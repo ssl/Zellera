@@ -74,7 +74,9 @@ class CraftingPackets(
         session: PacketSession,
         recipeName: String,
     ) {
+        val player = session.client.player ?: return
         val recipe = crafting.recipe(recipeName) ?: return
+        if (recipe.hidden && !player.stats.recipes.knows(recipe.id)) return
         if (!recipe.stock.available) {
             CatalogReplies.limitedSoldOut(session.client)
             return
@@ -125,6 +127,7 @@ class CraftingPackets(
         val recipe = altarOf(player, altarId)?.recipeNamed(recipeName)
         when {
             recipe == null -> delivery.answerFailure(session)
+            recipe.hidden && !player.stats.recipes.knows(recipe.id) -> delivery.answerFailure(session)
             !recipe.stock.available -> CatalogReplies.limitedSoldOut(session.client)
             hasIngredients(player, recipe) -> delivery.deliverNamed(session, player, recipe)
             else -> delivery.answerFailure(session)

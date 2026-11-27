@@ -206,6 +206,7 @@ class RoomTrades(
                 messages.completed(it)
                 messages.closed(it, side.id, TradeClosed.COMPLETED)
             }
+            if (side.items.isEmpty()) return@forEach
             progress(side.id, GameEvents.TRADE_DONE, 1)
             val coins = side.items.sumOf { CreditFurni.credits(it.definition) }
             if (coins > 0) progress(side.id, GameEvents.TRADE_COIN_VALUE, coins)

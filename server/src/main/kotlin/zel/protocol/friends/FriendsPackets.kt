@@ -423,7 +423,7 @@ class FriendsPackets(
         val receiver = players.find(friendId)
         val mayTalk = player.stats.standing.mayTalk()
         if (mayTalk && !player.stats.messengerPace.take(System.currentTimeMillis())) return null
-        if (mayTalk && friend == null && receiver == null) {
+        if (mayTalk && friend == null && players.profileOf(friendId) == null) {
             session.client.send(ErrorReport.forRequest(InstantMessageRefusal.SEND_REQUEST))
             return null
         }
@@ -432,7 +432,8 @@ class FriendsPackets(
                 !mayTalk -> InstantMessageRefusal.SENDER_MUTED
                 friend == null -> InstantMessageRefusal.NOT_A_FRIEND
                 messenger.blocks.blocks(friendId, player.profile.id) -> InstantMessageRefusal.RECIPIENT_UNAVAILABLE
-                receiver != null && !receiver.stats.standing.mayTalk() -> InstantMessageRefusal.RECEIVER_MUTED
+                friend.shownOnline && receiver != null && !receiver.stats.standing.mayTalk() ->
+                    InstantMessageRefusal.RECEIVER_MUTED
                 else -> null
             }
         if (reason == null) return friend

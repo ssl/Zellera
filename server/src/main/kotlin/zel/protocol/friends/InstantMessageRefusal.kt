@@ -7,7 +7,6 @@ object InstantMessageRefusal {
 
     const val RECIPIENT_UNAVAILABLE = 14
 
-    /** Request id of the error report for a message to someone neither a friend nor online. */
     const val SEND_REQUEST = 33
 
     const val UNDELIVERED = 10

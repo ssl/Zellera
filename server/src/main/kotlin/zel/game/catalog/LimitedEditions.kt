@@ -10,11 +10,15 @@ class LimitedEditions(
     private val services: CatalogServices,
     private val data: CatalogData,
 ) {
+    @Volatile
+    private var loadFailed = false
+
     fun get(offer: CatalogOffer): LimitedEditionStock? = data.limitedNumbers[offer.id]
 
     /** What is free is every number up to the edition's size that has no sale. */
     fun load() {
         data.limitedNumbers.clear()
+        loadFailed = false
         try {
             services.database.dataSource.connection.use { connection ->
                 val sold = soldNumbers(connection)
@@ -26,6 +30,7 @@ class LimitedEditions(
                 }
             }
         } catch (e: SQLException) {
+            loadFailed = true
             log.error("Loading the limited editions failed", e)
         }
     }
@@ -35,7 +40,7 @@ class LimitedEditions(
         if (!offer.isLimited) return null
         val stock =
             data.limitedNumbers.getOrPut(offer.id) {
-                val all = (1..offer.editionSize).toList()
+                val all = if (loadFailed) emptyList() else (1..offer.editionSize).toList()
                 LimitedEditionStock(offer.id, all, offer.editionSize, offer.editionOrder, services)
             }
         stock.growTo(offer.editionSize)

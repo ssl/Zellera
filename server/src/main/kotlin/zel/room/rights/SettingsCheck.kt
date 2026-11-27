@@ -42,7 +42,10 @@ object SettingsCheck {
         }
         if (wanted.tags.any { it.length > TAG_LENGTH || ';' in it }) return SettingsAnswer.Refused(ERROR_TAG, "")
         val tags = cleaned.tags.distinct().filter { it.isNotEmpty() }
-        if (tags.any { it in staffTags }) return SettingsAnswer.Refused(ERROR_STAFF_TAG, STAFF_TAG_TEXT)
+        val reserved = staffTags.map { it.trim().lowercase() }.toSet()
+        if (tags.any { it.trim().lowercase() in reserved }) {
+            return SettingsAnswer.Refused(ERROR_STAFF_TAG, STAFF_TAG_TEXT)
+        }
         return SettingsAnswer.Saved(
             cleaned.copy(
                 ownerId = current.ownerId,

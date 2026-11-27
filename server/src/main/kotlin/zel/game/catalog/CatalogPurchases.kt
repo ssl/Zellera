@@ -166,7 +166,7 @@ class CatalogPurchases(
                     val style =
                         order.player.services.chatStyles
                             .styleOfOffer(order.item.id) ?: stop(GENERIC_FAILURE)
-                    delivery.deliver(order, null, style) != null
+                    delivery.deliver(order, serial, style) != null
                 } else {
                     delivery.deliver(order, serial) != null
                 }

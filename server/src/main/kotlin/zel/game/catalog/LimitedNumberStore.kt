@@ -15,7 +15,7 @@ internal class LimitedNumberStore(
         offerId: Int,
         number: Int,
         buyerId: Int,
-        furniId: Int,
+        furniId: Int = NO_FURNI,
     ) {
         connection.write(SELL) {
             int(offerId)
@@ -47,13 +47,14 @@ internal class LimitedNumberStore(
         }
 
     private companion object {
+        const val NO_FURNI = 0
         const val SELL =
             "INSERT INTO catalogue_limited_sales (offer_id, number, player_id, sold_at, furni_id) VALUES (?, ?, ?, ?, ?)"
         const val COUNT_SALE = "UPDATE catalogue_offers SET limited_sold = limited_sold + 1 WHERE id = ?"
         const val UNCOUNT_SALE =
             "UPDATE catalogue_offers SET limited_sold = limited_sold - 1 WHERE id = ? AND limited_sold > 0"
         const val UNDO_ORPHANED =
-            "DELETE FROM catalogue_limited_sales WHERE offer_id = ? AND number = ?" +
+            "DELETE FROM catalogue_limited_sales WHERE offer_id = ? AND number = ? AND furni_id <> $NO_FURNI" +
                 " AND NOT EXISTS (SELECT 1 FROM furni WHERE furni.id = catalogue_limited_sales.furni_id)"
         const val IS_SOLD = "SELECT 1 FROM catalogue_limited_sales WHERE offer_id = ? AND number = ?"
     }

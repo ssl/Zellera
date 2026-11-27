@@ -77,6 +77,9 @@ internal class PurchaseDelivery(
                     val copies = order.item.quantityOf(base.id) * order.amount
                     repeat(copies) { create(connection, order, base, reservation, made) }
                 }
+                if (reservation != null && made.furni.isEmpty()) {
+                    reservation.stock.markSold(connection, player, reservation.number)
+                }
                 PurchaseCharge(made, order.credits, order.points, order.pointsType)
             }
         publish(order, made)

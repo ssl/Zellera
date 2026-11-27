@@ -44,6 +44,13 @@ class LimitedEditionStock(
         item: OwnedFurni,
     ) = store.recordSale(connection, offerId, item.editionNumber, player.profile.id, item.id)
 
+    @Throws(SQLException::class)
+    fun markSold(
+        connection: Connection,
+        player: Player,
+        number: Int,
+    ) = store.recordSale(connection, offerId, number, player.profile.id)
+
     fun markSold(
         player: Player,
         item: OwnedFurni,

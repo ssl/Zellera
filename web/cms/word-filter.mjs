@@ -2,37 +2,73 @@ const GROUPS = ['il1|!', 'o0', 'e3', 'a4@', 's5$', 'z2', 't7+', 'b8', 'g9'];
 const GROUP_OF = new Map(GROUPS.flatMap((group) => [...group].map((c) => [c, group[0]])));
 const LETTER_OR_DIGIT = /^[\p{L}\p{Nd}]$/u;
 
+const HOMOGLYPHS = new Map([
+  ['а', 'a'], ['в', 'b'], ['с', 'c'], ['е', 'e'], ['н', 'h'], ['і', 'i'], ['ј', 'j'], ['к', 'k'],
+  ['м', 'm'], ['о', 'o'], ['р', 'p'], ['ԛ', 'q'], ['т', 't'], ['у', 'y'], ['х', 'x'], ['ѕ', 's'],
+]);
+const IGNORED = new Set([0x200b, 0x200c, 0x200d, 0x2060, 0xfeff, 0x00ad]);
+
 const lowerUnit = (c) => {
   const l = c.toLowerCase();
   return l.length === 1 ? l : l[0];
 };
 
-const plain = (c) => {
+const plain = (codePoint) => {
+  const c = String.fromCodePoint(codePoint);
   const base = c.normalize('NFKD')[0];
-  const read = lowerUnit(LETTER_OR_DIGIT.test(base) ? base : c);
-  return GROUP_OF.get(read) ?? read;
+  let read;
+  if (LETTER_OR_DIGIT.test(base)) read = lowerUnit(base);
+  else if (c.length === 1) read = lowerUnit(c);
+  else return null;
+  const mapped = HOMOGLYPHS.get(read) ?? read;
+  return GROUP_OF.get(mapped) ?? mapped;
 };
 
-const fold = (f) => (text) => {
+const folded = (text) => {
   let out = '';
-  for (let i = 0; i < text.length; i++) out += f(text[i]);
-  return out;
+  const origin = [];
+  for (let i = 0; i < text.length;) {
+    const codePoint = text.codePointAt(i);
+    const width = codePoint > 0xffff ? 2 : 1;
+    if (!IGNORED.has(codePoint)) {
+      const read = plain(codePoint);
+      if (read != null) {
+        out += read;
+        origin.push(i);
+      } else {
+        for (let j = 0; j < width; j++) {
+          out += text[i + j];
+          origin.push(i + j);
+        }
+      }
+    }
+    i += width;
+  }
+  origin.push(text.length);
+  return { text: out, origin };
 };
-export const normalise = fold(plain);
-const lowercase = fold(lowerUnit);
+
+const lowered = (text) => {
+  let out = '';
+  for (let i = 0; i < text.length; i++) out += lowerUnit(text[i]);
+  return { text: out, origin: Array.from({ length: text.length + 1 }, (_, i) => i) };
+};
+
+export const normalise = (text) => folded(text).text;
 
 const matcher = (words, foldText) => {
-  const keys = words.map((w) => [foldText(w.word), w]).sort((a, b) => b[0].length - a[0].length);
+  const keys = words.map((w) => [foldText(w.word).text, w]).filter(([key]) => key.length > 0)
+    .sort((a, b) => b[0].length - a[0].length);
   return (text) => {
     if (!keys.length) return [];
-    const folded = foldText(text);
+    const { text: read, origin } = foldText(text);
     const hits = [];
     let at = 0;
-    while (at < folded.length) {
-      const hit = keys.find(([key]) => folded.startsWith(key, at));
+    while (at < read.length) {
+      const hit = keys.find(([key]) => read.startsWith(key, at));
       if (!hit) at++;
       else {
-        hits.push([at, at + hit[0].length, hit[1]]);
+        hits.push([origin[at], origin[at + hit[0].length], hit[1]]);
         at += hit[0].length;
       }
     }
@@ -42,8 +78,8 @@ const matcher = (words, foldText) => {
 
 export const wordList = (words, normalising = false) => {
   const matched = words.filter((w) => w.word.length > 0);
-  const censoring = matcher(matched, normalising ? normalise : lowercase);
-  const hiding = matcher(matched.filter((w) => w.hideMessage), normalise);
+  const censoring = matcher(matched, normalising ? folded : lowered);
+  const hiding = matcher(matched.filter((w) => w.hideMessage), folded);
   return Object.freeze({
     hides: (text) => hiding(text).length > 0,
     censor: (text) => {

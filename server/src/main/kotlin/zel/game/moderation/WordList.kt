@@ -3,7 +3,7 @@ package zel.game.moderation
 /** Filtered words matched case-insensitively anywhere, longest first; withholding words on normalised text. */
 class WordList(
     words: List<FilteredWord>,
-    fold: (String) -> String = ChatNormaliser::lowercase,
+    fold: (String) -> ChatNormaliser.Folded = ChatNormaliser::lowercase,
 ) {
     data class Censored(
         val text: String,
@@ -29,25 +29,27 @@ class WordList(
         return Censored(out.toString(), hits.map { it.second }.distinct())
     }
 
-    /** Finds [words] in a text read through [fold], which keeps one character for one so ranges map back. */
+    /** Finds [words] in a text read through [fold]. */
     private class Matcher(
         words: List<FilteredWord>,
-        private val fold: (String) -> String,
+        private val fold: (String) -> ChatNormaliser.Folded,
     ) {
-        private val keys = words.map { fold(it.key) to it }.sortedByDescending { it.first.length }
+        private val keys = words.map { fold(it.key).text to it }.sortedByDescending { it.first.length }
 
         fun matches(text: String): List<Pair<IntRange, FilteredWord>> {
             if (keys.isEmpty()) return emptyList()
             val folded = fold(text)
+            val chars = folded.text
             val hits = ArrayList<Pair<IntRange, FilteredWord>>()
             var at = 0
-            while (at < folded.length) {
-                val hit = keys.firstOrNull { (key, _) -> folded.startsWith(key, at) }
+            while (at < chars.length) {
+                val hit = keys.firstOrNull { (key, _) -> chars.startsWith(key, at) }
                 if (hit == null) {
                     at++
                 } else {
-                    hits += (at until at + hit.first.length) to hit.second
-                    at += hit.first.length
+                    val end = at + hit.first.length
+                    hits += (folded.origin[at] until folded.origin[end]) to hit.second
+                    at = end
                 }
             }
             return hits

@@ -3,11 +3,14 @@ package zel.wired.chest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import zel.core.Configuration
+import zel.db.first
+import zel.db.write
 import zel.game.achievements.GameEvents
 import zel.game.earnings.WiredCreditEarnings
 import zel.game.economy.EconomyLedger
 import zel.game.items.Item
 import zel.game.items.ItemServices
+import zel.game.items.Items
 import zel.game.items.OwnedFurni
 import zel.game.items.ProductKind
 import zel.game.players.Player
@@ -190,7 +193,7 @@ class GameChests(
         stored: StoredFurni,
     ): OwnedFurni? {
         val manager = items()?.items() ?: return null
-        return manager.newFurni(
+        return kept(connection, manager, playerId, stored.furniId) ?: manager.newFurni(
             connection,
             playerId,
             manager.getItem(stored.definitionId),
@@ -198,6 +201,21 @@ class GameChests(
             stored.limitedNumber,
             stored.state,
         )
+    }
+
+    private fun kept(
+        connection: Connection,
+        manager: Items,
+        playerId: Int,
+        furniId: Int,
+    ): OwnedFurni? {
+        if (furniId <= 0) return null
+        val claimed =
+            connection.write(CLAIM_KEPT) {
+                int(playerId)
+                int(furniId)
+            } == 1
+        return if (claimed) connection.first(KEPT_ROW, { int(furniId) }, manager::readFurni) else null
     }
 
     private fun deliver(created: List<Pair<Int, OwnedFurni>>) {
@@ -325,5 +343,9 @@ class GameChests(
         const val UNSEEN_FURNI = 1
         const val STARTER_NAME = "wired.chest.starter.name"
         const val STARTER_DESCRIPTION = "wired.chest.starter.description"
+        const val CLAIM_KEPT =
+            "UPDATE furni SET player_id = ? WHERE id = ? AND player_id IS NULL AND room_id IS NULL" +
+                " AND NOT EXISTS (SELECT 1 FROM marketplace_listings l WHERE l.furni_id = furni.id AND l.state <> 2)"
+        const val KEPT_ROW = "SELECT * FROM furni WHERE id = ?"
     }
 }

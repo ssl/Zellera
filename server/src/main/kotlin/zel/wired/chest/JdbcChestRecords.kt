@@ -84,6 +84,7 @@ internal class JdbcChestRecords(
             limitedNumber = rows.getInt("limited_number"),
             limitedTotal = rows.getInt("limited_total"),
             extra = rows.getInt("extra"),
+            furniId = rows.getInt("furni_id"),
         )
 
     /** Inside the caller's transaction. */
@@ -107,6 +108,7 @@ internal class JdbcChestRecords(
             int(furni.limitedNumber)
             int(furni.limitedTotal)
             int(furni.extra)
+            int(furni.furniId)
             int(rowId)
         }
     }
@@ -147,7 +149,7 @@ internal class JdbcChestRecords(
                 "c.notify_mode, c.notify_full, c.notify_donation, c.notify_withdraw, c.notify_empty, c.notify_wired"
         const val FURNI_COLUMNS =
             "f.slot_id, f.transaction_id, f.definition_id, f.sprite_id, f.is_wall, f.groupable, f.state, " +
-                "f.poster_code, f.limited_number, f.limited_total, f.extra"
+                "f.poster_code, f.limited_number, f.limited_total, f.extra, f.furni_id"
         const val ROOM_CHESTS =
             "SELECT ${BuildPassRowIds.CLIENT_FACING} AS id, $CHEST_COLUMNS FROM wired_chests c " +
                 "JOIN furni i ON i.id = c.furni_id ${BuildPassRowIds.JOIN} WHERE i.room_id = ?"
@@ -175,7 +177,8 @@ internal class JdbcChestRecords(
         const val DELETE_FURNI = "DELETE FROM wired_chest_furni WHERE chest_id = ?"
         const val SAVE_FURNI =
             "INSERT INTO wired_chest_furni (slot_id, transaction_id, definition_id, sprite_id, is_wall, groupable, " +
-                "state, poster_code, limited_number, limited_total, extra, chest_id) " +
-                "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, c.furni_id FROM wired_chests c WHERE c.furni_id = ?"
+                "state, poster_code, limited_number, limited_total, extra, furni_id, chest_id) " +
+                "SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT i.id FROM furni i WHERE i.id = ?), c.furni_id " +
+                "FROM wired_chests c WHERE c.furni_id = ?"
     }
 }

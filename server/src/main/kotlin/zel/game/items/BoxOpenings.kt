@@ -23,7 +23,8 @@ object BoxOpenings {
             " AND NOT EXISTS (SELECT 1 FROM wired_spawned_furni WHERE furni_id = furni.id) LIMIT 1"
     const val CLAIM_GIFT_CONTENT_SQL =
         "UPDATE furni SET player_id = ? WHERE id = ? AND player_id IS NULL AND room_id IS NULL" +
-            " AND NOT EXISTS (SELECT 1 FROM marketplace_listings l WHERE l.furni_id = furni.id AND l.state <> 2) LIMIT 1"
+            " AND NOT EXISTS (SELECT 1 FROM marketplace_listings l WHERE l.furni_id = furni.id AND l.state <> 2)" +
+            " AND NOT EXISTS (SELECT 1 FROM wired_chest_furni c WHERE c.furni_id = furni.id) LIMIT 1"
     const val OPENED_GIFT_CONTENT_SQL = "SELECT * FROM furni WHERE id = ? AND player_id = ? LIMIT 1"
 
     fun boxDay(date: LocalDate): String = date.toString()

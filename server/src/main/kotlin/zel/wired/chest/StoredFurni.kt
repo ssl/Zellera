@@ -12,4 +12,5 @@ data class StoredFurni(
     val limitedNumber: Int,
     val limitedTotal: Int,
     val extra: Int,
+    val furniId: Int = 0,
 )

@@ -50,12 +50,12 @@ class JdbcChestStore(
         make: (Connection, Int, StoredFurni) -> T?,
     ): ChestSettlement.Written<T> =
         dataSource.inOneTransaction { c ->
-            val deleted =
-                c.writeEach(DELETE_ITEM, settlement.paid) {
+            val parked =
+                c.writeEach(PARK_ITEM, settlement.paid) {
                     int(it)
                     int(settlement.payerId)
                 }
-            if (deleted.any { it != 1 }) throw SQLException("a furni paid into a chest is no longer the payer's")
+            if (parked.any { it != 1 }) throw SQLException("a furni paid into a chest is no longer the payer's")
             settlement.chests.forEach { (id, record) -> chests.save(c, id, record) }
             c.writeEach(LOG, settlement.rows) { row -> entry(row) }
             c.writeEach(LOG_FURNI, settlement.rows.flatMap(::furniLines)) { line -> furniLine(line) }
@@ -225,7 +225,7 @@ class JdbcChestStore(
                 "amount, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)"
         const val LOCK_OWNER = "SELECT id FROM players WHERE id = ? FOR UPDATE"
         const val COUNT_PENDING = "SELECT COUNT(*) FROM wired_chest_notices WHERE player_id = ?"
-        const val DELETE_ITEM = "DELETE FROM furni WHERE id = ? AND player_id = ?"
+        const val PARK_ITEM = "UPDATE furni SET player_id = NULL WHERE id = ? AND player_id = ? AND room_id IS NULL"
         const val PAYOUT_KIND = "credit_grant"
         const val PAYOUT_REASON = "wired.chest.payout"
         const val TRADE_STANDING =

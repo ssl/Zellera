@@ -95,6 +95,7 @@ class ChestMoves(
                     limitedNumber = item.limitedNumber,
                     limitedTotal = item.limitedTotal,
                     extra = item.extra,
+                    furniId = item.id,
                 )
             delta.chest.furni += stored
             delta.deposited += stored

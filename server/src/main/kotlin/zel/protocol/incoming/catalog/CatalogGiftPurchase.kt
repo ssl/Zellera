@@ -172,9 +172,16 @@ class CatalogGiftPurchase(
         val inside =
             contents.fill(gift.client, gift.sender, boxed.item, gift.request, charge.edition, charge.furni) ?: return
         val box =
-            contents.wrap(gift.client, gift.sender, gift.request, gift.receiverId, boxed.box.item, inside) ?: return
+            contents.wrap(
+                gift.client,
+                gift.sender,
+                gift.request,
+                gift.receiverId,
+                boxed.box.item,
+                inside,
+                charge.edition,
+            ) ?: return
         charge.furni += box
-        charge.edition?.let { edition -> inside.forEach { edition.stock.markSold(gift.sender, it) } }
         receiver?.client?.send(InventoryUpdateItem(listOf(box)))
         recordSale(gift, boxed.item)
     }

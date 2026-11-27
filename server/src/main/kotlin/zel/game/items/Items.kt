@@ -150,6 +150,16 @@ class Items(
             }
         }
 
+    fun deliverGift(
+        playerId: Int,
+        furni: OwnedFurni,
+    ) {
+        players()?.find(playerId)?.let { receiver ->
+            receiver.inventory.furni.put(furni)
+            receiver.client?.send(AddRoomItem(furni))
+        }
+    }
+
     /** The teleport pair row goes with it (the pair table cascades). */
     fun deleteFurni(furniId: Int) {
         queries.withConnection { connection -> connection.write(DELETE_FURNI_SQL) { int(furniId) } }

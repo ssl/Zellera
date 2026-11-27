@@ -1,5 +1,8 @@
 package zel.protocol.incoming.catalog
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import zel.db.allOrNothing
 import zel.game.catalog.CatalogOffer
 import zel.game.catalog.CatalogServices
 import zel.game.items.GiftWrap
@@ -9,6 +12,7 @@ import zel.game.players.Player
 import zel.net.clients.ClientConnection
 import zel.protocol.outgoing.catalog.CatalogReplies
 import zel.protocol.outgoing.catalog.PurchaseError
+import java.sql.SQLException
 
 /** The box's state holds contents, wrapping, message and sender. */
 internal class GiftContents(
@@ -34,6 +38,7 @@ internal class GiftContents(
         return inside.takeIf { complete }
     }
 
+    @Suppress("LongParameterList") // one gift in flight
     fun wrap(
         client: ClientConnection,
         sender: Player,
@@ -41,6 +46,7 @@ internal class GiftContents(
         receiverId: Int,
         box: Item,
         inside: List<OwnedFurni>,
+        reservation: GiftLimited.Reservation?,
     ): OwnedFurni? {
         val profile = sender.profile
         val wrap =
@@ -53,10 +59,35 @@ internal class GiftContents(
                 senderName = profile.name,
                 senderLook = profile.figure,
             )
-        val gift = services.items.giveFurni(receiverId, box, wrap.state(), 0, 0)
-        if (gift == null) CatalogReplies.purchaseFailed(client, PurchaseError.GENERIC)
+        val gift = writeBox(sender, receiverId, box, wrap.state(), inside, reservation)
+        if (gift == null) {
+            CatalogReplies.purchaseFailed(client, PurchaseError.GENERIC)
+            return null
+        }
+        services.items.deliverGift(receiverId, gift)
         return gift
     }
+
+    private fun writeBox(
+        sender: Player,
+        receiverId: Int,
+        box: Item,
+        state: String,
+        inside: List<OwnedFurni>,
+        reservation: GiftLimited.Reservation?,
+    ): OwnedFurni? =
+        try {
+            services.database.dataSource.connection.use { connection ->
+                connection.allOrNothing {
+                    services.items.newFurni(connection, receiverId, box, 0, 0, state)?.also {
+                        inside.forEach { item -> reservation?.stock?.markSold(connection, sender, item) }
+                    }
+                }
+            }
+        } catch (e: SQLException) {
+            log.error("Wrapping a gift for player {} failed", receiverId, e)
+            null
+        }
 
     /** A teleport comes as a linked pair; false when a furni could not be made. */
     @Suppress("LongParameterList") // see fill
@@ -82,6 +113,7 @@ internal class GiftContents(
     }
 
     private companion object {
+        val log: Logger = LoggerFactory.getLogger(GiftContents::class.java)
         const val RENTED_BOT_PREFIX = "rentable_bot_"
     }
 }

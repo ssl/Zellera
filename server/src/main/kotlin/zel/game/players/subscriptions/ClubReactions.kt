@@ -95,7 +95,7 @@ class ClubReactions(
             if (achievements.isEmpty()) return
             val stats = profile.loadStats()
             for (achievement in achievements) {
-                val missing = stats.club.totalClubDays - maxOf(stats.progressOf(achievement), 0)
+                val missing = stats.club.pastClubDays - maxOf(stats.progressOf(achievement), 0)
                 if (missing > 0) achievement.progressFor(profile.id, missing)
             }
         }

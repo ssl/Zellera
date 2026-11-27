@@ -6,6 +6,7 @@ import zel.game.achievements.count
 import zel.game.camera.CameraService
 import zel.game.camera.PhotoCompetition
 import zel.game.economy.LedgerEntry
+import zel.game.permissions.Privilege
 import zel.game.permissions.isAnyOwner
 import zel.game.quests.CountedAction
 import zel.game.quests.PlayerActions
@@ -90,6 +91,7 @@ class CameraPackets(
         frame: ByteArray,
     ) {
         val player = session.client.player ?: return
+        if (!player.hasPermission(Privilege.PERK_CAMERA)) return session.url("")
         val userId = player.profile.id
         val roomId = services.game.rooms.roomOf(userId) ?: return
         val json = inflateFrame(length, frame) ?: return
@@ -108,6 +110,7 @@ class CameraPackets(
         frame: ByteArray,
     ) {
         val player = session.client.player ?: return
+        if (!player.hasPermission(Privilege.PERK_ROOM_THUMBNAIL_CAMERA)) return
         val userId = player.profile.id
         val rooms = services.game.rooms
         val roomId = rooms.roomOf(userId) ?: return
@@ -127,7 +130,7 @@ class CameraPackets(
         val client = session.client
         val player = client.player ?: return
         val userId = player.profile.id
-        if (camera.preview(userId) == null || !player.stats.standing.safetyAllows()) return
+        if (!player.hasPermission(Privilege.PERK_CAMERA) || camera.preview(userId) == null || !player.stats.standing.safetyAllows()) return
 
         val price = CameraPrices.from(services.config).photo
         if (player.profile.credits < price.credits) {
@@ -161,7 +164,7 @@ class CameraPackets(
         val client = session.client
         val player = client.player ?: return
         val userId = player.profile.id
-        if (camera.preview(userId) == null || !player.stats.standing.safetyAllows()) {
+        if (!player.hasPermission(Privilege.PERK_CAMERA) || camera.preview(userId) == null || !player.stats.standing.safetyAllows()) {
             session.publishStatus(false, "")
             return
         }
@@ -195,7 +198,7 @@ class CameraPackets(
     private fun enterCompetition(session: PacketSession) {
         val player = session.client.player ?: return
         val userId = player.profile.id
-        val preview = camera.preview(userId)
+        val preview = camera.preview(userId).takeIf { player.hasPermission(Privilege.PERK_CAMERA) }
         val door = competition.door(userId)
         if (preview == null || door == PhotoCompetition.Door.CLOSED) {
             session.competition(false, FAILED)

@@ -216,14 +216,13 @@ export const createCms = ({
 
     const cfg = await db.settings();
     const maxPerIp = Number(cfg['site.registration.accounts_per_address']) || 0;
-    if (maxPerIp > 0 && !isLoopbackIp(ip) && await db.accountsForIp(ip) >= maxPerIp) {
-      return fail(res, 429, `This connection already has ${maxPerIp} accounts.`);
-    }
+    const overCap = maxPerIp > 0 && !isLoopbackIp(ip);
     const hash = await hashPassword(password);
     const avatar = await newAvatar(username, ip);
     let made;
     try {
       made = await db.withRegisterLock(async () => {
+        if (overCap && await db.accountsForIp(ip) >= maxPerIp) return 'tooMany';
         if (await db.usernameTaken(username)) return 'username';
         if (email && await db.emailTaken(email)) return 'email';
         return db.createUser({ password: hash, mail: email, ...avatar });
@@ -233,6 +232,7 @@ export const createCms = ({
       if (key === null) throw e;
       made = key === dbModule.EMAIL_KEY ? 'email' : 'username';
     }
+    if (made === 'tooMany') return fail(res, 429, `This connection already has ${maxPerIp} accounts.`);
     if (made === 'username' && !email) return fail(res, 409, 'That username is taken. Try another one.', 'username');
     if (made === 'username' || made === 'email') return fail(res, 409, NOT_AVAILABLE);
     return json(res, 201, { ok: true, next: '/me' }, {
@@ -251,24 +251,26 @@ export const createCms = ({
     if (ban) return fail(res, 403, banNotice(ban));
     const cfg = await db.settings();
     const maxPerIp = Number(cfg['site.registration.accounts_per_address']) || 0;
-    if (maxPerIp > 0 && !isLoopbackIp(ip) && await db.accountsForIp(ip) >= maxPerIp) {
-      return fail(res, 429, `This connection already has ${maxPerIp} accounts.`);
-    }
+    const overCap = maxPerIp > 0 && !isLoopbackIp(ip);
     const password = randomBytes(24).toString('base64url');
     const hash = await hashPassword(password);
     let made = null;
+    let tooMany = false;
     let username = '';
-    for (let tries = 0; tries < 8 && !made; tries++) {
+    for (let tries = 0; tries < 8 && !made && !tooMany; tries++) {
       username = `Guest${randomInt(1000, 1000000)}`;
       if (usernameProblem(username)) return fail(res, 503, 'Guest accounts are not possible with these name rules.');
       const avatar = await newAvatar(username, ip);
       try {
-        made = await db.withRegisterLock(async () => (await db.usernameTaken(username)
-          ? null : db.createUser({ password: hash, mail: null, mayChangeName: true, ...avatar })));
+        made = await db.withRegisterLock(async () => {
+          if (overCap && await db.accountsForIp(ip) >= maxPerIp) { tooMany = true; return null; }
+          return (await db.usernameTaken(username)) ? null : db.createUser({ password: hash, mail: null, mayChangeName: true, ...avatar });
+        });
       } catch (e) {
         if (dbModule.duplicateKey(e) === null) throw e;
       }
     }
+    if (tooMany) return fail(res, 429, `This connection already has ${maxPerIp} accounts.`);
     if (!made) return fail(res, 503, 'Could not make a guest account. Try again.');
     return json(res, 201, { ok: true, username, password }, {
       'set-cookie': loginCookie(req, { id: made.accountId, password: hash }, made.userId, GUEST_SESSION_TTL),

@@ -190,6 +190,7 @@ cmd_import() {
 cmd_backup() {
   [ $# = 0 ] || fail "backup takes no arguments"
   load_env
+  db_secrets
   backup_make
 }
 

@@ -67,6 +67,7 @@ internal class ContentImporter(
                 clear(section, roomIds, section.id in declared)
                 stagedColumns[section.id]?.let { write(section, it) }
             }
+            connection.executeAll(COUNT_LIMITED_SALES)
             writeClientStrings(clientStrings)
             writePackInfo(pack)
             connection.commit()
@@ -173,6 +174,8 @@ internal class ContentImporter(
         if (section.mode == ImportMode.PLAYERS) {
             val updates = columns.filter { it != "id" }.joinToString(",") { "`$it` = VALUES(`$it`)" }
             connection.executeAll("INSERT INTO `${section.table}` ($list) $from ON DUPLICATE KEY UPDATE $updates")
+        } else if (section.skip != null) {
+            connection.executeAll("INSERT INTO `${section.table}` ($list) $from WHERE NOT (${section.skip})")
         } else {
             connection.executeAll("REPLACE INTO `${section.table}` ($list) $from")
         }
@@ -230,6 +233,9 @@ internal class ContentImporter(
         private val LOGGER = LoggerFactory.getLogger(ContentImporter::class.java)
         private const val BATCH_ROWS = 200
         private const val INSERT_CLIENT_STRING = "INSERT INTO client_strings (name, value) VALUES (?, ?)"
+        private const val COUNT_LIMITED_SALES =
+            "UPDATE catalogue_offers o SET limited_sold = LEAST(o.limited_total, " +
+                "(SELECT COUNT(*) FROM catalogue_limited_sales s WHERE s.offer_id = o.id)) WHERE o.limited_total > 0"
 
         private const val SQL_MODE = "STRICT_ALL_TABLES,NO_ENGINE_SUBSTITUTION"
     }

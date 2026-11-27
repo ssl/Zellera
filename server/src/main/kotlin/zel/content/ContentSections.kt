@@ -52,7 +52,12 @@ internal object ContentSections {
             TableSection("catalogue/build-pages", "catalogue_pages", keep = ALL_ROWS),
             TableSection("catalogue/build-items", "catalogue_offers", keep = ALL_ROWS, retired = setOf("rent_days")),
             TableSection("catalogue/build-offer-items", "catalogue_offer_items", keep = ALL_ROWS),
-            TableSection("catalogue/limited", "catalogue_limited_sales"),
+            TableSection(
+                "catalogue/limited",
+                "catalogue_limited_sales",
+                keep = ALL_ROWS,
+                skip = "offer_id IN (SELECT offer_id FROM catalogue_limited_sales)",
+            ),
             TableSection("catalogue/clothing", "clothing"),
             TableSection("catalogue/clothing-sets", "clothing_sets"),
             TableSection("catalogue/club-offers", "club_offers"),

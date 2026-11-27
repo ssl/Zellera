@@ -32,6 +32,7 @@ interface ChestStore {
 
     fun chestLogs(
         chestId: Int,
+        roomId: Int,
         size: Int,
         page: Int,
     ): Pair<List<TransactionRow>, Int>

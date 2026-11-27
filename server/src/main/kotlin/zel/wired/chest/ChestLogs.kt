@@ -16,9 +16,10 @@ class ChestLogs(
     fun chestList(
         session: PacketSession,
         chestId: Int,
+        roomId: Int,
         pageSize: Int,
         page: Int,
-    ) = list(session, TYPE_CHEST, chestId, pageSize, page) { size, p -> store.chestLogs(chestId, size, p) }
+    ) = list(session, TYPE_CHEST, chestId, pageSize, page) { size, p -> store.chestLogs(chestId, roomId, size, p) }
 
     fun roomList(
         session: PacketSession,

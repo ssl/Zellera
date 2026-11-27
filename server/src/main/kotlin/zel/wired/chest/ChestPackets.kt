@@ -101,7 +101,7 @@ class ChestPackets(
                 inRoom(session) { scope, player, level ->
                     val readable = masks(scope.room).mayRead(level) && desk.chests.inRoom(scope.room, m.chestId) != null
                     if (readable) {
-                        desk.logs.chestList(session, m.chestId, m.pageSize, m.page)
+                        desk.logs.chestList(session, m.chestId, scope.room.info.id, m.pageSize, m.page)
                     } else {
                         scope.refuseChestUse(player, NO_READ)
                     }

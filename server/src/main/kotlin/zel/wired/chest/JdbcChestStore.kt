@@ -123,15 +123,16 @@ class JdbcChestStore(
 
     override fun chestLogs(
         chestId: Int,
+        roomId: Int,
         size: Int,
         page: Int,
-    ): Pair<List<TransactionRow>, Int> = logs("chest_id", chestId, size, page)
+    ): Pair<List<TransactionRow>, Int> = logs(listOf("chest_id" to chestId, "room_id" to roomId), size, page)
 
     override fun roomLogs(
         roomId: Int,
         size: Int,
         page: Int,
-    ): Pair<List<TransactionRow>, Int> = logs("room_id", roomId, size, page)
+    ): Pair<List<TransactionRow>, Int> = logs(listOf("room_id" to roomId), size, page)
 
     override fun transaction(id: Long): TransactionRow? {
         val entry = sql.select("$ENTRIES WHERE id = ?") { long(id) }.first(::transactionRow) ?: return null
@@ -171,19 +172,21 @@ class JdbcChestStore(
         } != false
 
     private fun logs(
-        column: String,
-        value: Int,
+        conditions: List<Pair<String, Int>>,
         size: Int,
         page: Int,
     ): Pair<List<TransactionRow>, Int> {
+        val where = conditions.joinToString(" AND ") { "${it.first} = ?" }
         val total =
-            sql.select("SELECT COUNT(*) FROM wired_chest_log WHERE $column = ?") { int(value) }.first {
-                it.getInt(1)
-            }
+            sql
+                .select("SELECT COUNT(*) FROM wired_chest_log WHERE $where") {
+                    conditions.forEach { int(it.second) }
+                }.first { it.getInt(1) }
+        val scopedWhere = conditions.joinToString(" AND ") { "l.${it.first} = ?" }
         val rows =
             sql
-                .select("$ENTRIES WHERE l.$column = ? ORDER BY l.logged_at DESC, l.id ASC LIMIT ? OFFSET ?") {
-                    int(value)
+                .select("$ENTRIES WHERE $scopedWhere ORDER BY l.logged_at DESC, l.id ASC LIMIT ? OFFSET ?") {
+                    conditions.forEach { int(it.second) }
                     int(size)
                     long((page - 1).coerceAtLeast(0).toLong() * size)
                 }.rows(::transactionRow)

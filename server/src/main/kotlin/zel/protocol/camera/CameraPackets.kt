@@ -141,10 +141,10 @@ class CameraPackets(
         val items = checkNotNull(services.game.items)
         val item = items.getItem(services.config.getInt("camera.photo.furni_id"))
         if (item == null || "display.image" != item.interaction.name) return
-        val stored = camera.photo(userId) ?: return
         if (!price.takeFrom(player.wallet, LedgerEntry.newKey("camera:buy:$userId"))) return
-        val photo = items.newFurni(userId, item, 0, 0, CameraService.itemData(stored))
-        if (photo == null) {
+        val stored = camera.photo(userId)
+        val photo = stored?.let { items.newFurni(userId, item, 0, 0, CameraService.itemData(it)) }
+        if (stored == null || photo == null) {
             price.refundTo(player.wallet)
             return
         }
@@ -161,8 +161,7 @@ class CameraPackets(
         val client = session.client
         val player = client.player ?: return
         val userId = player.profile.id
-        val stored = camera.photo(userId).takeIf { camera.preview(userId) != null }
-        if (stored == null || !player.stats.standing.safetyAllows()) {
+        if (camera.preview(userId) == null || !player.stats.standing.safetyAllows()) {
             session.publishStatus(false, "")
             return
         }
@@ -175,7 +174,8 @@ class CameraPackets(
             session.publishStatus(false, "")
             return
         }
-        if (!camera.published(stored)) {
+        val stored = camera.photo(userId)
+        if (stored == null || !camera.published(stored)) {
             price.refundTo(player.wallet)
             session.publishStatus(false, "")
             return

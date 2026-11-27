@@ -5,7 +5,7 @@ export const COMMAND_TYPES = Object.freeze(['setCurrency', 'addCurrency', 'giveB
 export const PUBLIC_COMMAND_TYPES = Object.freeze(['setMotto', 'setPrivacy']);
 
 const COMMAND_INSERT = Object.freeze(['player_id', 'kind', 'payload', 'created_by', 'created_at']);
-export const COMMAND_SELECT = Object.freeze(['id', 'player_id', 'kind', 'status', 'result', 'processed_at']);
+export const COMMAND_SELECT = Object.freeze(['id', 'player_id', 'kind', 'payload', 'status', 'result', 'processed_at']);
 export const COMMAND_GRANT = Object.freeze({ table: 'web_commands', insert: [...COMMAND_INSERT], select: [...COMMAND_SELECT] });
 
 const currencies = () => {
@@ -42,6 +42,15 @@ export const insertCommand = async (query, { userId, type, payload, createdBy = 
   const id = Number(r?.insertId);
   if (!(id > 0)) throw new Error('web_commands: no row id');
   return id;
+};
+
+export const pendingPayloads = async (db, userId, kind) => {
+  const rows = await db.query(sql`SELECT payload FROM web_commands
+    WHERE player_id = ${Number(userId)} AND kind = ${kind} AND status = 'pending' ORDER BY id`);
+  return [...rows].map((r) => {
+    if (r.payload && typeof r.payload === 'object') return r.payload;
+    try { return JSON.parse(String(r.payload ?? '{}')); } catch { return {}; }
+  });
 };
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });

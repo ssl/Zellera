@@ -4,6 +4,7 @@ import { SITE_API } from './index.mjs';
 import { showsHousekeepingLink } from '../hk-api/_guard.mjs';
 import { checkTyped } from './me-motto.mjs';
 import { titleOf } from './news.mjs';
+import { pendingPayloads } from '../cms/lib/commands.mjs';
 import {
   GRANTS, SEARCH_ROWS, friends, latestNews, memberships, mottoRules, myGroups, myRooms, ownUser, purse, searchUsers,
 } from './me-queries.mjs';
@@ -87,7 +88,9 @@ export const routes = [
       if (error) return refuse(400, error);
       const user = await ownUser(ctx.db, Number(s.userId));
       if (!user) return loginFirst(ctx, res);
-      if (motto === String(user.motto ?? '')) return ctx.send.json(res, 200, { ok: true, state: 'saved', motto });
+      let effective = String(user.motto ?? '');
+      for (const p of await pendingPayloads(ctx.db, user.id, 'setMotto')) if (typeof p.motto === 'string') effective = p.motto;
+      if (motto === effective) return ctx.send.json(res, 200, { ok: true, state: 'saved', motto });
 
       let row;
       try {

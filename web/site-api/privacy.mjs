@@ -1,4 +1,4 @@
-import { COMMAND_GRANT } from '../cms/lib/commands.mjs';
+import { COMMAND_GRANT, pendingPayloads } from '../cms/lib/commands.mjs';
 import { loginFirst, signedIn } from '../cms/lib/session.mjs';
 import { sql } from '../cms/lib/sql.mjs';
 import { SITE_API } from './index.mjs';
@@ -50,8 +50,12 @@ export const routes = [
         return ctx.send.error(res, 400, 'Bad request', 'The request named no setting to change.');
       }
       const before = await privacyOf(ctx.db, userId);
-      const changed = Object.fromEntries(Object.entries(given).filter(([k, v]) => before[k] !== v));
-      if (Object.keys(changed).length === 0) return ctx.send.json(res, 200, { ok: true, state: 'saved', privacy: before });
+      const effective = { ...before };
+      for (const p of await pendingPayloads(ctx.db, userId, 'setPrivacy')) {
+        for (const k of Object.keys(CHOICES)) if (typeof p[k] === 'boolean') effective[k] = p[k];
+      }
+      const changed = Object.fromEntries(Object.entries(given).filter(([k, v]) => effective[k] !== v));
+      if (Object.keys(changed).length === 0) return ctx.send.json(res, 200, { ok: true, state: 'saved', privacy: effective });
       let row;
       try {
         const id = await ctx.command('setPrivacy', changed);
@@ -60,7 +64,7 @@ export const routes = [
         ctx.log(`privacy for user ${userId} not sent: ${e?.message ?? e}`);
         return ctx.send.error(res, 503, 'Not saved', 'Your settings could not be saved right now. Try again in a minute.');
       }
-      if (!row || row.status === 'pending') return ctx.send.json(res, 202, { ok: true, state: 'pending', privacy: { ...before, ...changed } });
+      if (!row || row.status === 'pending') return ctx.send.json(res, 202, { ok: true, state: 'pending', privacy: { ...effective, ...changed } });
       if (row.status !== 'done') return ctx.send.error(res, 422, 'Not saved', `The game did not save it: ${row.result || 'it was refused.'}`);
       return ctx.send.json(res, 200, { ok: true, state: 'saved', privacy: await privacyOf(ctx.db, userId) });
     },

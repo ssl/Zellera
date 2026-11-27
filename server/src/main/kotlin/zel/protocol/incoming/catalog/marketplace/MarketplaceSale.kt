@@ -46,7 +46,7 @@ class MarketplaceSale(
         }
 
         val first = items.first()
-        if (!first.definition.canSell || !MarketplacePrices.isListable(credits)) {
+        if (!first.definition.canTrade || !first.definition.canSell || !MarketplacePrices.isListable(credits)) {
             CatalogReplies.marketplacePostResult(client, MarketplacePostResult.FAILED)
             return
         }

@@ -1,6 +1,7 @@
 package zel.room.unit.bot
 
 import zel.game.bots.BotLimits
+import zel.game.permissions.Privilege
 import zel.game.players.Player
 import zel.protocol.generated.BotErrorOut
 import zel.protocol.generated.BotErrorOutCodec
@@ -60,6 +61,7 @@ class BotSettings(
         placed: RoomBot,
         data: String,
     ) {
+        if (muted(player)) return
         val lineLength = minOf(ChatText.MAX_LENGTH, BotLimits.STORED_LINE_LENGTH)
         if (data.length > BotLimits.MAX_CHAT_LINES * (lineLength + 1) + SETTINGS_ROOM) return
         val parts = data.split(SEPARATOR)
@@ -129,6 +131,9 @@ class BotSettings(
         unit.face((unit.bodyDirection + 2) % UnitDirection.COUNT)
         walking.sendNow(scope, listOf(unit))
     }
+
+    private fun muted(player: Player): Boolean =
+        !player.stats.standing.mayTalk() && !player.hasPermission(Privilege.CHAT_MUTE_IMMUNE)
 
     private fun resend(
         scope: RoomScope,

@@ -263,6 +263,7 @@ class Game(
                     },
                     kickBanned = { id -> moderationService?.banning?.kickBanned(id) == true },
                     releaseTicket = { id -> moderationService?.tickets?.releaseStuck(id) == true },
+                    muteOffline = { id, seconds -> moderationService?.mutes?.give(id, seconds) },
                 ) { rooms }.processor
             }
         webCommandProcessor?.start()

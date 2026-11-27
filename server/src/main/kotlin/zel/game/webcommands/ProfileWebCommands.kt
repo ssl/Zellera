@@ -48,7 +48,7 @@ internal class ProfileWebCommands(
         if (typed.length > MOTTO_MAX_SENT) return WebCommandResult.failed("That motto is far too long.")
         val max = services.mottoMaxLength()
         val motto =
-            Mottos.accepted(typed, services.wordFilter, max)
+            Mottos.accepted(typed, { services.wordFilter(it, services.online(command.userId)) }, max)
                 ?: return WebCommandResult.failed("With the word filter it is longer than $max characters.")
 
         services.dataSource.connection.use { connection ->
@@ -62,6 +62,9 @@ internal class ProfileWebCommands(
             }
         }
 
+        if (services.online(command.userId) == null) {
+            services.muteSeconds(typed).takeIf { it > 0 }?.let { services.muteOffline(command.userId, it) }
+        }
         showMotto(command.userId, motto)
         return WebCommandResult.done(
             if (motto == typed.trim()) "Motto saved." else "Motto saved; the word filter changed it.",

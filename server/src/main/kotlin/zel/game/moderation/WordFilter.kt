@@ -40,6 +40,8 @@ class WordFilter(
         return censored.text
     }
 
+    fun muteSeconds(text: String): Int = list.censor(text).found.maxOfOrNull { it.muteSeconds } ?: 0
+
     private fun listFor(words: List<FilteredWord>) =
         WordList(
             words,

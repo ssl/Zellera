@@ -18,7 +18,7 @@ class WebCommandApplier(
         val online: (Int) -> Player?,
         val pointTypes: () -> Set<Int>,
         val mottoMaxLength: () -> Int,
-        val wordFilter: (String) -> String?,
+        val wordFilter: (String, Player?) -> String?,
         val badgeExists: (String) -> Boolean,
         val ranks: Ranks,
         val reloadSettings: () -> Unit,
@@ -29,6 +29,8 @@ class WebCommandApplier(
         val accountLevelChanged: (Int) -> Unit = {},
         val kickBanned: (Int) -> Boolean = { false },
         val releaseTicket: (Int) -> Boolean = { false },
+        val muteSeconds: (String) -> Int = { 0 },
+        val muteOffline: (Int, Int) -> Unit = { _, _ -> },
     )
 
     interface Ranks {

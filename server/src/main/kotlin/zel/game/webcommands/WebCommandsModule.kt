@@ -32,6 +32,7 @@ class WebCommandsModule(
     reloadTvPlaylists: () -> Unit,
     kickBanned: (Int) -> Boolean,
     releaseTicket: (Int) -> Boolean,
+    muteOffline: (Int, Int) -> Unit,
     rooms: () -> RoomPort,
 ) {
     val processor: WebCommandProcessor
@@ -44,7 +45,7 @@ class WebCommandsModule(
                     online = { id -> players.find(id) },
                     pointTypes = { EconomyLedger.pointTypes().toSet() },
                     mottoMaxLength = { Mottos.maxLength(config) },
-                    wordFilter = { text -> wordFilter.filter(text, null) },
+                    wordFilter = { text, player -> wordFilter.filter(text, player) },
                     badgeExists = badgeExists,
                     ranks = GameRanks(dataSource, players, permissions),
                     reloadSettings = { config.reload() },
@@ -54,6 +55,8 @@ class WebCommandsModule(
                     accountLevelChanged = accountLevelChanged,
                     kickBanned = kickBanned,
                     releaseTicket = releaseTicket,
+                    muteSeconds = wordFilter::muteSeconds,
+                    muteOffline = muteOffline,
                 ),
             )
         processor =

@@ -22,7 +22,7 @@ class GameClothing(
             .contains(item.id)
     }
 
-    override fun unlock(
+    override fun grant(
         player: Player,
         classname: String,
     ): Boolean {
@@ -30,9 +30,24 @@ class GameClothing(
         val wardrobe = player.inventory.wardrobe
         if (wardrobe.clothing.contains(item.id)) return false
         wardrobe.addClothing(item.id, item.setId)
+        return true
+    }
+
+    override fun settle(
+        player: Player,
+        classname: String,
+    ) {
+        val item = catalog()?.clothingSet(classname) ?: return
         val playerId = player.profile.id
         persist(Runnable { store(playerId, item.id) })
-        return true
+    }
+
+    override fun release(
+        player: Player,
+        classname: String,
+    ) {
+        val item = catalog()?.clothingSet(classname) ?: return
+        player.inventory.wardrobe.removeClothing(item.id, item.setId)
     }
 
     private fun store(

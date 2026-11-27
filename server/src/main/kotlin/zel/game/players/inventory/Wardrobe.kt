@@ -53,6 +53,14 @@ class Wardrobe(
 
     val clothingSets: IntCollection get() = setIds
 
+    fun removeClothing(
+        clothingId: Int,
+        sets: IntArray,
+    ) {
+        clothingIds.remove(clothingId)
+        sets.forEach(setIds::remove)
+    }
+
     fun addClothing(
         clothingId: Int,
         sets: IntArray,

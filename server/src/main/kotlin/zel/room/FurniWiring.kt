@@ -141,8 +141,12 @@ internal class FurniWiring(
         roomId: Int,
         rowId: Int,
         onDeleted: () -> Unit = {},
+        onFailed: () -> Unit = {},
     ) {
-        core.roomWrites.write(roomId, Runnable { if (special.host.deleteSpent(roomId, rowId)) onDeleted() })
+        core.roomWrites.write(
+            roomId,
+            Runnable { if (special.host.deleteSpent(roomId, rowId)) onDeleted() else onFailed() },
+        )
     }
 
     fun pickups(

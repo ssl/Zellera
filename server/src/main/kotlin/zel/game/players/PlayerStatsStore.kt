@@ -28,6 +28,8 @@ private const val SAVE_OFFER_PURCHASE =
 private const val SAVE_DISCORD_SQL =
     "UPDATE player_preferences SET discord_version = ?, discord_sharing = ? WHERE player_id = ?"
 
+private const val WRITE_MUTE_SQL = "UPDATE player_standing SET muted_until = ? WHERE player_id = ?"
+
 internal class PlayerStatsStore(
     private val services: GameServices,
     private val playerId: Int,
@@ -93,6 +95,19 @@ internal class PlayerStatsStore(
             playerId,
         )
     }
+
+    fun storeMutedUntil(until: Int) =
+        services.threading.write(MuteLane(playerId)) {
+            try {
+                services.database.queries.write(WRITE_MUTE_SQL, until, playerId)
+            } catch (e: SqlFailure) {
+                log.error("Storing the mute of user {} failed", playerId, e)
+            }
+        }
+
+    private data class MuteLane(
+        val playerId: Int,
+    )
 
     @Throws(SqlFailure::class)
     fun startOfferPurchase(offerId: Int) {

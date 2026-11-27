@@ -87,11 +87,13 @@ class Player(
     fun mute(seconds: Int): Boolean {
         if (seconds <= 0 || hasPermission(Privilege.CHAT_MUTE_IMMUNE)) return false
         stats.standing.mute(seconds)
+        stats.storeMute()
         return true
     }
 
     fun liftMute() {
         stats.standing.unmute()
+        stats.storeMute()
         client?.send(RemainingMutePeriod(0))
     }
 }

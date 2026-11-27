@@ -22,9 +22,16 @@ export default (ext) => {
     return owner;
   };
 
+  const muted = async (ctx, viewer) => {
+    const [row] = await ctx.db.query(sql`SELECT 1 FROM player_standing
+      WHERE player_id = ${viewer.id} AND muted_until > UNIX_TIMESTAMP() LIMIT 1`);
+    return Boolean(row);
+  };
+
   const writeRefusal = async (ctx, owner, viewer) => {
     if (!viewer.loggedIn) return 'login';
     if (await ctx.blocks.blocked(owner.id, viewer.id)) return 'blocked';
+    if (await muted(ctx, viewer)) return 'muted';
     return null;
   };
 
@@ -63,9 +70,11 @@ export default (ext) => {
     if (length(message) > MAX_LENGTH) return ctx.error(400, `A message is at most ${MAX_LENGTH} characters.`, { field: 'message' });
     const owner = await ownerFor(ctx, viewer);
     if (!owner) return;
-    if (await writeRefusal(ctx, owner, viewer) === 'blocked') {
+    const refusal = await writeRefusal(ctx, owner, viewer);
+    if (refusal === 'blocked') {
       return ctx.error(403, `${owner.name} does not take messages from you.`, { reason: 'blocked' });
     }
+    if (refusal === 'muted') return ctx.error(403, 'You cannot post while muted.', { reason: 'muted' });
     for (const [bucket, max, sec] of WRITE_LIMITS) if (!(await ctx.rateLimit(bucket, max, sec))) return;
     const filtered = await ctx.filter(message);
     const stored = cleanMessage(filtered.text);

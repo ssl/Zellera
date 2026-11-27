@@ -60,6 +60,8 @@ class PlayerStats internal constructor(
         }
     }
 
+    fun storeMute() = store.storeMutedUntil(standing.mutedUntil)
+
     @Synchronized
     fun dispose() {
         run()

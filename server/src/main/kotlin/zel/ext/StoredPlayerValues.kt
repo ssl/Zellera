@@ -83,6 +83,8 @@ internal class StoredPlayerValues(
             read(playerId, loaded)
         } catch (e: SQLException) {
             log.error("extension {}: reading the numbers of player {} failed", extension, playerId, e)
+            players.remove(playerId, entry)
+            return
         }
         synchronized(entry) {
             entry.waiting.forEach { it(loaded) }

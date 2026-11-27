@@ -27,10 +27,12 @@ class TriggerPackets(
             PacketRoute(ClickFurniInCodec) { session, m ->
                 withAvatar(session) { scope, unit ->
                     val id = m.itemId.absoluteValue
-                    if (scope.room.furni[id] != null) scope.raise(RoomEvent.ClickFurni(unit.index, id))
-                    session.client.player?.takeIf { it.services.config.getBoolean(TreasureHunts.SETTING) }?.let {
-                        it.services.game.treasureHunts
-                            ?.takeClick(it, id)
+                    if (scope.room.furni[id] != null) {
+                        scope.raise(RoomEvent.ClickFurni(unit.index, id))
+                        session.client.player?.takeIf { it.services.config.getBoolean(TreasureHunts.SETTING) }?.let {
+                            it.services.game.treasureHunts
+                                ?.takeClick(it, id)
+                        }
                     }
                 }
             },

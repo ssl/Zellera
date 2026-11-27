@@ -14,17 +14,21 @@ class DailyRefill(
     private val marks: ChoreMarks,
     private val round: DailyRound = DailyRound(),
     private val now: () -> Long = { Instant.now().epochSecond },
-    private val refill: () -> Unit,
+    private val refill: () -> Boolean,
 ) {
     private var filledAt: Long? = null
     private var asked = false
+
+    @Volatile
+    private var failed = false
 
     @Synchronized
     fun runIfDue() {
         val moment = now()
         val last = if (asked) filledAt else stored(moment)
         if (last != null && moment < round.endOf(round.numberAt(last))) return
-        refill()
+        failed = !refill()
+        if (failed) return
         filledAt = moment
         try {
             marks.write(CHORE, moment)
@@ -35,6 +39,7 @@ class DailyRefill(
 
     /** Until the running round ends, where the next look belongs. */
     fun untilNextRound(): Duration {
+        if (failed) return RETRY
         val moment = now()
         return Duration.ofSeconds((round.endOf(round.numberAt(moment)) - moment).coerceAtLeast(1))
     }
@@ -54,6 +59,7 @@ class DailyRefill(
 
     companion object {
         const val CHORE = "respects"
+        private val RETRY: Duration = Duration.ofMinutes(1)
         private val log: Logger = LoggerFactory.getLogger(DailyRefill::class.java)
     }
 }

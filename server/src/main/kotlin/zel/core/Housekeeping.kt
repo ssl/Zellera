@@ -104,7 +104,7 @@ class Housekeeping(
         }
     }
 
-    private fun refillDailyRespects() {
+    private fun refillDailyRespects(): Boolean {
         val respects = rules.dailyRespects
         val petRespects = rules.dailyPetRespects
         val refills = config.getInt("respect.buybacks.per_day", 1)
@@ -118,15 +118,17 @@ class Housekeeping(
             }
         } catch (e: SQLException) {
             log.error("daily respects not refilled", e)
+            return false
         }
 
-        if (!state.isReady) return
+        if (!state.isReady) return true
         game()?.players?.all?.forEach { player ->
             player.stats.tally.respectsLeft = respects
             player.stats.tally.petRespectsLeft = petRespects
             player.stats.tally.respectRefillsLeft = refills
             player.client?.send(UserData(player))
         }
+        return true
     }
 
     // One player's failure must not stop the others.

@@ -5,6 +5,7 @@ import zel.protocol.generated.ItemsStateUpdateOut
 import zel.protocol.generated.ItemsStateUpdateOutCodec
 import zel.room.furni.HeightMapChange
 import zel.room.furni.RoomFurni
+import zel.room.furni.StoredValues
 import zel.room.furni.Toggleable
 import zel.room.furni.place.Interactions
 import zel.room.tick.Audience
@@ -69,13 +70,16 @@ class ToggleState(
             return changed
         }
 
+        /** Toggle, toggle-to-random, match-to-snapshot and the furni-state variable all write through this. */
         fun toggles(furni: RoomFurni): Boolean {
             val type = Interactions.of(furni.definition)
             return !BoxCodes.isBox(type) &&
+                !StoredValues.holds(type) &&
                 type !in NEVER &&
                 NEVER_PREFIXES.none(type::startsWith)
         }
 
+        /** Look states wired leaves to the furni's own use: walkers, rides, games, pets and the like. */
         private val NEVER =
             setOf(
                 "wf_link",
@@ -89,22 +93,14 @@ class ToggleState(
                 "gate.oneway",
                 "puzzle.box",
                 "area.tent",
-                "display.trophy",
                 "water.area",
                 "effect.gym",
                 "transit.hopper",
                 "vending.plain",
                 "vending.any_side",
-                "gift.box",
-                "display.badge",
-                "outfit.mannequin",
                 "outfit.clothing",
-                "crack.plain",
-                "crack.master",
                 "counter.hockey",
                 "effect.trap",
-                "plant.pot",
-                "game.football.gate",
             )
 
         private val NEVER_PREFIXES =

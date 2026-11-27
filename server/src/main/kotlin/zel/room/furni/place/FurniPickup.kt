@@ -75,7 +75,7 @@ class FurniPickup(
         toOwner: Boolean,
     ) = inRoom(roomId) { scope ->
         if (scope.room.furni[furni.id] === furni && take(scope, furni, furni.ownerId, null) && toOwner) {
-            inventory.handBack(furni.ownerId, furni.id)
+            inventory.handBack(furni.placerId, furni.id)
         }
     }
 

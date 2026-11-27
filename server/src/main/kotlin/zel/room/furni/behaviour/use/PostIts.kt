@@ -60,7 +60,7 @@ class PostIts(
     ) {
         val note = note(scope, itemId) ?: return
         val blank = note.state.none { it == ' ' }
-        if (level < DoorCheck.RIGHTS && !(blank && note.ownerId == player.profile.id)) return
+        if (level < DoorCheck.RIGHTS && !(blank && note.placerId == player.profile.id)) return
         val config = player.services.config
         val shown = hooks.filter(text, player)
         if (shown.length > config.getInt(CHAR_LIMIT_KEY, MAX_TEXT)) return

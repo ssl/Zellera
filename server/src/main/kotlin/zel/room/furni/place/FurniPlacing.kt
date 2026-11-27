@@ -79,7 +79,10 @@ class FurniPlacing(
         if (!limits.notesLeft(room)) return FurniOut.error(scope, player, PlaceError.MaxStickies)
         if (!inventory.take(player, itemId)) return
         val state = item.state.takeUnless { it.isEmpty() || it == "0" } ?: NOTE_COLOUR
-        val furni = furniOf(item, null, 0.0, 0, state, position)
+        // As in Habbo, a note becomes the room owner's whoever sticks it up; an ownerless room leaves it the placer's.
+        val keeper = room.info.takeIf { it.ownerId > 0 }
+        val ownerId = keeper?.ownerId ?: item.ownerId
+        val furni = furniOf(item, null, 0.0, 0, state, position, ownerId, keeper?.ownerName ?: item.ownerName)
         room.furni.add(furni)
         scope.out.send(Lane.Now, Audience.Room, ItemAddOutCodec, FurniWire.itemAdd(furni))
         scope.out.send(Lane.Now, Audience.Player(player), FurniListRemoveOutCodec, FurniListRemoveOut(furni.id))
@@ -175,11 +178,13 @@ class FurniPlacing(
         direction: Int,
         state: String,
         wallPosition: String?,
+        ownerId: Int = item.ownerId,
+        ownerName: String = item.ownerName,
     ): RoomFurni =
         RoomFurni(
             id = item.id,
-            ownerId = item.ownerId,
-            ownerName = item.ownerName,
+            ownerId = ownerId,
+            ownerName = ownerName,
             definition = item.definition,
             behaviour = behaviours.forType(Interactions.behaviourKey(item.definition)),
             anchor = anchor,
@@ -189,9 +194,11 @@ class FurniPlacing(
             wallPosition = wallPosition,
             groupId = item.groupId,
             limitedData = item.limitedData,
+            placerId = item.ownerId,
+            placerName = item.ownerName,
         )
 
-    /** Moves the row from the owner's inventory into the room, outside the lock. */
+    /** Moves the row from the placer's inventory into the room, as its owner's, outside the lock. */
     @Suppress("TooGenericExceptionCaught") // logged; the room keeps the furni
     private fun write(
         room: Room,
@@ -203,8 +210,8 @@ class FurniPlacing(
             roomId,
             Runnable {
                 try {
-                    if (!transfers.putInRoom(roomId, furni.ownerId, save)) {
-                        log.warn("room {}: furni {} was no longer in its owner's inventory", roomId, furni.id)
+                    if (!transfers.putInRoom(roomId, furni.placerId, save, furni.ownerId)) {
+                        log.warn("room {}: furni {} was no longer in its placer's inventory", roomId, furni.id)
                         unplaced(roomId, furni, false)
                     }
                 } catch (e: Exception) {

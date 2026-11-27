@@ -36,6 +36,7 @@ class FurniStore(
         roomId: Int,
         ownerId: Int,
         place: FurniSave,
+        keeperId: Int,
     ): Boolean =
         sql.write(PUT_IN_ROOM) {
             int(roomId)
@@ -45,6 +46,7 @@ class FurniStore(
             double(place.z)
             int(place.direction)
             string(place.state)
+            int(keeperId)
             int(place.id)
             int(ownerId)
         } == 1
@@ -109,8 +111,8 @@ class FurniStore(
                 " WHERE id = ? AND room_id = ?"
 
         internal const val PUT_IN_ROOM =
-            "UPDATE furni SET room_id = ?, wall_position = ?, x = ?, y = ?, z = ?, direction = ?, state = ?" +
-                " WHERE id = ? AND player_id = ? AND room_id IS NULL" +
+            "UPDATE furni SET room_id = ?, wall_position = ?, x = ?, y = ?, z = ?, direction = ?, state = ?," +
+                " player_id = ? WHERE id = ? AND player_id = ? AND room_id IS NULL" +
                 " AND NOT EXISTS (SELECT 1 FROM room_playlist_discs WHERE furni_id = furni.id)"
 
         internal const val TAKE_TO_INVENTORY =

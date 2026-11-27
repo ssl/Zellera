@@ -108,8 +108,36 @@ class DealPlan(
             rule.filterNot { it.credits }.forEach { term ->
                 paid += offered.filter { it.wall == term.wall && it.spriteId == term.typeId }.take(term.amount * sets)
             }
-            if (rule.any { it.credits }) paid += offered.filter { isCreditPayment(it, rule) }
+            val creditsNeeded = rule.filter { it.credits }.sumOf { it.amount.toLong() * sets }
+            paid += creditsFor(creditsNeeded, offered.filter { isCreditPayment(it, rule) })
             return paid.toList() to offered.filterNot { it in paid }
+        }
+
+        private fun creditsFor(
+            needed: Long,
+            credit: List<OfferedFurni>,
+        ): List<OfferedFurni> {
+            val worth = { item: OfferedFurni -> CreditFurni.credits(item.name).toLong() }
+            val taken = ArrayList<OfferedFurni>()
+            var left = needed
+            for (item in credit.sortedByDescending(worth)) {
+                if (left > 0 && worth(item) <= left) {
+                    taken += item
+                    left -= worth(item)
+                }
+            }
+            val rest = credit.filterNot { it in taken }.sortedBy(worth)
+            rest.firstOrNull { left > 0 && worth(it) >= left }?.let {
+                taken += it
+                left = 0
+            }
+            for (item in rest) {
+                if (left <= 0) break
+                if (item in taken) continue
+                taken += item
+                left -= worth(item)
+            }
+            return taken
         }
 
         fun rewards(

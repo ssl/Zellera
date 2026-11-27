@@ -2,6 +2,7 @@ package zel.room.furni.behaviour.use
 
 import zel.game.players.Gender
 import zel.game.players.Player
+import zel.game.players.figure.LookValidation
 import zel.protocol.outgoing.users.UserData
 import zel.room.RoomScope
 import zel.room.port.RoomPort
@@ -20,7 +21,12 @@ class MannequinLooks(
         look: String,
     ) {
         val wearer = player(playerId) ?: return
-        wearer.profile.figure = look
+        wearer.profile.figure =
+            if (LookValidation.validateOnChangeLooks) {
+                LookValidation.allowedLook(wearer, look, wearer.profile.gender.name)
+            } else {
+                look
+            }
         rooms()?.appearanceChanged(playerId)
         wearer.client?.send(UserData(wearer))
     }

@@ -39,17 +39,25 @@ class Configuration(
     /** A startup key keeps its startup value. */
     fun loadTable() {
         tableLoaded = true
-        layers = Layers(startup, usable(readTable(), "setting", emptyMap()))
+        layers = Layers(startup, usable(readTable().orEmpty(), "setting", emptyMap()))
     }
 
     /** The first read may come before the pool is open, over a connection source of its own. */
     fun loadTable(source: DataSource) {
         tableLoaded = true
-        layers = Layers(startup, usable(readTable(NameValueTable("settings") { source }), "setting", emptyMap()))
+        val read = readTable(NameValueTable("settings") { source }).orEmpty()
+        layers = Layers(startup, usable(read, "setting", emptyMap()))
     }
 
     fun reload() {
-        if (tableLoaded) layers = Layers(startup, usable(readTable(), "setting", layers.table))
+        if (tableLoaded) {
+            val read = readTable()
+            if (read == null) {
+                log.warn("settings could not be read, the loaded settings stay")
+            } else {
+                layers = Layers(startup, usable(read, "setting", layers.table))
+            }
+        }
         reloadListeners.forEach { it() }
     }
 
@@ -83,8 +91,10 @@ class Configuration(
         default: Double = 0.0,
     ): Double = valueOrNull(key)?.trim()?.toDoubleOrNull() ?: default
 
-    private fun readTable(from: NameValueTable = table): Map<String, String> =
-        buildMap { from.each { name, value -> put(name, value) } }
+    private fun readTable(from: NameValueTable = table): Map<String, String>? {
+        val rows = mutableMapOf<String, String>()
+        return if (from.each { name, value -> rows[name] = value }) rows else null
+    }
 
     /** [values] with each unusable one replaced by what [running] holds for its key, or left out. */
     private fun usable(

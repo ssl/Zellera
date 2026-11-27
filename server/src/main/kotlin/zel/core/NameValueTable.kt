@@ -11,9 +11,10 @@ internal class NameValueTable(
     private val table: String,
     private val dataSource: () -> DataSource?,
 ) {
-    fun each(take: (name: String, value: String) -> Unit) =
-        onTable("read", Unit) { sql ->
+    fun each(take: (name: String, value: String) -> Unit): Boolean =
+        onTable("read", false) { sql ->
             sql.select("SELECT `name`, `value` FROM $table").each { take(it.getString(1), it.getString(2)) }
+            true
         }
 
     private inline fun <T> onTable(

@@ -118,7 +118,7 @@ class BotSettings(
     ) {
         if (typed.length > MOTTO_SENT_AT_MOST) return
         val motto = filter(player, typed.replace(MARKUP, "")).trim()
-        if (motto.length > mottoLength()) return
+        if (motto.length > minOf(mottoLength(), BotLimits.STORED_MOTTO_LENGTH)) return
         placed.bot.motto = motto
         resend(scope, placed)
     }

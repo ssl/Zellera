@@ -25,4 +25,6 @@ object BotLimits {
 
     /** What a stored line holds at most. */
     const val STORED_LINE_LENGTH = 255
+
+    const val STORED_MOTTO_LENGTH = 100
 }

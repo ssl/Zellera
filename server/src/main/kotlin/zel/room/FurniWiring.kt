@@ -8,6 +8,7 @@ import zel.room.entry.RoomEntry
 import zel.room.entry.RoomEntryMethod
 import zel.room.furni.FurniBehaviour
 import zel.room.furni.FurniBehaviours
+import zel.room.furni.RoomFurni
 import zel.room.furni.behaviour.special.GameSpecialHost
 import zel.room.furni.behaviour.special.JdbcDimmerStore
 import zel.room.furni.behaviour.special.SpecialPackets
@@ -144,7 +145,10 @@ internal class FurniWiring(
         core.roomWrites.write(roomId, Runnable { if (special.host.deleteSpent(roomId, rowId)) onDeleted() })
     }
 
-    fun pickups(confirm: PickupConfirm): FurniPickup =
+    fun pickups(
+        confirm: PickupConfirm,
+        onPicked: (RoomScope, RoomFurni) -> Unit = { _, _ -> },
+    ): FurniPickup =
         FurniPickup(
             core.furniInventory,
             core.copies,
@@ -153,7 +157,10 @@ internal class FurniWiring(
             confirm,
             buildPass.picks,
             { roomId, block -> core.rooms.get()?.post(roomId, block = block) },
-            state::release,
+            { scope, furni ->
+                state.release(scope, furni)
+                onPicked(scope, furni)
+            },
         )
 
     fun placingPackets(

@@ -48,6 +48,14 @@ class UserEffectState(
         unit: RoomUnit,
     ): Boolean = of(room).frozen.containsKey(unit.index)
 
+    fun copyPicked(
+        room: Room,
+        furniId: Int,
+    ) {
+        val kept = of(room)
+        if (kept.copies.remove(furniId)) kept.visuals.furniGone(furniId)
+    }
+
     private fun left(
         room: Room,
         unitIndex: Int,

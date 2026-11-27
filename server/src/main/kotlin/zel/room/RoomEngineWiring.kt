@@ -159,7 +159,10 @@ class RoomEngineWiring(
         val furni = FurniWiring(services, core, behaviourOf, entries::get)
         val wired = WiredEngineWiring(services, core, furni.state)
         val games = gamesPart(services, core, furni.state, wired, port::get)
-        val pickups: FurniPickup = furni.pickups(wired.variables.pickupConfirm)
+        val pickups: FurniPickup =
+            furni.pickups(wired.variables.pickupConfirm) { scope, furni ->
+                wired.userEffects.get()?.copyPicked(scope.room, furni.id)
+            }
         val use = FurniUseWiring(services, core, furni, pickups, port::get, behaviourOf)
         val boxes =
             WiredBoxWiring(

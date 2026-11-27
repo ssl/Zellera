@@ -124,7 +124,15 @@ class ReportPackets(
             PacketIds.isId(userId) &&
                 PacketIds.isId(roomId) &&
                 userId != reporter.profile.id
-        val reported = if (validIds && reporter.rooms.roomOf(userId) == roomId) players.find(userId) else null
+        val reported =
+            if (validIds &&
+                reporter.rooms.roomOf(reporter.profile.id) == roomId &&
+                reporter.rooms.roomOf(userId) == roomId
+            ) {
+                players.find(userId)
+            } else {
+                null
+            }
         when {
             !reporter.stats.standing.mayTalk() -> ModerationReplies.helperRequestDisabled(s.client)
             reported != null -> ModerationReplies.bullyReported(s.client, fileBullyReport(reporter, reported, roomId))

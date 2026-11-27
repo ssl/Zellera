@@ -56,7 +56,7 @@ class FurniUsePackets(
                 inRoom(session) { scope, player, _ -> notes.read(scope, player.profile.id, m.itemId) }
             },
             PacketRoute(SetItemDataInCodec) { session, m ->
-                inRoom(session) { scope, _, level -> notes.write(scope, level, m.itemId, m.color, m.text) }
+                inRoom(session) { scope, player, level -> notes.write(scope, player, level, m.itemId, m.color, m.text) }
             },
             PacketRoute(RemoveItemInCodec) { session, m ->
                 inRoom(

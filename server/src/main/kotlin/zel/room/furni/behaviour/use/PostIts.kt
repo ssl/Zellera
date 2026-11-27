@@ -40,6 +40,7 @@ class PostIts(
 
     fun write(
         scope: RoomScope,
+        player: Player,
         level: Int,
         itemId: Int,
         colour: String,
@@ -47,7 +48,7 @@ class PostIts(
     ) {
         val note = note(scope, itemId) ?: return
         if (level < DoorCheck.RIGHTS || colour !in COLOURS || text.length > MAX_TEXT) return
-        StateShow.data(scope, note, "$colour $text")
+        StateShow.data(scope, note, "$colour ${hooks.filter(text, player)}")
     }
 
     fun writeOnPole(

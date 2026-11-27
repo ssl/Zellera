@@ -41,6 +41,11 @@ internal class PlayerRanks(
         client?.send(UserPermissions(this))
         client?.send(UserPerks(this))
         rooms.refreshRights(profile.id)
+        if (!hasPermission(Privilege.MODERATION_TICKETS)) {
+            services.game.moderationService
+                ?.tickets
+                ?.releasePickedBy(profile.id)
+        }
         if (hasPermission(Privilege.MODERATION_TOOL)) services.game.moderationService?.sendModeratorInit(this)
         client?.let(CatalogReplies::catalogUpdated)
     }

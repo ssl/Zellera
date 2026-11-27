@@ -28,6 +28,7 @@ class WebCommandApplier(
         val rooms: () -> RoomPort,
         val accountLevelChanged: (Int) -> Unit = {},
         val kickBanned: (Int) -> Boolean = { false },
+        val releaseTicket: (Int) -> Boolean = { false },
     )
 
     interface Ranks {
@@ -75,6 +76,7 @@ class WebCommandApplier(
             ASK_ROOM_QUESTION -> rooms.askQuestion(payload)
             SET_PRIVACY -> privacy.set(command, payload)
             KICK_BANNED -> kickBanned(command)
+            RELEASE_TICKET -> releaseTicket(payload)
             else -> profile.setMotto(command, payload)
         }
     }
@@ -89,6 +91,12 @@ class WebCommandApplier(
         services.reloadTvPlaylists()
         log.info("TV playlists read again for player {} (web command #{})", command.createdBy, command.id)
         return WebCommandResult.done("TV playlists are being read again.")
+    }
+
+    private fun releaseTicket(payload: WebCommandPayload): WebCommandResult {
+        val id = payload.int("ticketId") ?: return WebCommandResult.failed("No ticket.")
+        if (!services.releaseTicket(id)) return WebCommandResult.failed("Ticket $id is not picked.")
+        return WebCommandResult.done("Released.")
     }
 
     private fun kickBanned(command: WebCommand): WebCommandResult =
@@ -106,6 +114,7 @@ class WebCommandApplier(
         const val ASK_ROOM_QUESTION = "askRoomQuestion"
         const val SET_PRIVACY = "setPrivacy"
         const val KICK_BANNED = "kickBanned"
+        const val RELEASE_TICKET = "releaseTicket"
         val TYPES: Set<String> =
             setOf(
                 SET_CURRENCY,
@@ -119,6 +128,7 @@ class WebCommandApplier(
                 ASK_ROOM_QUESTION,
                 SET_PRIVACY,
                 KICK_BANNED,
+                RELEASE_TICKET,
             )
 
         const val VIA_HOUSEKEEPING = "housekeeping"
@@ -142,6 +152,7 @@ class WebCommandApplier(
                 RELOAD_TV_PLAYLISTS to Privilege.HOUSEKEEPING_YOUTUBE,
                 ASK_ROOM_QUESTION to Privilege.MODERATION_ROOM_ALERT,
                 KICK_BANNED to Privilege.MODERATION_PLAYER_BAN,
+                RELEASE_TICKET to Privilege.MODERATION_TICKETS,
             )
 
         /** The kinds an account sends about itself, and nobody else about it. */

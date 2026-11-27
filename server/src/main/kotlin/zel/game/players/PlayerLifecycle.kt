@@ -45,6 +45,7 @@ internal class PlayerLifecycle(
             player.messenger.dispose()
             PlayerActions.forget(id)
             game.rewardTrackService?.unload(id)
+            game.moderationService?.tickets?.releasePickedBy(id)
             game.snowball?.lobby?.userLoggedOut(id)
             ExtensionBus.event(ServerEvent.LoggedOut(id))
         } finally {

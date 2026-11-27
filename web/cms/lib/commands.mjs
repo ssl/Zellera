@@ -1,7 +1,7 @@
 import { sql } from './sql.mjs';
 import { currencyIds, displayNames } from '../display-names.mjs';
 
-export const COMMAND_TYPES = Object.freeze(['setCurrency', 'addCurrency', 'giveBadge', 'takeBadge', 'setMotto', 'setRank', 'askRoomQuestion', 'setPrivacy', 'reloadTvPlaylists', 'kickBanned']);
+export const COMMAND_TYPES = Object.freeze(['setCurrency', 'addCurrency', 'giveBadge', 'takeBadge', 'setMotto', 'setRank', 'askRoomQuestion', 'setPrivacy', 'reloadTvPlaylists', 'kickBanned', 'releaseTicket']);
 export const PUBLIC_COMMAND_TYPES = Object.freeze(['setMotto', 'setPrivacy']);
 
 const COMMAND_INSERT = Object.freeze(['player_id', 'kind', 'payload', 'created_by', 'created_at']);

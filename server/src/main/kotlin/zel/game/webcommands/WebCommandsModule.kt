@@ -31,6 +31,7 @@ class WebCommandsModule(
     accountLevelChanged: (Int) -> Unit,
     reloadTvPlaylists: () -> Unit,
     kickBanned: (Int) -> Boolean,
+    releaseTicket: (Int) -> Boolean,
     rooms: () -> RoomPort,
 ) {
     val processor: WebCommandProcessor
@@ -52,6 +53,7 @@ class WebCommandsModule(
                     rooms = rooms,
                     accountLevelChanged = accountLevelChanged,
                     kickBanned = kickBanned,
+                    releaseTicket = releaseTicket,
                 ),
             )
         processor =

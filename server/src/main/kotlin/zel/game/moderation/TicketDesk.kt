@@ -100,6 +100,40 @@ class TicketDesk(
         return true
     }
 
+    fun releaseStuck(ticketId: Int): Boolean {
+        val ticket = tickets[ticketId] ?: return false
+        synchronized(ticket) {
+            if (ticket.state != TicketState.PICKED) return false
+            ticket.moderatorId = 0
+            ticket.moderatorName = ""
+            ticket.state = TicketState.OPEN
+        }
+        save(ticket)
+        announce(ticket)
+        return true
+    }
+
+    fun releasePickedBy(moderatorId: Int) {
+        if (moderatorId <= 0) return
+        for (ticket in tickets.values) {
+            val released =
+                synchronized(ticket) {
+                    if (ticket.state == TicketState.PICKED && ticket.moderatorId == moderatorId) {
+                        ticket.moderatorId = 0
+                        ticket.moderatorName = ""
+                        ticket.state = TicketState.OPEN
+                        true
+                    } else {
+                        false
+                    }
+                }
+            if (released) {
+                save(ticket)
+                announce(ticket)
+            }
+        }
+    }
+
     /**
      * Takes the ticket off the desk for [resolution] and tells the reporter, if online, what a moderator decided;
      * a report judged abusive counts against its reporter. False when it was closed already.

@@ -1,3 +1,5 @@
+import { COMMAND_GRANT } from '../cms/lib/commands.mjs';
+import { DbRefused } from '../cms/lib/db.mjs';
 import { intParam, sql } from '../cms/lib/sql.mjs';
 import { HK_API } from './index.mjs';
 import { audit } from './_guard.mjs';
@@ -13,11 +15,13 @@ const PER_PAGE = 100;
 const ROOM_WINDOW = 30 * 60;
 const IM_WINDOW = SECONDS_PER_HOUR;
 const FORUM_MAX = 100;
+const SUPER_USER = 9;
 
 export const grants = [
   USER_GRANT,
   ROOM_NAME_GRANT,
   ...TICKET_GRANTS,
+  COMMAND_GRANT,
   CHAT_ROOM_GRANT,
   { table: 'direct_messages', select: ['id', 'sender_id', 'target_id', 'message', 'icon_id', 'sent_at'] },
   { table: 'guilds', select: ['id', 'name', 'badge_code'] },
@@ -190,8 +194,39 @@ const detail = async (req, res, ctx) => {
   });
 };
 
+const release = async (req, res, ctx) => {
+  if (ctx.staff.rank < SUPER_USER) {
+    return ctx.send.error(res, 403, 'Not for your rank', 'Only a super user can release a stuck ticket.', { reason: 'permission' });
+  }
+  const id = intParam(ctx.params.id);
+  const [t] = id ? await ctx.db.query(sql`SELECT id, status, moderator_id FROM support_tickets WHERE id = ${id} LIMIT 1`) : [];
+  if (!t) return ctx.send.notFound(res, 'There is no ticket with this id.');
+  if (String(t.status) !== 'picked') {
+    return ctx.send.error(res, 409, 'Not changed', 'This ticket is not picked, so there is nothing to release. Reload the page.', { reason: 'state' });
+  }
+  const holder = Number(t.moderator_id ?? 0);
+  let commandId;
+  try {
+    commandId = await ctx.command('releaseTicket', { ticketId: id }, { userId: holder });
+  } catch (e) {
+    await audit(ctx, { action: 'hk.ticket.release', targetType: 'ticket', targetId: id, label: `#${id}`, detail: 'not sent', success: false });
+    if (e instanceof DbRefused) return ctx.send.error(res, 503, 'Not released', 'This server can not send changes to the game right now.');
+    throw e;
+  }
+  await audit(ctx, { action: 'hk.ticket.release', targetType: 'ticket', targetId: id, label: `#${id}`, detail: `released from moderator ${holder}, command #${commandId}` });
+  const [row] = await ctx.waitForCommands([commandId], { userId: holder });
+  if (row && String(row.status) === 'failed') {
+    return ctx.send.error(res, 409, 'Not changed', 'Someone changed this ticket just now. Reload the page.', { reason: 'state' });
+  }
+  const [after] = await ctx.db.query(sql`SELECT ${TICKET_SELECT} FROM ${TICKET_JOIN} WHERE st.id = ${id} LIMIT 1`);
+  const users = await loadUsers(ctx, [after.sender_id, after.reported_id, after.moderator_id]);
+  const rooms = await loadRooms(ctx, [after.room_id]);
+  return ctx.send.json(res, 200, { ok: true, ticket: ticketJson(after), users: peopleOf(users), rooms: roomsOf(rooms) });
+};
+
 const ID = ':id(\\d{1,10})';
 export const routes = [
   { method: 'GET', path: `${HK_API}/tickets`, perm: 'moderation.tickets', handler: list },
   { method: 'GET', path: `${HK_API}/tickets/${ID}`, perm: 'moderation.tickets', audited: true, handler: detail },
+  { method: 'POST', path: `${HK_API}/tickets/${ID}/release`, perm: 'moderation.tickets', handler: release },
 ];

@@ -206,8 +206,9 @@ class PetCommands(
         command: PetCommand,
     ) {
         val pet = placed.pet
+        val paid = command.xp.coerceAtMost(pet.energy)
         pet.energy = (pet.energy - command.xp).coerceAtLeast(0)
-        if (command.xp > 0) pets.growth.addExperience(scope, placed, command.xp)
+        if (paid > 0) pets.growth.addExperience(scope, placed, paid)
         unit.changed = true
     }
 

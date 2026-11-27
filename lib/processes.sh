@@ -102,7 +102,7 @@ process_start() { # name
   else
     process_command "$name"
     process_env "$name"
-    (cd "$CMD_DIR" && exec nohup env -i "${ENVV[@]}" "${CMD[@]}" >> "$LOGS/$name.log" 2>&1 < /dev/null) &
+    (cd "$CMD_DIR" && exec_env nohup "${CMD[@]}" >> "$LOGS/$name.log" 2>&1 < /dev/null) &
     echo $! > "$RUN/$name.pid"
   fi
   note "$name started (pid $(process_pid "$name"))"

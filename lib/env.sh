@@ -169,3 +169,10 @@ env_common() {
     ENVV+=("$name=${!name}")
   done
 }
+
+exec_env() {
+  local name entry
+  while IFS= read -r name; do [ -z "$name" ] || unset -v "$name" 2>/dev/null || true; done < <(compgen -e)
+  for entry in "${ENVV[@]}"; do export "${entry%%=*}=${entry#*=}"; done
+  exec "$@"
+}

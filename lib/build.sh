@@ -112,7 +112,7 @@ jar_tool() { # account, arguments...
   shift
   env_common
   [ "$account" != owner ] || ENVV+=("ZEL_DB_MIGRATE_USER=$DB_MIGRATE_USER" "ZEL_DB_MIGRATE_PASS=$DB_MIGRATE_PASS")
-  (cd "$RUN/tool" && exec env -i "${ENVV[@]}" java -jar "$RUN/server/zellera-server.jar" "$@")
+  (cd "$RUN/tool" && exec_env java -jar "$RUN/server/zellera-server.jar" "$@")
 }
 
 # The server checks the configuration first and ends with 3 when a value is not usable.

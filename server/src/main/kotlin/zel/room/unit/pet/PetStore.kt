@@ -166,6 +166,34 @@ class PetStore(
             }
         }
 
+    data class NestSpend(
+        val deleted: Boolean,
+        val baby: Pet?,
+    )
+
+    fun spendNest(
+        rowId: Int,
+        ownerId: Int,
+        saveBaby: (Connection) -> Pet?,
+    ): NestSpend =
+        log.orFallback("spending nest furni $rowId", NestSpend(false, null)) {
+            dataSource.connection.use { connection ->
+                connection.allOrNothing {
+                    val deleted =
+                        connection.write(DELETE_FURNI_SQL) {
+                            int(rowId)
+                            intOrNull(ownerId)
+                        } == 1
+                    if (!deleted) {
+                        null
+                    } else {
+                        connection.write(DELETE_BUILD_PASS_SQL) { int(rowId) }
+                        NestSpend(true, saveBaby(connection))
+                    }
+                } ?: NestSpend(false, null)
+            }
+        }
+
     fun markDead(id: Int): Boolean =
         log.orFallback("saving the death of plant $id", false) { sql.write(DEAD_SQL, id) > 0 }
 

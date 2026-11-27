@@ -49,6 +49,21 @@ class PetMaker(
         return pet
     }
 
+    @Throws(SQLException::class)
+    fun breedOn(
+        connection: Connection,
+        type: Int,
+        race: Int,
+        name: String,
+        ownerId: Int,
+    ): Pet? {
+        if (!pets.catalog.hasKind(type)) return null
+        val pet = plainOrCow(type, race, Pet.figureColor(type, "FFFFFF"), name, ownerId)
+        pet.markChanged()
+        pet.save(connection)
+        return pet
+    }
+
     fun ofRandomPalette(
         type: Int,
         name: String,

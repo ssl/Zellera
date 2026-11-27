@@ -287,12 +287,16 @@ class PetNests(
         val breeds = module.catalog.babyBreeds(babyType)
         persist(
             Runnable {
-                val spent = store.deleteFurni(furni.rowId, furni.placerId)
                 val breed = module.breedingCurve.drawBreed(level, breeds, module.services.random())
                 if (breed == null) log.error("no baby of pet type {}: no breeds are listed for it", babyType)
-                val baby =
-                    breed?.takeIf { spent }?.let { module.maker.ofBreed(babyType, it, babyName, furni.ownerId) }
-                if (spent && breed != null && baby == null) log.error("no baby of pet type {}: no data", babyType)
+                val spent =
+                    store.spendNest(furni.rowId, furni.placerId) { connection ->
+                        breed?.let { module.maker.breedOn(connection, babyType, it, babyName, furni.ownerId) }
+                    }
+                val baby = spent.baby
+                if (spent.deleted && breed != null && baby == null) {
+                    log.error("no baby of pet type {}: no data", babyType)
+                }
                 val kept = hatch.outcome.compareAndSet(null, baby ?: NoBaby)
                 if (!kept && baby != null) pets.toInventory(baby, acquired = true)
             },

@@ -99,6 +99,43 @@ export const deviceSharerTopRank = async (ctx, playerId, now = unixNow()) => {
   return Math.max(0, ...tops.map((r) => Number(r?.top) || 0));
 };
 
+export const deviceBanExempt = async (ctx, playerId) => {
+  const [row] = await ctx.db.query(sql`SELECT 1 AS ok FROM device_ban_exemptions WHERE player_id = ${Number(playerId)} LIMIT 1`);
+  return Boolean(row);
+};
+
+export const deviceBanCatch = async (ctx, playerId, now) => {
+  const id = Number(playerId);
+  const { window, others } = await banRules(ctx);
+  const since = now - window;
+  const found = await ctx.db.query(sql`SELECT COALESCE(MAX(s.rank_id), 0) AS top, COUNT(*) AS n
+    FROM player_devices d JOIN device_bans b ON ${anyOrEqual(PIECES)}
+      LEFT JOIN players s ON s.id = b.staff_id
+    WHERE d.player_id = ${id} AND d.last_seen_at >= ${since} AND (b.expires_at IS NULL OR b.expires_at > ${now})`);
+  const devs = await devicesOf(ctx, id, since);
+  const ids = idsOf(devs);
+  if (ids.length) {
+    found.push(...await ctx.db.query(sql`SELECT COALESCE(MAX(s.rank_id), 0) AS top, COUNT(*) AS n
+      FROM player_devices o JOIN bans x ON x.player_id = o.player_id AND x.ends_at > ${now} AND x.avatar_only = 0
+        AND o.last_seen_at + ${window} >= x.issued_at
+        LEFT JOIN players s ON s.id = x.issued_by
+      WHERE o.player_id <> ${id} AND o.id IN (${sql.in(ids)})`));
+  }
+  for (const c of combosOf(devs)) {
+    const [gpu, scr, fnt] = COMBO.map((name) => String(c[name]));
+    found.push(...await ctx.db.query(sql`SELECT COALESCE(MAX(s.rank_id), 0) AS top, COUNT(*) AS n
+      FROM player_devices o JOIN bans x ON x.player_id = o.player_id AND x.ends_at > ${now} AND x.avatar_only = 0
+        AND o.last_seen_at + ${window} >= x.issued_at
+        LEFT JOIN players s ON s.id = x.issued_by
+      WHERE o.gpu = ${gpu} AND o.scr = ${scr} AND o.fnt = ${fnt} AND o.player_id <> ${id}
+        AND (SELECT COUNT(DISTINCT q.player_id) FROM player_devices q
+          WHERE q.gpu = ${gpu} AND q.scr = ${scr} AND q.fnt = ${fnt} AND q.player_id <> ${id}
+            AND NOT EXISTS (SELECT 1 FROM bans z WHERE z.player_id = q.player_id AND z.ends_at > ${now})) <= ${others}`));
+  }
+  const hits = [...found].filter((r) => (Number(r?.n) || 0) > 0);
+  return { matched: hits.length > 0, topRank: Math.max(0, ...hits.map((r) => Number(r?.top) || 0)) };
+};
+
 export const loadDevice = async (ctx, userId, reading) => {
   const values = parseReading(reading);
   if (!values) return null;

@@ -3,7 +3,7 @@ import { HK_API } from './index.mjs';
 import { audit, higherRank } from './_guard.mjs';
 import { findUser } from './actions-lib.mjs';
 import {
-  COMBO, PIECES, anyOrEqual, deviceOf, loadUser, parseReading, piecesEqual, readingOf, usable, userNotFound,
+  COMBO, PIECES, anyOrEqual, deviceBanCatch, deviceOf, loadUser, parseReading, piecesEqual, readingOf, usable, userNotFound,
 } from './devices-shared.mjs';
 import { ref, userIdParam, userOf } from './users-shared.mjs';
 
@@ -13,9 +13,9 @@ export const grants = [
   { table: 'players', select: ['id', 'name', 'figure', 'gender', 'rank_id', 'is_online', 'last_online_at'] },
   { table: 'ranks', select: ['id', 'name'] },
   { table: 'player_devices', select: ['player_id', ...PIECES, 'first_seen_at', 'last_seen_at', 'logins'] },
-  { table: 'device_bans', select: ['id', ...PIECES.map((p) => `p_${p}`), 'expires_at'] },
+  { table: 'device_bans', select: ['id', ...PIECES.map((p) => `p_${p}`), 'staff_id', 'expires_at'] },
   { table: 'device_ban_exemptions', select: ['player_id', 'staff_id', 'created_at'], insert: ['player_id', 'staff_id', 'created_at'], delete: true },
-  { table: 'bans', select: ['player_id', 'ends_at'] },
+  { table: 'bans', select: ['player_id', 'issued_by', 'ends_at', 'avatar_only'] },
 ];
 
 const PERM = 'moderation.player.ban';
@@ -189,6 +189,14 @@ const exemptPost = async (req, res, ctx) => {
   if (refusal) {
     await audit(ctx, { action, targetId: id, label, detail: `refused: ${refusal}`, success: false });
     return ctx.send.error(res, 403, 'Not for your rank', refusal);
+  }
+  if (on) {
+    const caught = await deviceBanCatch(ctx, id, unixNow());
+    const late = caught.matched ? higherRank(ctx.staff, caught.topRank, 'A device ban on this player') : null;
+    if (late) {
+      await audit(ctx, { action, targetId: id, label, detail: `refused: ${late}`, success: false });
+      return ctx.send.error(res, 403, 'Not for your rank', late);
+    }
   }
   let result;
   try {

@@ -116,9 +116,7 @@ internal class RewardTrackStore(
         trackId: String,
         prizeId: String,
     ) {
-        LOGGER.orFallback("Saving reward track claim $trackId/$prizeId of player $playerId", Unit) {
-            sql.write(INSERT_CLAIM, playerId, trackId, prizeId)
-        }
+        sql.write(INSERT_CLAIM, playerId, trackId, prizeId)
     }
 
     fun savePass(

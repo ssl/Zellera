@@ -249,11 +249,9 @@ class RewardTrackService internal constructor(
     ): PlayerTrack.Claim =
         standings.change(playerId) { standing ->
             val state = standing.on(track)
-            val outcome = state.claim(track, prize, premiumOf(state), canPay)
-            if (outcome.result == ClaimResult.OK) {
-                standings.write(playerId) { store?.saveClaim(playerId, track.id, prize.id) }
+            state.claim(track, prize, premiumOf(state), canPay) {
+                store?.saveClaim(playerId, track.id, prize.id)
             }
-            outcome
         }
 
     /** A prize that fails to hand out is logged; the claim stays stored and the track's completion still counts. */

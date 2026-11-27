@@ -55,6 +55,7 @@ class PlayerTrack {
         prize: RewardTrackDefinition.Prize,
         premiumOpen: Boolean,
         canPay: (RewardTrackDefinition.Prize) -> Boolean,
+        persist: () -> Unit,
     ): Claim =
         when {
             prize.id in claimed -> {
@@ -75,6 +76,7 @@ class PlayerTrack {
 
             else -> {
                 val wasComplete = track.completedBy(claimed)
+                persist()
                 claimed.add(prize.id)
                 Claim(ClaimResult.OK, !wasComplete && track.completedBy(claimed))
             }

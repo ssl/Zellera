@@ -161,6 +161,11 @@ class GuildMemberships(
         query: String,
     ): Int = rows.count(guild.id, level, query)
 
+    fun atMembershipLimit(player: Player): Boolean =
+        rows.inTransaction(false) { connection ->
+            rows.groupsOf(connection, player.profile.id) >= membershipLimit(player)
+        }
+
     private fun membershipLimit(player: Player): Int =
         if (player.stats.club.isMember) rules.groupMaxMembershipsClub else rules.groupMaxMemberships
 

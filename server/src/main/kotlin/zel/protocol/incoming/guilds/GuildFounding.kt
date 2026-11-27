@@ -119,6 +119,10 @@ internal class GuildFounding(
                 Stop.EditFailed(GuildEditFailure.BAD_NAME)
             }
 
+            guilds.members.atMembershipLimit(caller.player) -> {
+                Stop.PurchaseFailed
+            }
+
             else -> {
                 null
             }

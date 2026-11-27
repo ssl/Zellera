@@ -140,6 +140,7 @@ abstract class RoomGame(
 
     protected fun recordEnd(scope: RoomScope) {
         endedAt = context.host.nowSeconds()
+        val seconds = ((runningMillis(scope) + GameClock.HALF_SECOND) / MILLIS_PER_SECOND).toInt()
         val played =
             teams
                 .filter { it.members.isNotEmpty() }
@@ -147,7 +148,7 @@ abstract class RoomGame(
                     val players = team.members.map { GameRecord.Player(it.playerId, it.score) }
                     GameRecord.Team(team.color.code, team.teamScore, players)
                 }
-        if (played.isNotEmpty()) {
+        if (played.isNotEmpty() && runningMillis(scope) >= MIN_RESULT_MILLIS) {
             context.host.record(GameRecord(scope.room.info.id, scoreName, startedAt, endedAt, played))
         }
         val total = teams.sumOf { it.totalScore }
@@ -156,7 +157,6 @@ abstract class RoomGame(
             teams
                 .filter { it.members.isNotEmpty() && (it === winner || it.totalScore > 0) }
                 .map { t -> TeamResult(t.color, t.members.map { it.playerId }, t.totalScore, t === winner) }
-        val seconds = ((runningMillis(scope) + GameClock.HALF_SECOND) / MILLIS_PER_SECOND).toInt()
         if (results.isNotEmpty()) context.host.finished(scope, GameResult(scoreName, results, seconds))
     }
 
@@ -167,6 +167,8 @@ abstract class RoomGame(
     }
 
     companion object {
+        private const val MIN_RESULT_MILLIS = 1000L
+
         fun experience(seconds: List<Int>): Int {
             val played = seconds.filter { it > 0 }
             return if (played.isEmpty()) 0 else played.sum() - (played.size - 1)

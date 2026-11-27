@@ -35,6 +35,8 @@ class RoomVariables(
 
     private val spaces = ConcurrentHashMap<Room, VariableSpace>()
 
+    private val boxRevisions = ConcurrentHashMap<Room, Int>()
+
     private val shared = ConcurrentHashMap<SharedKey, MutableMap<Holder, HeldValue>>()
 
     private val sources = ConcurrentHashMap<SharedKey, Boolean>()
@@ -63,8 +65,11 @@ class RoomVariables(
 
     override fun unload(scope: RoomScope) {
         spaces.remove(scope.room)
+        boxRevisions.remove(scope.room)
         writer.flush(scope.room.info.id)
     }
+
+    fun boxRevision(room: Room): Int = boxRevisions[room] ?: 0
 
     override fun on(
         scope: RoomScope,
@@ -411,6 +416,7 @@ class RoomVariables(
         next: BoxSettings,
     ) {
         val space = space(room)
+        boxRevisions.merge(room, 1, Int::plus)
         val code = Interactions.of(box.definition)
         val availability = availabilityOf(code, next) ?: return
         val roomId = room.info.id
@@ -493,6 +499,7 @@ class RoomVariables(
     ) {
         val roomId = room.info.id
         val boxId = box.id
+        boxRevisions.merge(room, 1, Int::plus)
         space(room).homes.remove(boxId)
         shared.remove(SharedKey(roomId, boxId))
         sources[SharedKey(roomId, boxId)] = false

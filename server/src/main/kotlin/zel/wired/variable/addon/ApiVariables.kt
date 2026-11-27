@@ -11,17 +11,28 @@ import java.util.concurrent.ConcurrentHashMap
 class ApiVariables(
     private val variables: () -> RoomVariables,
 ) : RoomPart {
-    private val rooms = ConcurrentHashMap<Room, ApiNames>()
+    private val rooms = ConcurrentHashMap<Room, Cached>()
+
+    private data class Cached(
+        val revision: Int,
+        val names: ApiNames,
+    )
 
     override fun load(room: Room) {
-        rooms[room] = read(room)
+        rooms[room] = cache(room)
     }
 
     override fun unload(scope: RoomScope) {
         rooms.remove(scope.room)
     }
 
-    fun of(room: Room): ApiNames = rooms.getOrPut(room) { read(room) }
+    fun of(room: Room): ApiNames {
+        val revision = variables().boxRevision(room)
+        rooms[room]?.takeIf { it.revision == revision }?.let { return it.names }
+        return cache(room).names
+    }
+
+    private fun cache(room: Room): Cached = Cached(variables().boxRevision(room), read(room)).also { rooms[room] = it }
 
     private fun read(room: Room): ApiNames {
         val api =

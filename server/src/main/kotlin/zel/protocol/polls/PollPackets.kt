@@ -64,7 +64,7 @@ class PollPackets(
     ) {
         when {
             polls.declinedPoll(player, poll.id) -> session.client.send(pollNotAvailable())
-            polls.donePoll(player, poll.id) -> Unit
+            polls.completedPoll(player, poll) -> Unit
             else -> session.send(PollContentsOutCodec, pollContents(poll))
         }
     }

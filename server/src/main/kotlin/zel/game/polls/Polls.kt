@@ -13,14 +13,6 @@ class Polls internal constructor(
     @Volatile
     private var cached = ConcurrentHashMap<Int, Poll>()
 
-    fun donePoll(
-        player: Player,
-        pollId: Int,
-    ): Boolean =
-        reading(false, "read the poll answers of user ${player.profile.id}") {
-            store.hasAnswered(player.profile.id, pollId)
-        }
-
     fun declinedPoll(
         player: Player,
         pollId: Int,
@@ -39,7 +31,11 @@ class Polls internal constructor(
 
     fun pollToOffer(player: Player): Poll? =
         reading(null, "find a poll for user ${player.profile.id}") {
-            store.firstOpenPoll(player.profile.id)?.let(::getPoll)
+            store
+                .openPolls(player.profile.id)
+                .asSequence()
+                .mapNotNull(::getPoll)
+                .firstOrNull { !it.isComplete(store.answeredQuestions(player.profile.id, it.id)) }
         }
 
     fun reload() {

@@ -31,11 +31,6 @@ internal class PollStore(
         return poll.with(rows)
     }
 
-    fun hasAnswered(
-        playerId: Int,
-        pollId: Int,
-    ): Boolean = exists("SELECT 1 FROM poll_answers WHERE poll_id = ? AND player_id = ? LIMIT 1", pollId, playerId)
-
     fun hasDeclined(
         playerId: Int,
         pollId: Int,
@@ -57,7 +52,7 @@ internal class PollStore(
         return answered
     }
 
-    fun firstOpenPoll(playerId: Int): Int? = sql.select(FIRST_OPEN_POLL, playerId).first { it.getInt(1) }
+    fun openPolls(playerId: Int): List<Int> = sql.select(OPEN_POLLS, playerId).rows { it.getInt(1) }
 
     private fun exists(
         query: String,
@@ -119,8 +114,9 @@ internal class PollStore(
         const val POLL_CHOICES =
             "SELECT o.question_id, o.value, o.text, o.category FROM poll_question_options o " +
                 "JOIN poll_questions q ON q.id = o.question_id WHERE q.poll_id = ? ORDER BY o.question_id, o.position"
-        const val FIRST_OPEN_POLL =
+        const val OPEN_POLLS =
             "SELECT p.id FROM polls p WHERE NOT EXISTS " +
-                "(SELECT 1 FROM poll_answers a WHERE a.poll_id = p.id AND a.player_id = ?) ORDER BY p.id LIMIT 1"
+                "(SELECT 1 FROM poll_answers a WHERE a.poll_id = p.id AND a.player_id = ? AND a.question_id = 0) " +
+                "ORDER BY p.id"
     }
 }

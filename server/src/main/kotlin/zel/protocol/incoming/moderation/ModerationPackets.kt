@@ -365,7 +365,7 @@ class ModerationPackets(
         var picked = false
         for (ticketId in m.issueIds.filter(PacketIds::isId)) {
             val issue = manager.tickets.byId(ticketId) ?: continue
-            if (!manager.tickets.pick(issue, player)) {
+            if (issue.accusedId == player.profile.id || !manager.tickets.pick(issue, player)) {
                 failed.add(issue)
                 continue
             }

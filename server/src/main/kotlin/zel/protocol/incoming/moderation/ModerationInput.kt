@@ -33,7 +33,9 @@ object ModerationInput {
     fun ownsTicket(
         ticket: SupportTicket,
         moderator: Player,
-    ): Boolean = ticket.state == TicketState.PICKED && ticket.moderatorId == moderator.profile.id
+    ): Boolean =
+        ticket.state == TicketState.PICKED && ticket.moderatorId == moderator.profile.id &&
+            ticket.accusedId != moderator.profile.id
 
     fun withReporterContact(
         message: String,

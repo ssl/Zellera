@@ -27,11 +27,14 @@ service_env_file() { # name
 }
 
 service_unit() { # name, units it starts after
-  local name=$1 after=$2 arg exec stop=90 start=120
+  local name=$1 after=$2 arg exec stop=90 start=120 sigkill=""
   process_command "$name"
   exec=$(unit_text "$(command -v "${CMD[0]}")")
   for arg in "${CMD[@]:1}"; do exec="$exec $(unit_text "$arg")"; done
-  case $name in server) stop=200 start=300 ;; db) stop=150 ;; esac
+  case $name in
+    server) stop=infinity start=300 sigkill=SendSIGKILL=no ;;
+    db) stop=infinity sigkill=SendSIGKILL=no ;;
+  esac
   cat <<UNIT
 [Unit]
 Description=Zellera $name
@@ -51,6 +54,7 @@ RestartSec=5
 SuccessExitStatus=143
 TimeoutStartSec=$start
 TimeoutStopSec=$stop
+${sigkill:+$sigkill}
 
 [Install]
 WantedBy=zel.target

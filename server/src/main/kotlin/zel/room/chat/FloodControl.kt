@@ -5,12 +5,19 @@ import java.util.concurrent.ConcurrentHashMap
 
 class FloodControl {
     private val windows = ConcurrentHashMap<Int, Window>()
+    private val mutedUntil = ConcurrentHashMap<Int, Long>()
 
     fun mutedFor(
         playerId: Int,
-        login: Any,
         now: Long,
-    ): Long = windowOf(playerId, login)?.muteLeft(now) ?: 0
+    ): Long {
+        val left = (mutedUntil[playerId] ?: return 0) - now
+        if (left <= 0) {
+            mutedUntil.remove(playerId)
+            return 0
+        }
+        return left
+    }
 
     /** Counts a line; true when the window was already full, which starts a mute and empties it. */
     fun trips(
@@ -21,7 +28,9 @@ class FloodControl {
         muteSeconds: Int = MUTE_SECONDS,
     ): Boolean {
         val window = windowOf(playerId, login) ?: Window(login).also { windows[playerId] = it }
-        return window.count(now, rule, muteSeconds * MILLIS_PER_SECOND)
+        val full = window.count(now, rule)
+        if (full) mutedUntil[playerId] = now + muteSeconds * MILLIS_PER_SECOND
+        return full
     }
 
     /** The count belongs to one login and would keep its player alive. */
@@ -38,20 +47,15 @@ class FloodControl {
         val login: Any,
     ) {
         private val stamps = ArrayDeque<Long>()
-        private var quietUntil = 0L
-
-        fun muteLeft(now: Long): Long = (quietUntil - now).coerceAtLeast(0)
 
         fun count(
             now: Long,
             rule: FloodRule,
-            muteMillis: Long,
         ): Boolean {
             stamps.removeAll { now - it >= rule.windowMillis }
             val full = stamps.size >= rule.lines
             if (full) {
                 stamps.clear()
-                quietUntil = now + muteMillis
             } else {
                 stamps.addLast(now)
             }

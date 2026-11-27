@@ -65,7 +65,7 @@ class RoomChat(
         message: String,
     ): Verdict {
         val now = scope.now()
-        val ownMute = maxOf(speaker.mutedSeconds, wholeSeconds(flood.mutedFor(speaker.playerId, speaker.login, now)))
+        val ownMute = maxOf(speaker.mutedSeconds, wholeSeconds(flood.mutedFor(speaker.playerId, now)))
         if (ownMute > 0) return Verdict.MuteLeft(ownMute)
 
         val whispered = kind == ChatKind.Whisper

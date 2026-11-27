@@ -122,8 +122,12 @@ class TradeStore(
     }
 
     private companion object {
-        const val MOVE = "UPDATE furni SET player_id = ? WHERE id = ? AND player_id = ? AND room_id IS NULL"
-        const val REDEEM = "DELETE FROM furni WHERE id = ? AND player_id = ? AND room_id IS NULL"
+        /** A disc in a room's playlist is not in the inventory, whatever its room_id says. */
+        const val IN_INVENTORY =
+            " AND player_id = ? AND room_id IS NULL" +
+                " AND NOT EXISTS (SELECT 1 FROM room_playlist_discs WHERE furni_id = furni.id)"
+        const val MOVE = "UPDATE furni SET player_id = ? WHERE id = ?$IN_INVENTORY"
+        const val REDEEM = "DELETE FROM furni WHERE id = ?$IN_INVENTORY"
         const val LOG =
             "INSERT INTO trades (first_player_id, second_player_id, first_ip, second_ip, traded_at) VALUES (?, ?, ?, ?, ?)"
         const val LOG_ITEM =

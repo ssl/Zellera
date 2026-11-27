@@ -23,6 +23,7 @@ import zel.protocol.generated.UnseenItemsOutCodec
 import zel.room.Room
 import zel.room.RoomPart
 import zel.room.RoomScope
+import zel.room.RoomWrites
 import zel.room.entry.DoorCheck
 import zel.room.entry.EntryViews
 import zel.room.furni.RoomFurni
@@ -36,12 +37,12 @@ import zel.util.MILLIS_PER_MINUTE
 import zel.util.MILLIS_PER_SECOND
 import java.util.concurrent.ConcurrentHashMap
 
-/** Per-room state is owned by the room's lock. */
+/** Per-room state is owned by the room's lock; playlist writes run on the room's write lane, in order. */
 class Jukebox(
     private val items: () -> Items?,
     private val store: JukeboxStore,
     private val player: (Int) -> Player?,
-    private val persist: (Runnable) -> Unit,
+    private val writes: RoomWrites,
     private val progress: (playerId: Int, event: String, amount: Int) -> Unit = { _, _, _ -> },
     private val capacity: (Item) -> Int = { Int.MAX_VALUE },
     private val levelOf: (RoomScope, Int) -> Int = { _, _ -> 0 },
@@ -153,7 +154,8 @@ class Jukebox(
         StateShow.set(furni, OFF)
         val discs = state.discs.toList()
         state.discs.clear()
-        persist(
+        writes.write(
+            roomId,
             Runnable {
                 store.removed(roomId, discs.map { it.itemId })
                 discs.forEach(::giveBack)
@@ -238,7 +240,7 @@ class Jukebox(
         state.discs += Disc(disc.id, disc.songId, seconds(disc.songId), playerId)
         val roomId = scope.room.info.id
         val discId = disc.id
-        persist(Runnable { store.added(roomId, discId) })
+        writes.write(roomId, Runnable { store.added(roomId, discId) })
         scope.out.send(Lane.Now, Audience.Room, JukeboxSongDisksOutCodec, disks(state, box))
         scope.out.send(Lane.Now, Audience.Player(playerId), FurniListRemoveOutCodec, FurniListRemoveOut(-discId))
         inventories(scope)
@@ -254,7 +256,8 @@ class Jukebox(
         val disc = state.discs.removeAt(index)
         if (state.playing) nowPlaying(scope, state)
         val roomId = scope.room.info.id
-        persist(
+        writes.write(
+            roomId,
             Runnable {
                 store.removed(roomId, listOf(disc.itemId))
                 giveBack(disc)
@@ -264,7 +267,7 @@ class Jukebox(
         inventories(scope)
     }
 
-    /** Runs on the persistence thread after the disc's row left the jukebox. */
+    /** Runs on the room's write lane after the disc's row left the jukebox. */
     private fun giveBack(disc: Disc) {
         val owner = player(disc.ownerId) ?: return
         val item: OwnedFurni = items()?.loadFurni(disc.itemId) ?: return

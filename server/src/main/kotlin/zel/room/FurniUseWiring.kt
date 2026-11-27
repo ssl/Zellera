@@ -41,7 +41,7 @@ internal class FurniUseWiring(
             { services.items()?.items() },
             JukeboxStore(services.dataSource),
             services.clients::onlinePlayer,
-            services.persist,
+            core.roomWrites,
             services.progress,
             ::jukeboxCapacity,
         ) { scope, playerId -> core.leaving.doorOf(scope.room).levelOf(playerId) }

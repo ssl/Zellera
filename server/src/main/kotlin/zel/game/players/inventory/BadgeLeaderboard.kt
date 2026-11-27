@@ -98,6 +98,9 @@ class BadgeLeaderboard(
         private const val KEY_LEVEL = "level"
         private val ACHIEVEMENT_BADGE = Regex("^ACH_(.*?)(\\d+)$")
 
+        // a longer level is no real one (a badge given by hand): it counts nothing, as on the site
+        private const val MAX_LEVEL_DIGITS = 4
+
         fun key(
             type: Int,
             rarity: Int,
@@ -150,8 +153,9 @@ class BadgeLeaderboard(
             val levels = HashMap<String, Int>()
             badges.filterNotNull().forEach { code ->
                 ACHIEVEMENT_BADGE.matchEntire(code)?.let { match ->
-                    val (name, level) = match.destructured
-                    levels[name] = maxOf(levels[name] ?: 0, level.toInt())
+                    val (name, digits) = match.destructured
+                    val level = digits.takeIf { it.length <= MAX_LEVEL_DIGITS }?.toIntOrNull() ?: return@forEach
+                    levels[name] = maxOf(levels[name] ?: 0, level)
                 }
             }
             return levels.values.sum()

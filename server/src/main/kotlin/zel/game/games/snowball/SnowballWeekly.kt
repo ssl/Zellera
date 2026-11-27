@@ -66,7 +66,7 @@ class SnowballWeekly(
         val groupBoard = store.groupScores(week)
         val groups =
             groupBoard.take(prizes.groupPoints.size).map { GroupWinner(it.id, store.groupScorers(it.id, week)) }
-        val plan = plan(week, board, groups, prizes)
+        val plan = plan(week, board, groups, prizes, store.weekSeed(week))
         for (award in plan.achievements) {
             effects.progressAchievement(award.userId, award.event, award.amount)
         }
@@ -104,6 +104,7 @@ class SnowballWeekly(
             board: List<ScoreRow>,
             groups: List<GroupWinner>,
             prizes: SnowballWeeklyPrizes,
+            seed: Long,
         ): Plan {
             val topTen = board.take(TOP_TEN).map { AchievementAward(it.id, GameEvents.GAME_SNOWBALL_WEEKLY_TOP_TEN, 1) }
             val best = board.firstOrNull()?.let { AchievementAward(it.id, GameEvents.GAME_SNOWBALL_WEEKLY_BEST, 1) }
@@ -117,7 +118,7 @@ class SnowballWeekly(
                 rewards.add(RewardAward(board[rank].id, 1, 1, prize))
             }
             if (prizes.luckyPrize.isNotEmpty()) {
-                luckyPlayers(week, board, prizes).forEach { rewards.add(RewardAward(it, 1, 1, prizes.luckyPrize)) }
+                luckyPlayers(board, prizes, seed).forEach { rewards.add(RewardAward(it, 1, 1, prizes.luckyPrize)) }
             }
             prizes.groupPoints.take(groups.size).forEachIndexed { rank, points ->
                 if (points > 0) {
@@ -127,18 +128,17 @@ class SnowballWeekly(
             return Plan(week, achievements, rewards.toList())
         }
 
-        /** Drawn with SplittableRandom(week start epoch day), so a rerun draws the same players. */
         internal fun luckyPlayers(
-            week: LocalDate,
             board: List<ScoreRow>,
             prizes: SnowballWeeklyPrizes,
+            seed: Long,
         ): List<Int> {
             val pool = mutableListOf<Int>()
             for (rank in prizes.luckyFrom..minOf(prizes.luckyTo, board.size)) {
                 pool.add(board[rank - 1].id)
             }
             val count = minOf(prizes.luckyCount, pool.size)
-            val random = SplittableRandom(week.toEpochDay())
+            val random = SplittableRandom(seed)
             for (i in 0 until count) {
                 pool.swap(i, i + random.nextInt(pool.size - i))
             }

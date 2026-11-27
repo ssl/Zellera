@@ -9,6 +9,7 @@ import zel.db.orFallback
 import zel.db.writeEach
 import zel.game.games.snowball.SnowballScoreStore.Profile
 import zel.game.games.snowball.SnowballScoreStore.ScoreRow
+import java.security.SecureRandom
 import java.sql.Date
 import java.sql.ResultSet
 import java.time.Clock
@@ -27,8 +28,9 @@ private const val GAMES_PLAYED_SQL = "SELECT games FROM snowball_totals WHERE pl
 private const val FIRST_WEEK_SQL = "SELECT MIN(week_start) FROM snowball_week_scores"
 private const val FAVOURITE_GROUP_SQL = "SELECT favourite_guild_id FROM player_stats WHERE player_id = ? LIMIT 1"
 private const val WEEK_SETTLED_SQL = "SELECT 1 FROM snowball_weeks WHERE week_start = ?"
+private const val WEEK_SEED_SQL = "SELECT draw_seed FROM snowball_weeks WHERE week_start = ?"
 private const val SETTLE_WEEK_SQL =
-    "INSERT IGNORE INTO snowball_weeks (week_start, processed_at) VALUES (?, UNIX_TIMESTAMP())"
+    "INSERT IGNORE INTO snowball_weeks (week_start, processed_at, draw_seed) VALUES (?, UNIX_TIMESTAMP(), ?)"
 private const val PLAYER_NAMES_SQL = "SELECT id, name, figure, gender FROM players WHERE id IN "
 private const val GROUP_NAMES_SQL = "SELECT id, name, badge_code FROM guilds WHERE id IN "
 
@@ -137,8 +139,15 @@ class SnowballScoreTable internal constructor(
 
     override fun settleWeek(week: LocalDate): Boolean =
         log.orFallback("the settling of Snowball week $week", false) {
-            sql.write(SETTLE_WEEK_SQL, Date.valueOf(week)) ==
-                1
+            sql.write(SETTLE_WEEK_SQL) {
+                value(Date.valueOf(week))
+                long(SecureRandom().nextLong())
+            } == 1
+        }
+
+    override fun weekSeed(week: LocalDate): Long =
+        log.orFallback("the Snowball draw seed of $week", 0L) {
+            sql.select(WEEK_SEED_SQL, Date.valueOf(week)).first { it.getLong(1) } ?: 0L
         }
 
     private fun scoreRows(

@@ -40,4 +40,6 @@ interface SnowballScoreStore {
 
     /** Marks the week settled (false if already); runs before paying, so a crash loses prizes, never pays twice. */
     fun settleWeek(week: LocalDate): Boolean
+
+    fun weekSeed(week: LocalDate): Long
 }

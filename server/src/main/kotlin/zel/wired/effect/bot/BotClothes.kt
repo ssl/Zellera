@@ -23,7 +23,7 @@ class BotClothes(
     override fun run(firing: Firing) {
         val saved = BotChoice.rest(settings.text)
         if (!valid(saved)) return
-        val figure = normalized(saved)
+        val figure = fit(normalized(saved))
         BotChoice.bots(firing, this, bots).forEach { (bot, unit) ->
             bot.bot.figure = figure
             bots.changed(firing.scope, bot)
@@ -49,6 +49,20 @@ class BotClothes(
     companion object {
         private val FIGURE = Regex("""[a-z]{2}-\d+(-\d+)*(\.[a-z]{2}-\d+(-\d+)*)*""")
 
+        private const val FIGURE_COLUMN_WIDTH = 500
+
         fun valid(figure: String): Boolean = FIGURE.matches(figure)
+
+        fun fit(figure: String): String {
+            if (figure.length <= FIGURE_COLUMN_WIDTH) return figure
+            val kept = StringBuilder()
+            for (set in figure.split('.')) {
+                val length = kept.length + set.length + if (kept.isEmpty()) 0 else 1
+                if (length > FIGURE_COLUMN_WIDTH) break
+                if (kept.isNotEmpty()) kept.append('.')
+                kept.append(set)
+            }
+            return kept.toString()
+        }
     }
 }

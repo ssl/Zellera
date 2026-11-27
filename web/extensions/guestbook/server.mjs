@@ -91,11 +91,17 @@ export default (ext) => {
   ext.post('/entries/:name/:id(\\d{1,10})/delete', { auth: 'user', maxBody: 256 }, async (ctx) => {
     if (!(await ctx.rateLimit('delete', 30, 60))) return;
     const viewer = await ctx.viewer();
-    const owner = await ownerFor(ctx, viewer);
-    if (!owner) return;
-    const [row] = await ctx.db.query(sql`SELECT id, author_id FROM ${T} WHERE id = ${Number(ctx.params.id)} AND owner_id = ${owner.id}`);
-    if (!row) return ctx.error(404, 'This message is gone.');
-    if (viewer.id !== owner.id && viewer.id !== Number(row.author_id) && !viewer.can(MODERATE)) {
+    const owner = await ctx.players.byName(ctx.params.name);
+    if (!owner) return ctx.error(404, 'There is no such player.');
+    const outsider = owner.private && viewer.id !== owner.id && !viewer.staff;
+    const id = Number(ctx.params.id);
+    const [row] = await ctx.db.query(outsider
+      ? sql`SELECT id, author_id FROM ${T} WHERE id = ${id} AND owner_id = ${owner.id} AND author_id = ${viewer.id}`
+      : sql`SELECT id, author_id FROM ${T} WHERE id = ${id} AND owner_id = ${owner.id}`);
+    if (!row) return ctx.error(404, outsider ? 'This guestbook is private.' : 'This message is gone.');
+    const isAuthor = viewer.id === Number(row.author_id);
+    if (outsider && !isAuthor) return ctx.error(404, 'This guestbook is private.');
+    if (viewer.id !== owner.id && !isAuthor && !viewer.can(MODERATE)) {
       return ctx.error(403, 'Only the profile\'s owner, the writer and staff delete a message.');
     }
     await ctx.db.write(sql`DELETE FROM ${T} WHERE id = ${Number(row.id)}`);

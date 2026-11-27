@@ -49,17 +49,13 @@ private val COPY_WIRED_SQL =
         "INSERT INTO wired_box_picks (box_id, list, position, furni_id, saved_state, saved_x, saved_y, saved_z, " +
             "saved_direction, saved_wall_position) (SELECT ?, list, position, furni_id, saved_state, saved_x, " +
             "saved_y, saved_z, saved_direction, saved_wall_position FROM wired_box_picks WHERE box_id = ?)",
-        "INSERT INTO wired_chests (furni_id, name, description, credits, capacity, capacity_max, appearance, " +
+        "INSERT INTO wired_chests (furni_id, name, description, capacity, capacity_max, appearance, " +
             "preview_mode, preview_amount, placed, access_open, access_donate, locked, auto_lock, wired_enabled, " +
             "notify_mode, notify_full, notify_donation, notify_withdraw, notify_empty, notify_wired) " +
-            "(SELECT ?, name, description, credits, capacity, capacity_max, appearance, preview_mode, " +
+            "(SELECT ?, name, description, capacity, capacity_max, appearance, preview_mode, " +
             "preview_amount, placed, access_open, access_donate, locked, auto_lock, wired_enabled, notify_mode, " +
             "notify_full, notify_donation, notify_withdraw, notify_empty, notify_wired " +
             "FROM wired_chests WHERE furni_id = ?)",
-        "INSERT INTO wired_chest_furni (chest_id, slot_id, transaction_id, definition_id, sprite_id, is_wall, " +
-            "groupable, state, poster_code, limited_number, limited_total, extra) (SELECT ?, slot_id, " +
-            "transaction_id, definition_id, sprite_id, is_wall, groupable, state, poster_code, limited_number, " +
-            "limited_total, extra FROM wired_chest_furni WHERE chest_id = ?)",
         "INSERT INTO wired_contracts (furni_id, payment_mode, receive_text, layout, reward_category, " +
             "show_reward_popup, reward_text) (SELECT ?, payment_mode, receive_text, layout, reward_category, " +
             "show_reward_popup, reward_text FROM wired_contracts WHERE furni_id = ?)",

@@ -367,7 +367,6 @@ class RoomEngineWiring(
             EntryBurst(registry, core.walking, core.leaving, views, services.extensions.arrivals),
             core.arrivals,
             core.entryEnvironment,
-            logsEntries = { services.config.getBoolean(ENTER_LOGS_KEY, true) },
             categoryPrompt = CategoryPrompt(::needsCategory),
         )
     }
@@ -579,7 +578,6 @@ class RoomEngineWiring(
 
     private companion object {
         const val STAFF_TAGS_KEY = "room.tags.staff_only"
-        const val ENTER_LOGS_KEY = "room.visits.are_logged"
         val log: Logger = LoggerFactory.getLogger(RoomEngineWiring::class.java)
     }
 }

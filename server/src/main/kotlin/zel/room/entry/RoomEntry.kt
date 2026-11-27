@@ -40,7 +40,6 @@ class RoomEntry(
     private val arrivals: ArrivalNotes,
     private val environment: EntryEnvironment,
     private val clock: RoomClock = RoomClock.System,
-    private val logsEntries: () -> Boolean = { true },
     private val categoryPrompt: CategoryPrompt,
     private val pace: EntryPace = EntryPace(),
     private val attempts: DoorAttempts = DoorAttempts(),
@@ -540,7 +539,7 @@ class RoomEntry(
         environment.entered(player, roomId)
         environment.persistInOrder(VisitKey(roomId, playerId)) {
             val firstVisit = !store.visitedBefore(roomId, playerId)
-            if (logsEntries()) store.logEntry(roomId, playerId, now)
+            store.logEntry(roomId, playerId, now)
             if (!ownRoom) environment.countEntry(player, firstVisit)
         }
     }

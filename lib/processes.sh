@@ -55,7 +55,7 @@ process_marker() { # name
     server) echo "$RUN/server/zellera-server.jar" ;;
     web) echo "$ROOT/web/server.mjs" ;;
     proxy) echo "$DATA/caddy/Caddyfile" ;;
-    tunnel) echo "cloudflared" ;;
+    tunnel) echo "http://127.0.0.1:$TUNNEL_PORT" ;;
   esac
 }
 

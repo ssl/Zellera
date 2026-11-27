@@ -94,10 +94,11 @@ log_open() { # name
 
 process_start() { # name
   local name=$1
+  # Also for a unit that runs: systemd starts it again from this file, after a crash or a reboot.
+  ! service_installed || service_env_file "$name"
   if process_alive "$name"; then note "$name already runs (pid $(process_pid "$name"))"; return 0; fi
   log_open "$name"
   if service_installed; then
-    service_env_file "$name"
     systemctl --user start "zel-$name.service" || fail "zel-$name.service did not start (.data/logs/$name.log)"
   else
     process_command "$name"

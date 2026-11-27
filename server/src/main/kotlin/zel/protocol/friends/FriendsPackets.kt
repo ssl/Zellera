@@ -169,6 +169,8 @@ class FriendsPackets(
             when {
                 target == null -> TARGET_NOT_FOUND
 
+                target.id == ownId -> TARGET_NOT_FOUND
+
                 player.stats.contacts.userBlocked(target.id) -> TARGET_BLOCKED_BY_ASKER
 
                 // A player who blocked the asker answers like one who takes no requests at all.

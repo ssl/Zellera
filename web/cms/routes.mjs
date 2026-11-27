@@ -145,13 +145,13 @@ export const createCms = ({
     if (limited(res, `login:ip:${ipLimitKey(clientIp(req))}`, ...LOGIN_CLIENT_LIMIT)) return;
     const what = many ? 'your e-mail address' : rules.email === 'off' ? 'your username' : 'your username or e-mail address';
     if (!loginName || !password) return fail(res, 400, `Enter ${what} and your password.`, loginName ? 'password' : 'login');
-    const nameKey = `login:fail:${loginName.toLowerCase()}`;
-    if (limiter.count(nameKey) >= loginSlowdown.failures) await sleep(loginSlowdown.delayMs);
     const byEmail = rules.email !== 'off' && loginName.includes('@') ? await db.accountByEmail(loginName) : null;
     const candidates = [
       byEmail && (many ? byEmail : { ...byEmail, avatarId: await db.firstAvatar(byEmail.id) }),
       many ? null : await db.accountByAvatarName(loginName),
     ].filter(Boolean);
+    const nameKey = `login:fail:${candidates[0] ? `id:${candidates[0].id}` : `name:${loginName.toLowerCase()}`}`;
+    if (limiter.count(nameKey) >= loginSlowdown.failures) await sleep(loginSlowdown.delayMs);
     let account = null;
     for (const candidate of candidates.length ? candidates : [null]) {
       if (await verifyPassword(password, candidate?.password ?? null)) { account = candidate; break; }

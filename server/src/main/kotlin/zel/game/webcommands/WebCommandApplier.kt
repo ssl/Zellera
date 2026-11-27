@@ -19,7 +19,8 @@ class WebCommandApplier(
         val pointTypes: () -> Set<Int>,
         val mottoMaxLength: () -> Int,
         val wordFilter: (String) -> String?,
-        val rankBadges: () -> Set<String?>,
+        /** Whether the game has that badge code ([zel.game.players.inventory.KnownBadges]). */
+        val badgeExists: (String) -> Boolean,
         val ranks: Ranks,
         val reloadSettings: () -> Unit,
         val reloadTvPlaylists: () -> Unit = {},

@@ -2,10 +2,13 @@ package zel.game.webcommands
 
 import zel.db.Params
 import zel.db.write
-import zel.game.permissions.SecurityLevel
+import zel.game.players.inventory.KnownBadges
 import java.sql.SQLException
 
-/** `giveBadge` / `takeBadge`: through the badge case when the player is online, on the table otherwise. */
+/**
+ * `giveBadge` / `takeBadge`: through the badge case when the player is online, on the table otherwise. Any badge the
+ * game has may be given ([KnownBadges]).
+ */
 internal class BadgeWebCommands(
     private val services: WebCommandApplier.Services,
 ) {
@@ -56,7 +59,7 @@ internal class BadgeWebCommands(
         payload: WebCommandPayload,
     ): WebCommandResult {
         val code = codeOf(payload) ?: return BAD_CODE
-        comesWith(code)?.let { return WebCommandResult.failed(it) }
+        if (!services.badgeExists(code)) return WebCommandResult.failed(KnownBadges.missing(code))
         val badges = badgeCase(command) ?: return offline(command.userId, code, OfflineWrite.GIVE)
         return when {
             badges.owns(code) -> alreadyHas(code)
@@ -76,26 +79,6 @@ internal class BadgeWebCommands(
         badges.discard(badge)
         return OfflineWrite.TAKE.changed(badge.code)
     }
-
-    /** Why a badge cannot be given by hand: it comes with something else. Null for a badge that can. */
-    private fun comesWith(code: String): String? =
-        when {
-            code.startsWith(ACHIEVEMENT_PREFIX, ignoreCase = true) -> {
-                "$code is an achievement badge: it comes with the achievement's level."
-            }
-
-            services.rankBadges().any { it.equals(code, ignoreCase = true) } -> {
-                "$code is a rank's badge: it comes with the rank."
-            }
-
-            SecurityLevel.isVipBadge(code) -> {
-                "$code comes with the VIP level (${SecurityLevel.VIP})."
-            }
-
-            else -> {
-                null
-            }
-        }
 
     private fun offline(
         userId: Int,
@@ -128,7 +111,6 @@ internal class BadgeWebCommands(
         payload.string("badge")?.takeIf { WebCommandApplier.BADGE_CODE.matches(it) }
 
     private companion object {
-        const val ACHIEVEMENT_PREFIX = "ACH_"
         val BAD_CODE = WebCommandResult.failed("The payload needs a badge: 1 to 32 letters, digits or _.")
 
         fun alreadyHas(code: String) = WebCommandResult.failed("Already has the badge $code.")

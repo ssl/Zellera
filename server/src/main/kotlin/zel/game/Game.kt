@@ -59,6 +59,8 @@ import zel.game.pets.PetsModule
 import zel.game.players.ChatStyles
 import zel.game.players.Players
 import zel.game.players.inventory.BadgeCaches
+import zel.game.players.inventory.BadgeTexts
+import zel.game.players.inventory.KnownBadges
 import zel.game.players.level.AccountLevels
 import zel.game.players.level.JdbcAccountLevelStore
 import zel.game.players.subscriptions.MembershipWatch
@@ -110,6 +112,16 @@ class Game(
     var players: Players? = null
         private set
     val badgeCaches: BadgeCaches by lazy { BadgeCaches(core.database) }
+
+    /** The badges staff may give, from housekeeping and the give-reward wired. */
+    val knownBadges: KnownBadges by lazy {
+        val texts = BadgeTexts.installed()
+        KnownBadges(
+            { achievements?.all?.values.orEmpty() },
+            { permissions?.ranks?.staffBadges.orEmpty() },
+            texts::names,
+        )
+    }
     val accountLevels: AccountLevels by lazy {
         AccountLevels(
             JdbcAccountLevelStore(core.database.dataSource),
@@ -244,6 +256,7 @@ class Game(
                     now,
                     { core.state.isReady },
                     badgeCaches,
+                    knownBadges::exists,
                     accountLevels::inputChanged,
                     reloadTvPlaylists = {
                         configuration.reload()

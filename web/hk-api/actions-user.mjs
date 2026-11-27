@@ -3,7 +3,6 @@ import { COMMAND_GRANT, walletCurrencies } from '../cms/lib/commands.mjs';
 import { DbRefused } from '../cms/lib/db.mjs';
 import { intParam, sql } from '../cms/lib/sql.mjs';
 import { HK_API } from './index.mjs';
-import { badgeNameOrCode } from '../lib/badges.mjs';
 import { gameRules } from '../lib/game-rules.mjs';
 import { audit } from './_guard.mjs';
 
@@ -11,7 +10,7 @@ export const owner = 'hk-actions';
 
 export const grants = [
   { table: 'players', select: ['id', 'name', 'rank_id'] },
-  { table: 'ranks', select: ['id', 'name', 'badge_code'] },
+  { table: 'ranks', select: ['id', 'name'] },
   { table: 'permissions', select: ['code', 'description'] },
   { table: 'rank_permissions', select: ['rank_id', 'permission_code'] },
   { table: 'player_badges', select: ['player_id', 'badge_code', 'slot'] },
@@ -22,7 +21,6 @@ export const CURRENCY_PERM = 'housekeeping.wallet';
 export const BADGE_PERM = 'housekeeping.badges';
 const RANK_PERM = 'housekeeping.ranks';
 const SUPER_USER = 9;
-const LEVEL_BADGES = Object.freeze(['VIP']);
 const BALANCE_MAX = 2147483647;
 export const BADGE_CODE = /^[A-Za-z0-9_]{1,32}$/;
 const EDIT_LIMIT = ['hk-edit', 60, 3600];
@@ -49,17 +47,7 @@ export const balance = (value) => {
   return n <= BALANCE_MAX ? n : null;
 };
 
-const rankBadges = async (ctx) => new Set((await ctx.db.query(sql`SELECT badge_code AS badge FROM ranks WHERE badge_code <> ''`))
-  .map((r) => String(r.badge).toUpperCase()));
-
-export const giveRefusal = (texts, code, ranks = new Set()) => {
-  if (!BADGE_CODE.test(code)) return 'A badge code is 1 to 32 letters, digits or _ (like ADM or HC1).';
-  if (code.toUpperCase().startsWith('ACH_')) return `${code} is an achievement badge: it comes with the achievement's level, so it can not be given here.`;
-  if (ranks.has(code.toUpperCase())) return `${code} is a rank's badge: it comes with the rank, so it can not be given here.`;
-  if (LEVEL_BADGES.includes(code.toUpperCase())) return `${code} comes with the VIP level (2) (the level box), so it can not be given here.`;
-  if (badgeNameOrCode(texts, code) === code) return `The game has no badge called ${code} (no badge_name_${code} in its texts).`;
-  return null;
-};
+export const giveRefusal = (code) => (BADGE_CODE.test(code) ? null : 'A badge code is 1 to 32 letters, digits or _ (like ADM or HC1).');
 
 const ownedBadge = async (ctx, userId, code) => {
   const [b] = await ctx.db.query(sql`SELECT badge_code, slot AS slot_id FROM player_badges WHERE player_id = ${userId} AND badge_code = ${code} LIMIT 1`);
@@ -136,7 +124,7 @@ const giveBadgePost = async (req, res, ctx) => {
   const target = await start(ctx, res, 'hk.give.badge');
   if (!target) return;
   const code = String(ctx.form.get('badge') ?? '').trim();
-  const refusal = giveRefusal(ctx.texts, code, await rankBadges(ctx));
+  const refusal = giveRefusal(code);
   if (refusal) return ctx.send.error(res, 400, 'Not given', refusal, { field: 'badge' });
   const had = await ownedBadge(ctx, Number(target.id), code);
   if (had) return ctx.send.error(res, 409, 'Not given', `${target.username} has the badge ${had.badge_code} already.`, { field: 'badge' });

@@ -106,7 +106,7 @@ HK.start((main) => {
       d.can.badges ? [HK.jsonForm(h('form', { class: 'inline-form' },
         HK.field({ id: 'badge-give', name: 'badge', label: 'Give a badge', required: true, maxlength: 32, pattern: '[A-Za-z0-9_]{1,32}', autocomplete: 'off', spellcheck: 'false', placeholder: 'Badge code, like HC1' }),
         h('button', { class: 'btn', type: 'submit', 'data-busy': 'Giving…' }, 'Give')), `/users/${u.id}/badges/give`, { onDone: reloadWith }),
-      h('p', { class: 'hint' }, `Not achievement badges (ACH_…), a rank's badge (AMB, ADM) or VIP: those come with their level. ${ONLINE_NOTE}`)] : '',
+      h('p', { class: 'hint' }, `Any badge the game has: one its texts name (HC1), a level an achievement has (ACH_RoomEntry5, not past its last level), a rank's badge (AMB, ADM) or VIP. The game refuses a code it does not have. ${ONLINE_NOTE}`)] : '',
       d.badges.length ? h('ul', { class: 'badge-grid', 'aria-label': `Badges of ${u.name}` }, sorted.map(tile)) : HK.empty('No badges.'),
       d.badgesMore ? h('p', { class: 'foot-note' }, `The first ${fmt.number(d.badges.length)} are shown.`) : ''] });
 

@@ -220,11 +220,25 @@ class RoomPets(
         unit.changed = true
     }
 
+    private fun mayAdd(
+        scope: RoomScope,
+        ownerId: Int,
+    ): Boolean {
+        val set = petsOf(scope.room)
+        val isOwner = scope.room.info.ownerId == ownerId
+        val player = host.player(ownerId)
+        val staff = player != null && (player.isAnyOwner || player.hasPermission(Privilege.ROOM_PLACE_ANYWHERE))
+        if (!isOwner && !set.switches.allowOtherPets && !staff) return false
+        val unlimited = player != null && player.hasPermission(Privilege.PETS_UNLIMITED)
+        return unlimited || set.byIndex.size < maxPetsInRoom()
+    }
+
     fun planted(
         scope: RoomScope,
         plant: Pet,
         tile: Point,
     ) {
+        if (!mayAdd(scope, plant.userId)) return toInventory(plant, acquired = false)
         val owner = Audience.Player(plant.userId)
         val removed = PetRemovedFromInventoryOut(plant.id)
         scope.out.send(Lane.Now, owner, PetRemovedFromInventoryOutCodec, removed)
@@ -242,6 +256,7 @@ class RoomPets(
         tile: Point,
         direction: Int,
     ) {
+        if (!mayAdd(scope, pet.userId)) return toInventory(pet, acquired = true)
         val placed = putDown(scope, pet, tile, direction)
         placed.nextChatAt = scope.now() + SMILE_MILLIS
         placed.nextActionAt = scope.now() + SMILE_MILLIS
@@ -272,6 +287,7 @@ class RoomPets(
         tile: Point,
         direction: Int,
     ) {
+        if (!mayAdd(scope, baby.userId)) return toInventory(baby, acquired = false)
         val placed = putDown(scope, baby, tile, direction)
         placed.nextChatAt = scope.now() + SMILE_MILLIS
         placed.nextActionAt = scope.now() + SMILE_MILLIS

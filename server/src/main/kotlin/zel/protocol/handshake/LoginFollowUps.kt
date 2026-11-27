@@ -48,6 +48,10 @@ class LoginFollowUps(
         player: Player,
     ) {
         val id = player.profile.id
+        step("rank reload", id) {
+            player.services.game.players
+                ?.reloadRank(player)
+        }
         step("moderation data", id) { game.moderation.sendLoginData(player) }
         step("build pass rooms", id) { player.rooms.syncBuildPassRooms(id) }
         client.send(BadgePointLimits(game.achievements))

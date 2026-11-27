@@ -83,6 +83,8 @@ class Players(
         via: String = "system",
     ) = PlayerRanks(services, this).change(userId, rankId, actorId, actorName, via)
 
+    fun reloadRank(player: Player) = PlayerRanks(services, this).reload(player)
+
     fun dispose() {
         online.values.toList().forEach { it.disconnect() }
         online.clear()

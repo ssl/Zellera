@@ -31,6 +31,16 @@ internal class PlayerRanks(
         online?.follow(rank)
     }
 
+    fun reload(player: Player) {
+        val stored = storedRank(player.profile.id)
+        if (stored == NO_RANK || stored == player.profile.rank.id) return
+        val rank =
+            services.game.permissions
+                .required()
+                .ranks[stored] ?: return
+        player.follow(rank)
+    }
+
     private fun Player.follow(rank: Rank) {
         val oldBadge = profile.rank.badge
         profile.rank = rank

@@ -15,24 +15,27 @@ export const safeEqual = (a, b) => {
 const LOG_N = 16;
 const SALT_LEN = 16;
 const KEY_LEN = 28;
-export const SCRYPT_GATE = Object.freeze({ max: 2, queue: 32 });
+const gateSize = (name, dflt) => { const n = Number(process.env[name]); return Number.isInteger(n) && n > 0 ? n : dflt; };
+export const SCRYPT_GATE = Object.freeze({ max: gateSize('ZEL_WEB_SCRYPT_MAX', 2), queue: gateSize('ZEL_WEB_SCRYPT_QUEUE', 32) });
+export const LOGIN_GATE = Object.freeze({ max: gateSize('ZEL_WEB_LOGIN_SCRYPT_MAX', 2), queue: gateSize('ZEL_WEB_LOGIN_SCRYPT_QUEUE', 32) });
 const scryptGate = createGate(SCRYPT_GATE.max, SCRYPT_GATE.queue);
-const derive = (password, salt, logN) => scryptGate.run(() =>
+const loginGate = createGate(LOGIN_GATE.max, LOGIN_GATE.queue);
+const derive = (password, salt, logN, gate = scryptGate) => gate.run(() =>
   scryptAsync(password.normalize('NFKC'), salt, KEY_LEN, { N: 2 ** logN, r: 8, p: 1, maxmem: 256 * 2 ** logN * 8 }));
 
-export const hashPassword = async (password) => {
+export const hashPassword = async (password, { login = false } = {}) => {
   const salt = randomBytes(SALT_LEN);
-  const key = await derive(password, salt, LOG_N);
+  const key = await derive(password, salt, LOG_N, login ? loginGate : scryptGate);
   return `s${LOG_N}$${Buffer.concat([salt, key]).toString('base64url')}`;
 };
 
 const FORMAT = /^s(1[4-7])\$([A-Za-z0-9_-]{59})$/;
 const DUMMY = `s${LOG_N}$${Buffer.alloc(SALT_LEN + KEY_LEN).toString('base64url')}`;
-export const verifyPassword = async (password, stored) => {
+export const verifyPassword = async (password, stored, { login = false } = {}) => {
   const ours = FORMAT.exec(stored ?? '');
   const m = ours ?? FORMAT.exec(DUMMY);
   const raw = Buffer.from(m[2], 'base64url');
-  const key = await derive(password, raw.subarray(0, SALT_LEN), Number(m[1]));
+  const key = await derive(password, raw.subarray(0, SALT_LEN), Number(m[1]), login ? loginGate : scryptGate);
   return timingSafeEqual(key, raw.subarray(SALT_LEN)) && ours !== null;
 };
 export const hashIsOutdated = (stored) => {

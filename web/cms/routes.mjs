@@ -154,7 +154,7 @@ export const createCms = ({
     if (limiter.count(nameKey) >= loginSlowdown.failures) await sleep(loginSlowdown.delayMs);
     let account = null;
     for (const candidate of candidates.length ? candidates : [null]) {
-      if (await verifyPassword(password, candidate?.password ?? null)) { account = candidate; break; }
+      if (await verifyPassword(password, candidate?.password ?? null, { login: true })) { account = candidate; break; }
     }
     if (!account) {
       limiter.hit(nameKey, loginSlowdown.failures, loginSlowdown.windowSec);
@@ -163,7 +163,7 @@ export const createCms = ({
     limiter.reset(nameKey);
     if (hashIsOutdated(account.password)) {
       try {
-        const hash = await hashPassword(password);
+        const hash = await hashPassword(password, { login: true });
         await db.setPassword(account.id, hash);
         account = { ...account, password: hash };
       } catch (e) {

@@ -4,6 +4,7 @@ import zel.room.Room
 import zel.room.RoomPart
 import zel.room.RoomScope
 import zel.room.furni.RoomFurni
+import zel.room.furni.StoredValues
 import zel.room.map.Point
 import java.util.concurrent.ConcurrentHashMap
 
@@ -46,7 +47,8 @@ class ReloadPoints : RoomPart {
     ) {
         point.anchor?.let { room.furni.move(furni, it, point.direction) }
         furni.z = point.z
-        furni.state = point.state
+        // Hits, engravings, rents and the like are saved data of the furni, not a state: a rollback leaves them.
+        if (!StoredValues.holds(furni)) furni.state = point.state
         furni.wallPosition = point.wallPosition
         furni.dirty = true
     }

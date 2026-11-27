@@ -45,7 +45,9 @@ object ClubPayday {
     /** Credit furni is left out: credits packed into furni are moved, not spent. */
     internal const val SPENT =
         "SELECT COALESCE(SUM(price_credits), 0) FROM purchases WHERE player_id = ? AND bought_at > ? " +
-            "AND bought_at <= ? AND offer_name NOT LIKE 'CF\\_%' AND offer_name NOT LIKE 'CFC\\_%'"
+            "AND bought_at <= ? AND NOT EXISTS (SELECT 1 FROM catalogue_offer_items item JOIN furni_definitions " +
+            "furni ON furni.id = item.definition_id WHERE item.offer_id = purchases.offer_id " +
+            "AND (furni.code LIKE 'CF\\_%' OR furni.code LIKE 'CFC\\_%'))"
 
     /**
      * What the next pay day brings as things stand. The streak is the whole days of the oldest membership still

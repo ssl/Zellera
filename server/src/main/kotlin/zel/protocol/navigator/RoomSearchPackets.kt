@@ -80,7 +80,7 @@ class RoomSearchPackets internal constructor(
                         navigator.publicFolders.values
                             .sortedBy { it.order }
                             .map { NavigatorMessages.PublicFolder(it.name, navigator.roomsOf(it)) },
-                        rooms.promoted(),
+                        rooms.visibleTo(session.player, rooms.promoted()),
                     ),
                 )
             },

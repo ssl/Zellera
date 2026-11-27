@@ -23,6 +23,8 @@ class TagGame(
 ) : RoomGame(context, games) {
     private val taggers = LinkedHashMap<Int, Int?>()
 
+    private val taggedBy = HashMap<Int, Int>()
+
     val steppedOn = HashMap<Int, Long>()
 
     override val scoreName = kind.scoreName
@@ -91,6 +93,7 @@ class TagGame(
     ) {
         super.leave(scope, member)
         taggers.remove(member.playerId)
+        taggedBy.remove(member.playerId)
         if (member.present(scope)) context.hooks.giveEffect(scope, member.unit, 0, null)
     }
 
@@ -144,7 +147,10 @@ class TagGame(
         }
         flashPole(scope, held)
         val tagged = GameEvents.of(GameEvents.GAME_TAG_TAGGED, kind.detail)
-        if (tagger != null) context.hooks.progress(target.playerId, tagged, 1)
+        if (tagger != null) {
+            if (taggedBy[tagger.playerId] != target.playerId) context.hooks.progress(target.playerId, tagged, 1)
+            taggedBy[target.playerId] = tagger.playerId
+        }
     }
 
     private fun flashPole(

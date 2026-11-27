@@ -88,7 +88,9 @@ class TeleportToRoom(
         val here = room.units[unit.index] === unit
         val pair = host.linkerPair(linkerId)?.takeIf { it.roomId != room.info.id }
         if (pair == null) {
-            if (here) host.kickOut(scope, unit)
+            if (here) {
+                if (host.kickException(scope, playerId) == null) host.kickOut(scope, unit) else wornBack(scope, unit)
+            }
             return
         }
         val leaving =

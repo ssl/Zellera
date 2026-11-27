@@ -205,18 +205,22 @@ class ShopCheckout(
         val offer =
             page.offer(order.itemId)
                 ?: synchronized(page.offers) { page.offers.values.firstOrNull { it.clientOfferId == order.itemId } }
-        if (offer?.products.orEmpty().any { it.isPet } && !namesPet(order.extraData)) return failed()
+        if (offer?.products.orEmpty().any { it.isPet } && !namesPet(order.extraData, payer)) return failed()
         if (services.raffles.join(offer, payer)) return
         services.catalog.purchase(offer, payer, order.count, order.extraData, false)
     }
 
-    private fun namesPet(extraData: String): Boolean {
+    private fun namesPet(
+        extraData: String,
+        payer: Player,
+    ): Boolean {
         // trailing empty lines do not count in the three-line request
         val lines = extraData.split("\n").let { if (it.size == 1) it else it.dropLastWhile(String::isEmpty) }
         val petName = lines.firstOrNull().orEmpty()
         return lines.size == PetOrders.PARTS &&
             petName.length in PetNameLimits.minimum..PetNameLimits.maximum &&
-            petName.codePoints().allMatch(Character::isLetterOrDigit)
+            petName.codePoints().allMatch(Character::isLetterOrDigit) &&
+            petName.equals(services.wordFilter.filter(petName, payer), ignoreCase = true)
     }
 
     private fun sellRoomBundle(

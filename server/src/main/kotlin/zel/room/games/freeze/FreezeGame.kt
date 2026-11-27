@@ -31,6 +31,8 @@ class FreezeGame(
 
     private val pendingEndStates = mutableListOf<RoomFurni>()
 
+    private var contested = false
+
     override val scoreName = "FreezeGame"
 
     override fun member(
@@ -62,7 +64,10 @@ class FreezeGame(
     ) {
         equip(scope, member)
         member.joinedAt(runningMillis(scope))
-        if (run != GameRun.Idle) member.startWith(START_POINTS)
+        if (run != GameRun.Idle) {
+            member.startWith(START_POINTS)
+            if (teamsWithMembers() > 1) contested = true
+        }
     }
 
     override fun leave(
@@ -76,6 +81,7 @@ class FreezeGame(
     fun begin(scope: RoomScope) {
         if (run != GameRun.Idle) return
         members().forEach { equip(scope, it) }
+        contested = teamsWithMembers() > 1
         startRound(scope)
         sendOffField(scope)
         members().forEach {
@@ -371,7 +377,7 @@ class FreezeGame(
         val seconds = players.map { it.secondsPlayed(millis) }
         val total = experience(seconds)
         players.forEachIndexed { k, member ->
-            if (member.color == winner && total > 0) {
+            if (member.color == winner && contested && total > 0) {
                 hooks.progress(member.playerId, GameEvents.GAME_PLAYER_XP, total)
                 hooks.progress(member.playerId, GameEvents.GAME_FREEZE_WIN, total)
             }
@@ -380,8 +386,10 @@ class FreezeGame(
             if (froze > 0) hooks.progress(member.playerId, GameEvents.GAME_FREEZE_FROZE_OPPONENT, froze)
             member.frozeOpponents = 0
         }
-        if (total > 0) hooks.progress(scope.room.info.ownerId, GameEvents.GAME_AUTHOR_XP, total)
+        if (contested && total > 0) hooks.progress(scope.room.info.ownerId, GameEvents.GAME_AUTHOR_XP, total)
     }
+
+    private fun teamsWithMembers(): Int = teams.count { it.members.isNotEmpty() }
 
     private fun members(): List<FreezeMember> = teams.flatMap { it.members }.filterIsInstance<FreezeMember>()
 

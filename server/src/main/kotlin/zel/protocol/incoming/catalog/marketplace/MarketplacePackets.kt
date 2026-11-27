@@ -1,6 +1,7 @@
 package zel.protocol.incoming.catalog.marketplace
 
 import zel.game.catalog.CatalogServices
+import zel.game.catalog.marketplace.ListingPage
 import zel.game.catalog.marketplace.MarketplaceTokens
 import zel.net.clients.ClientConnection
 import zel.protocol.generated.BuyMarketplaceOfferInCodec
@@ -100,6 +101,11 @@ class MarketplacePackets(
         search: OfferSearchInput,
         combineUniques: Boolean,
     ) {
+        if (!services.settings.marketplaceEnabled) {
+            val empty = CatalogMessages.marketplaceOffers(ListingPage.EMPTY, services.settings.marketplaceFee)
+            s.send(MarketPlaceOffersOutCodec, empty)
+            return
+        }
         val cacheable = search.minPrice == -1 && search.maxPrice == -1 && search.query.isEmpty()
         val key = (search.sort shl 1) or (if (combineUniques) 1 else 0)
         val fee = services.settings.marketplaceFee

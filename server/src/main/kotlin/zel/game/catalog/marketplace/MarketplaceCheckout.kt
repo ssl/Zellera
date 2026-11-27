@@ -35,6 +35,9 @@ internal class MarketplaceCheckout(
         offerId: Int,
     ) {
         val buyer = client.player ?: return
+        if (!services.settings.marketplaceEnabled) {
+            return CatalogReplies.marketplaceBuyResult(client, MarketplaceBuyResult.GONE, 0, 0, offerId)
+        }
         MarketplaceStanding.refusal(buyer)?.let { return CatalogReplies.marketplaceSellStatus(client, it, 0) }
         val offer = reads.listing(offerId)
         if (offer == null || offer.sellerId == buyer.profile.id || !sellerMayTrade(offer)) {

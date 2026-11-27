@@ -41,7 +41,7 @@ internal class BotsAndPets(
             petTuning(rules.pets),
         )
     private val life = PetLife(pets)
-    private val care = PetCare(pets, services.persist)
+    private val care = PetCare(pets, services.persist).also { pets.care = it }
     private val commands = PetCommands(pets, care)
     val tick: TickPart = TickPart.inOrder(bots.tick, commands.tick, life.tick)
     val listeners: List<RoomListener> = listOf(PetListener(life, commands, care))

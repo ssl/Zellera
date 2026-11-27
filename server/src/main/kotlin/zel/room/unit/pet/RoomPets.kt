@@ -73,6 +73,8 @@ class RoomPets(
     val horses = HorseCare(this, store, persist)
     val jumps = HorseJumps(this, ::horseJumped)
 
+    lateinit var care: PetCare
+
     init {
         walking.walkedTiles.count = { playerId, tiles -> host.progress(playerId, GameEvents.HORSE_RIDDEN_TILES, tiles) }
         walking.walkedTiles.jumped = jumps::clean
@@ -380,7 +382,7 @@ class RoomPets(
             if (text.isNotEmpty()) player.alert(text)
             return
         }
-        placed.rider?.let { rider -> scope.room.units[rider]?.let { walking.dismount(scope, it) } }
+        dismountRider(scope, placed)
         remove(scope, placed)
         writes.write(scope.room.info.id, Runnable { store.save(rowOf(pet, null, 0)) })
         if (receiver == null) return
@@ -395,7 +397,7 @@ class RoomPets(
     ) {
         if (scope.room.info.ownerId == playerId) return
         all(scope).filter { it.pet.userId == playerId && !it.plant.composting }.forEach { placed ->
-            placed.rider?.let { rider -> scope.room.units[rider]?.let { walking.dismount(scope, it) } }
+            dismountRider(scope, placed)
             remove(scope, placed)
             val pet = placed.pet
             writes.write(scope.room.info.id, Runnable { store.save(rowOf(pet, null, 0)) })
@@ -554,6 +556,15 @@ class RoomPets(
         } else {
             room.floor.door.tile
         }
+    }
+
+    private fun dismountRider(
+        scope: RoomScope,
+        placed: RoomPet,
+    ) {
+        val rider = placed.rider?.let { scope.room.units[it] } ?: return
+        val horseUnit = unitOf(scope, placed) ?: return
+        care.dismount(scope, rider, horseUnit)
     }
 
     fun remove(

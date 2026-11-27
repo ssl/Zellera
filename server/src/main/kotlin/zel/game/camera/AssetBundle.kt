@@ -36,7 +36,14 @@ internal class AssetBundle private constructor(
 
     // sheet, cache, imageBytes and greyShades are guarded by this object.
     private var sheet: BufferedImage? = null
-    private val cache = HashMap<String, Image?>()
+    private val cache =
+        object : LinkedHashMap<String, Image?>(INITIAL_CACHE_CAPACITY, CACHE_LOAD_FACTOR, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Image?>?): Boolean {
+                if (size <= MAX_CACHED_IMAGES) return false
+                imageBytes -= ownBytes(eldest?.value)
+                return true
+            }
+        }
     private var imageBytes = 0L
 
     /** What the sheet takes once decoded, read from its PNG header: 4 bytes a pixel. */
@@ -79,12 +86,19 @@ internal class AssetBundle private constructor(
     @Throws(IOException::class)
     fun image(asset: String): Image? {
         if (asset in cache) return cache[asset]
-        return find(asset).also {
-            cache[asset] = it
-            // a cut of the sheet shares its pixels; a restored, shaded or turned copy has its own
-            val own = it?.image?.takeIf { image -> image.raster.dataBuffer !== sheet?.raster?.dataBuffer }
-            if (own != null) imageBytes += argbBytes(Extent(own.width, own.height))
+        val found = find(asset)
+        // A name the bundle does not have is not remembered, so made-up names in a frame cannot fill the cache.
+        if (found != null || has(asset)) {
+            imageBytes += ownBytes(found)
+            cache[asset] = found
         }
+        return found
+    }
+
+    // a cut of the sheet shares its pixels; a restored, shaded or turned copy has its own
+    private fun ownBytes(image: Image?): Long {
+        val own = image?.image?.takeIf { it.raster.dataBuffer !== sheet?.raster?.dataBuffer } ?: return 0L
+        return argbBytes(Extent(own.width, own.height))
     }
 
     /** The size [image] draws [asset] at, from the bundle's index alone: nothing is decoded. */
@@ -188,6 +202,11 @@ internal class AssetBundle private constructor(
         private const val INDEX_LENGTH_AT = 8
         private const val MAGIC_END = "\u0000"
         private const val MAX_RESTORED_SIDE = 4096
+
+        /** Images one bundle keeps, the least recently used going first: more than a photo takes from one bundle. */
+        internal const val MAX_CACHED_IMAGES = 1024
+        private const val INITIAL_CACHE_CAPACITY = 64
+        private const val CACHE_LOAD_FACTOR = 0.75f
         private const val INFLATE_CHUNK = 65536
         private const val MIN_INFLATE_BUFFER = 64
         private const val INFLATE_GROWTH = 3

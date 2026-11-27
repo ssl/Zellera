@@ -9,6 +9,12 @@ import zel.db.SqlFailure
 class NameClaim(
     private val sql: Sql,
 ) {
+    fun reservedForOthers(
+        name: String,
+        playerId: Int,
+        since: Int,
+    ): Boolean = sql.select(RESERVED, name, playerId, since).first { true } != null
+
     /** True when [name] now belongs to [playerId]; false when another player holds it or the write failed. */
     fun take(
         playerId: Int,
@@ -28,5 +34,7 @@ class NameClaim(
         val log: Logger = LoggerFactory.getLogger(NameClaim::class.java)
         const val DUPLICATE_KEY = 1062
         const val CLAIM = "UPDATE players SET name = ? WHERE id = ?"
+        const val RESERVED =
+            "SELECT 1 FROM name_changes WHERE old_name = ? AND player_id <> ? AND changed_at >= ? LIMIT 1"
     }
 }

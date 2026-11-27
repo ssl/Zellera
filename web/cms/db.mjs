@@ -25,13 +25,15 @@ export const READ_ONLY = DB_READONLY;
 export const query = (sql, params = []) => getPool().query(sql, params);
 
 const SETTING_KEYS = ['site.registration.motto',
-  'site.registration.home_room_id', 'site.registration.accounts_per_address', 'login.ticket.expires', 'game.name'];
+  'site.registration.home_room_id', 'site.registration.accounts_per_address', 'login.ticket.expires', 'game.name',
+  'player.name_change.reserve_days'];
 const DEFAULTS = {
   'site.registration.motto': '',
   'site.registration.home_room_id': '0',
   'site.registration.accounts_per_address': '5',
   'login.ticket.expires': '1',
   'game.name': '',
+  'player.name_change.reserve_days': '0',
 };
 let settingsCache = { at: 0, values: DEFAULTS };
 export const settings = async () => {
@@ -97,8 +99,13 @@ export const firstAvatar = async (accountId) => Number((await query(
   `SELECT p.id FROM players p LEFT JOIN player_accounts a ON a.id = p.account_id AND a.player_id = p.id
    WHERE p.account_id = ? ORDER BY a.id IS NULL, p.id LIMIT 1`, [accountId]))[0]?.id ?? 0);
 
-export const usernameTaken = async (username) =>
-  (await query('SELECT 1 FROM players WHERE name = ? LIMIT 1', [username])).length > 0;
+export const usernameTaken = async (username) => {
+  if ((await query('SELECT 1 FROM players WHERE name = ? LIMIT 1', [username])).length > 0) return true;
+  const days = Number((await settings())['player.name_change.reserve_days']) || 0;
+  if (days <= 0) return false;
+  return (await query('SELECT 1 FROM name_changes WHERE old_name = ? AND changed_at >= UNIX_TIMESTAMP() - ? LIMIT 1',
+    [username, days * 86400])).length > 0;
+};
 
 let nameFilter = null;
 export const nameAllowed = async (name) => {

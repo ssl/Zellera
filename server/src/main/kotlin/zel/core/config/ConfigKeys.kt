@@ -418,6 +418,7 @@ internal object ConfigKeys {
         }
         area("player") {
             int("motto.max.characters", default = 38, description = "Longest motto a player may set.")
+            int("name_change.reserve_days", 0, "Days a freed name stays kept for its old owner; 0 keeps none.")
         }
         area("mystery_box") {
             string("tracker.box_colour", "Colour of the mystery box the tracker shows; empty shows none.")

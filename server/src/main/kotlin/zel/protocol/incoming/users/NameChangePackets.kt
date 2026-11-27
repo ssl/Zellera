@@ -23,6 +23,7 @@ import zel.protocol.typed.PacketPackage
 import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.signedIn
 import zel.server.GameServices
+import zel.util.SECONDS_PER_DAY
 
 class NameChangePackets(
     private val services: GameServices,
@@ -86,7 +87,18 @@ class NameChangePackets(
     private fun isTaken(
         player: Player,
         requested: String,
-    ): Boolean = requested.equals(player.profile.name, ignoreCase = true) || exists(requested)
+    ): Boolean =
+        requested.equals(player.profile.name, ignoreCase = true) || exists(requested) || reserved(player, requested)
+
+    private fun reserved(
+        player: Player,
+        requested: String,
+    ): Boolean {
+        val days = services.config.getInt(RESERVE_DAYS_KEY, RESERVE_DAYS)
+        if (days <= 0) return false
+        val since = services.unixTimestamp() - days * SECONDS_PER_DAY
+        return names.reservedForOthers(requested, player.profile.id, since)
+    }
 
     private fun passesFilter(
         player: Player,
@@ -115,6 +127,10 @@ class NameChangePackets(
             return
         }
         if (requested != standing.checkedNewName) return
+        if (reserved(player, requested)) {
+            client.send(ChangeNameCheckResult(NameVerdict.TAKEN, requested))
+            return
+        }
         val oldName = player.profile.name
         if (!names.take(player.profile.id, requested)) {
             client.send(ChangeNameCheckResult(NameVerdict.TAKEN, requested))
@@ -188,6 +204,8 @@ class NameChangePackets(
         private const val SUGGESTIONS = 4
         private const val SUGGESTION_BOUND = 9999
         private const val CHECK_GAP_MS = 300L
+        private const val RESERVE_DAYS_KEY = "player.name_change.reserve_days"
+        private const val RESERVE_DAYS = 0
         private val LAST_CHECK: AttributeKey<ChangeNameCheckResult> = AttributeKey.valueOf("name-check-answer")
         private const val RECORD_SQL =
             "INSERT INTO name_changes (player_id, old_name, new_name, changed_at) VALUES (?, ?, ?, ?)"

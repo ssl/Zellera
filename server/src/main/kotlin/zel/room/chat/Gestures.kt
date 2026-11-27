@@ -40,6 +40,7 @@ class Gestures(
         id: Int,
     ) {
         if (id <= 0) return
+        if (id in CLUB_EXPRESSIONS && !isClubMember(unit)) return
         if (id != IDLE) active(scope, unit)
         if (id == SIXTY_SEVEN) dances.stop(scope, unit)
         scope.out.send(Lane.Now, Audience.Room, ExpressionOutCodec, ExpressionOut(unit.index, id))
@@ -81,6 +82,7 @@ class Gestures(
     private companion object {
         const val LAST_DANCE = 4
         const val FIRST_CLUB_DANCE = 2
+        val CLUB_EXPRESSIONS = setOf(2, 3)
         const val IDLE = 5
         const val SIXTY_SEVEN = 67
 

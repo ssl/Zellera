@@ -3,6 +3,7 @@ package zel.wired.variable.addon
 import zel.protocol.generated.WiredWebApiKeyResultOut
 import zel.protocol.generated.WiredWebApiKeyResultOutCodec
 import zel.room.Room
+import zel.room.RoomPart
 import zel.room.RoomScope
 import zel.room.furni.RoomFurni
 import zel.room.furni.place.Interactions
@@ -20,12 +21,13 @@ class WebApiBoxes(
     private val store: WebApiKeyStore,
     secret: String,
     private val clock: () -> Long = System::currentTimeMillis,
-) {
+) : RoomPart {
     private val random = SecureRandom()
     private val sealKey: ByteArray? =
         secret.takeIf { it.isNotEmpty() }?.let { sha256("wired-api-keys:$it") }
 
-    private val pending = ConcurrentHashMap<Int, MutableMap<String, MutableSet<String>>>()
+    /** The last unsaved key of each box and kind: a new one replaces it, as the dialog only shows the last. */
+    private val pending = ConcurrentHashMap<Slot, Waiting>()
 
     fun generate(
         scope: RoomScope,
@@ -36,7 +38,7 @@ class WebApiBoxes(
         val box = scope.room.furni[boxId] ?: return
         if (Interactions.of(box.definition) != AddonCodes.WEB_API || box.ownerId != playerId) return
         val key = Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(KEY_BYTES).also(random::nextBytes))
-        pending.computeIfAbsent(boxId) { HashMap() }.computeIfAbsent(kind(isRead)) { HashSet() }.add(key)
+        pending[Slot(boxId, kind(isRead))] = Waiting(scope.room.info.id, key)
         scope.out.send(
             Lane.Now,
             Audience.Player(playerId),
@@ -48,7 +50,7 @@ class WebApiBoxes(
     private fun kind(isRead: Boolean) = if (isRead) READ else WRITE
 
     fun opened(box: RoomFurni): String {
-        pending.remove(box.id)
+        forget(box.id)
         val keys = store.keys(box.id)
         if (keys.isEmpty()) return ""
         return "${shown(keys[READ])}\t${shown(keys[WRITE])}"
@@ -69,10 +71,9 @@ class WebApiBoxes(
     ): Boolean {
         val rows = text.split('\t')
         val saved = store.keys(box.id)
-        val waiting = pending[box.id].orEmpty()
         val decided =
             listOf(READ, WRITE).withIndex().associate { (index, kind) ->
-                kind to decide(rows.getOrElse(index) { "" }, saved[kind], waiting[kind].orEmpty())
+                kind to decide(rows.getOrElse(index) { "" }, saved[kind], pending[Slot(box.id, kind)]?.key)
             }
         if (decided.values.any { it == Decision.Refused }) return false
         decided.forEach { (kind, decision) -> carryOut(room, box, kind, decision, saved[kind]) }
@@ -82,12 +83,12 @@ class WebApiBoxes(
     private fun decide(
         sent: String,
         saved: StoredApiKey?,
-        waiting: Set<String>,
+        waiting: String?,
     ): Decision =
         when {
             sent.isEmpty() -> Decision.Clear
             saved != null && (isSame(sent, saved) || sent == masked(saved)) -> Decision.Keep
-            sent in waiting -> Decision.Save(sent)
+            sent == waiting -> Decision.Save(sent)
             else -> Decision.Refused
         }
 
@@ -106,7 +107,7 @@ class WebApiBoxes(
         if (decision == Decision.Clear && saved != null) store.delete(box.id, kind)
         if (decision is Decision.Save) {
             store.save(box.id, kind, room.info.id, box.ownerId, stored(decision.key), clock())
-            pending[box.id]?.get(kind)?.remove(decision.key)
+            pending.remove(Slot(box.id, kind))
         }
     }
 
@@ -115,8 +116,17 @@ class WebApiBoxes(
     fun hasWriteKey(box: RoomFurni): Boolean = store.keys(box.id).containsKey(WRITE)
 
     fun pickedUp(box: RoomFurni) {
-        pending.remove(box.id)
+        forget(box.id)
         store.deleteAll(box.id)
+    }
+
+    override fun unload(scope: RoomScope) {
+        val roomId = scope.room.info.id
+        pending.values.removeIf { it.roomId == roomId }
+    }
+
+    private fun forget(boxId: Int) {
+        pending.keys.removeIf { it.boxId == boxId }
     }
 
     private fun seal(key: String): ByteArray? {
@@ -139,6 +149,16 @@ class WebApiBoxes(
 
     private fun sha256(text: String): ByteArray =
         MessageDigest.getInstance("SHA-256").digest(text.toByteArray(Charsets.US_ASCII))
+
+    private data class Slot(
+        val boxId: Int,
+        val kind: String,
+    )
+
+    private class Waiting(
+        val roomId: Int,
+        val key: String,
+    )
 
     private sealed interface Decision {
         data object Clear : Decision

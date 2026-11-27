@@ -45,7 +45,7 @@ class VariableAddonSide(
 
     val validations: Map<String, BoxValidation> = VariableAddonRules(variables, fx, webApi).validations
 
-    val parts: List<RoomPart> = listOf(apiNames, fx)
+    val parts: List<RoomPart> = listOf(apiNames, fx, webApi)
 
     val amounts = VariableAmounts(variables)
 

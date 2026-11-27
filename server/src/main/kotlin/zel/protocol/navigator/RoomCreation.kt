@@ -7,6 +7,7 @@ import zel.game.players.Player
 import zel.room.listing.NewRoomRow
 import zel.room.listing.RoomCategory
 import zel.room.listing.RoomListings
+import zel.room.rights.SettingsCheck
 
 class RoomCreation(
     private val rooms: RoomListings,
@@ -20,7 +21,7 @@ class RoomCreation(
         val refused =
             !modelAllowed(player, request.modelName) ||
                 categoryId == null ||
-                !withinBounds(request) ||
+                !withinBounds(player, request) ||
                 !textAccepted(player, request)
         if (refused) return RoomCreationResult.Refused
         val owned = rooms.countOwned(player.profile.id)
@@ -64,8 +65,12 @@ class RoomCreation(
         return !clubOnly || player.stats.club.isMember
     }
 
-    private fun withinBounds(request: NewRoom): Boolean =
-        request.maxUsers in MIN_CAPACITY..MAX_CAPACITY && request.tradeMode in 0..MAX_TRADING
+    private fun withinBounds(
+        player: Player,
+        request: NewRoom,
+    ): Boolean =
+        request.maxUsers in MIN_CAPACITY..SettingsCheck.maxUsers(player.stats.club.isMember) &&
+            request.tradeMode in 0..MAX_TRADING
 
     private fun textAccepted(
         player: Player,
@@ -84,7 +89,6 @@ class RoomCreation(
 
     companion object {
         private const val MIN_CAPACITY = 10
-        private const val MAX_CAPACITY = 250
         private const val MAX_TRADING = 2
         private const val MIN_NAME_LENGTH = 3
         private const val MAX_NAME_LENGTH = 25

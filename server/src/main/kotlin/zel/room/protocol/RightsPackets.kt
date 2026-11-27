@@ -108,7 +108,17 @@ class RightsPackets(
                 player(session)?.let {
                     val staff = it.hasPermission(Privilege.MODERATION_TOOL)
                     val rank = it.profile.rank.id
-                    settings.save(it.profile.id, m.roomId, settingsOf(m), anyRoom(it), staff, rank, reply(session))
+                    val club = it.stats.club.isMember || anyRoom(it)
+                    settings.save(
+                        it.profile.id,
+                        m.roomId,
+                        settingsOf(m),
+                        anyRoom(it),
+                        staff,
+                        rank,
+                        reply(session),
+                        club,
+                    )
                 }
             },
         )

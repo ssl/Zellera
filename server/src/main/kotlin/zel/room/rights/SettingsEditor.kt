@@ -46,13 +46,14 @@ class SettingsEditor(
         staff: Boolean,
         rank: Int,
         reply: Reply,
+        club: Boolean = false,
     ) {
         val current = store.settings(roomId) ?: return
         if (current.ownerId != playerId && !mayEditAny) return
         val tags = if (staff) emptySet() else staffTags()
         val category =
             wanted.categoryId == current.categoryId || store.categoryOpenTo(wanted.categoryId, rank, staff)
-        when (val answer = SettingsCheck.check(wanted, current, tags, category) { filter(playerId, it) }) {
+        when (val answer = SettingsCheck.check(wanted, current, tags, category, club) { filter(playerId, it) }) {
             SettingsAnswer.Ignored -> {}
 
             is SettingsAnswer.Refused -> {

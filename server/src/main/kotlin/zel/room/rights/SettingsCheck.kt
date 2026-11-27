@@ -14,7 +14,8 @@ object SettingsCheck {
     const val MAX_TAGS = 2
     const val PASSWORD_DOOR = 2
     private val DOORS = 0..3
-    private val USERS = 1..200
+    const val MAX_USERS = 50
+    const val MAX_USERS_CLUB = 75
 
     private const val MIN_USERS = 10
     private val TRADE = 0..2
@@ -26,6 +27,7 @@ object SettingsCheck {
         current: RoomSettings,
         staffTags: Set<String>,
         categoryAllowed: Boolean,
+        club: Boolean = false,
         filter: (String) -> String = { it },
     ): SettingsAnswer {
         val cleaned =
@@ -35,7 +37,7 @@ object SettingsCheck {
                 tags = wanted.tags.map { filter(it).take(TAG_LENGTH) },
             )
         if (wanted.description.length > DESCRIPTION_LENGTH) return SettingsAnswer.Ignored
-        if (!inRanges(cleaned) || !categoryAllowed) return SettingsAnswer.Ignored
+        if (!inRanges(cleaned, current, club) || !categoryAllowed) return SettingsAnswer.Ignored
         if (cleaned.name.isBlank()) return SettingsAnswer.Refused(ERROR_NAME, "")
         if (cleaned.doorMode == PASSWORD_DOOR && cleaned.password.length !in 1..DoorSecret.MAX_LENGTH) {
             return SettingsAnswer.Refused(ERROR_PASSWORD, "")
@@ -59,9 +61,15 @@ object SettingsCheck {
         )
     }
 
-    private fun inRanges(s: RoomSettings): Boolean =
+    fun maxUsers(club: Boolean): Int = if (club) MAX_USERS_CLUB else MAX_USERS
+
+    private fun inRanges(
+        s: RoomSettings,
+        current: RoomSettings,
+        club: Boolean,
+    ): Boolean =
         s.doorMode in DOORS &&
-            s.maxUsers in USERS &&
+            (s.maxUsers in 1..maxUsers(club) || s.maxUsers == current.maxUsers) &&
             s.tradeMode in TRADE &&
             s.wallThickness in THICKNESS &&
             s.floorThickness in THICKNESS &&

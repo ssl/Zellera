@@ -483,6 +483,7 @@ class Game(
                     requireNotNull(items),
                     ThreadLocalRandom::current,
                     now,
+                    configuration,
                 )
             }
         calendars = calendar.calendars

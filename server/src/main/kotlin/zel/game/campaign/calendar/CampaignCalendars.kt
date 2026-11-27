@@ -22,6 +22,7 @@ class CampaignCalendars(
     private val randomSource: () -> Random,
     private val unixTime: () -> Int,
     private val messages: CalendarMessages,
+    private val isActiveCampaign: (String) -> Boolean = { true },
     private val today: () -> LocalDate = GameZone::today,
 ) {
     private val rewards = QuestRewards(items)
@@ -60,6 +61,7 @@ class CampaignCalendars(
         val client = player.client ?: return
         val campaign = byName[name] ?: return
         val forced = asStaff && player.hasPermission(Privilege.CALENDAR_FORCE_OPEN)
+        if (!forced && !isActiveCampaign(name)) return
         if (!campaign.opens(day, today(), forced)) return
         val prize = campaign.prizeFor(day, randomSource()) ?: return
         if (!records.claim(player.profile.id, campaign.id, day, prize.id, unixTime())) return

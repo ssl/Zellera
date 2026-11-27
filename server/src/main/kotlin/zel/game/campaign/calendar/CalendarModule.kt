@@ -1,6 +1,7 @@
 package zel.game.campaign.calendar
 
 import org.slf4j.LoggerFactory
+import zel.core.Configuration
 import zel.db.Database
 import zel.game.items.Items
 import zel.protocol.events.CalendarMessages
@@ -13,8 +14,19 @@ class CalendarModule(
     items: Items,
     randomSource: () -> Random,
     unixTime: () -> Int,
+    config: Configuration,
 ) {
-    val calendars = CampaignCalendars(CalendarStore(database), items, randomSource, unixTime, CalendarMessages())
+    val calendars =
+        CampaignCalendars(
+            CalendarStore(database),
+            items,
+            randomSource,
+            unixTime,
+            CalendarMessages(),
+            isActiveCampaign = { name ->
+                config.getBoolean("calendar.is_open") && config.getValue("calendar.campaign") == name
+            },
+        )
     val packets: PacketPackage = CalendarPackets(calendars)
 
     init {

@@ -86,7 +86,8 @@ class PetMeals(
     ): List<RoomFurni> {
         val data = pet.kind ?: return emptyList()
         return scope.room.furni.all().filter { furni ->
-            Interactions.of(furni.definition) == interaction && furni.anchor != null && data.accepts(furni.definition)
+            Interactions.of(furni.definition) == interaction && furni.anchor != null && furni.isSpendable &&
+                data.accepts(furni.definition)
         }
     }
 
@@ -107,14 +108,14 @@ class PetMeals(
         pet: Pet,
         bowl: RoomFurni,
     ): Boolean =
-        PetFood.foodLeft(stateOf(bowl), bowl.definition.stateCount) && pet.isHungry &&
+        PetFood.foodLeft(stateOf(bowl), bowl.definition.stateCount) && pet.isHungry && bowl.isSpendable &&
             pet.kind?.accepts(bowl.definition) == true
 
     private fun wantsWaterFrom(
         pet: Pet,
         bowl: RoomFurni,
     ): Boolean =
-        stateOf(bowl) < bowl.definition.stateCount - 1 && pet.thirst >= DRINKS_FROM_THIRST &&
+        stateOf(bowl) < bowl.definition.stateCount - 1 && pet.thirst >= DRINKS_FROM_THIRST && bowl.isSpendable &&
             pet.kind?.accepts(bowl.definition) == true
 
     private fun startEating(

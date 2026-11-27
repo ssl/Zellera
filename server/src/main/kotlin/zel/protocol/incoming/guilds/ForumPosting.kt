@@ -37,7 +37,7 @@ internal class ForumPosting(
         ) {
             return
         }
-        val guild = guilds.byId(guildId) ?: return
+        val guild = guilds.byId(guildId)?.takeIf { it.hasForum } ?: return
         val message = services.wordFilter.filter(typedMessage, caller.player)
         if (opensThread) {
             open(caller, guild, services.wordFilter.filter(typedSubject, caller.player), message)

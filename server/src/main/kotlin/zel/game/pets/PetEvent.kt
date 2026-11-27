@@ -18,6 +18,7 @@ sealed interface PetEvent {
     data class HorseJumped(
         val roomOwnerId: Int,
         val riderId: Int,
+        val streak: Int,
     ) : PetEvent
 
     data class Mounted(

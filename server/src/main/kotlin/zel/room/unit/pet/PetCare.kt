@@ -221,6 +221,7 @@ class PetCare(
         horseUnit.statuses.remove(PetLines.POSTURE)
         horseUnit.statuses.remove(PetLines.GESTURE)
         placed.rider = riderUnit.index
+        placed.jumpStreak = 0
         placed.next = null
         placed.announcedGoal = null
         pets.walking.ride(scope, riderUnit, horseUnit)

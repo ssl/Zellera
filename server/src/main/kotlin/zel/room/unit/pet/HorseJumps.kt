@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class HorseJumps(
     private val pets: RoomPets,
-    private val counted: (scope: RoomScope, rider: RoomUnit) -> Unit,
+    private val counted: (scope: RoomScope, rider: RoomUnit, streak: Int) -> Unit,
 ) {
     class Jump(
         val obstacleId: Int,
@@ -92,7 +92,12 @@ class HorseJumps(
         val rider = placed.rider?.let { scope.room.units[it] } ?: return
         jump.rider = rider
         inTheAir += rider
-        if (jump.clean) counted(scope, rider)
+        if (jump.clean) {
+            placed.jumpStreak += 1
+            counted(scope, rider, placed.jumpStreak)
+        } else {
+            placed.jumpStreak = 0
+        }
     }
 
     private fun landed(

@@ -95,6 +95,7 @@ class RoomPet(
     var rider: Int? = null
 
     var jump: HorseJumps.Jump? = null
+    var jumpStreak: Int = 0
 
     val plant = PlantLife.Show()
 

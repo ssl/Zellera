@@ -444,13 +444,13 @@ class RoomPets(
     private fun horseJumped(
         scope: RoomScope,
         rider: RoomUnit,
+        streak: Int,
     ) {
         val playerId = (rider.kind as? UnitKind.Player)?.playerId ?: return
-        host.progress(playerId, GameEvents.HORSE_JUMP_STREAK, 1)
         host.progress(playerId, GameEvents.HORSE_JUMP, 1)
         val horse = walking.horseOf(scope, rider)?.let { byIndex(scope, it.index) }?.pet ?: return
         val owner = scope.room.info.ownerId
-        persist(Runnable { PetAchievements.credit(horse.services, PetEvent.HorseJumped(owner, playerId)) })
+        persist(Runnable { PetAchievements.credit(horse.services, PetEvent.HorseJumped(owner, playerId, streak)) })
     }
 
     /**

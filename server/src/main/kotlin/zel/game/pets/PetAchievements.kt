@@ -92,6 +92,7 @@ object PetAchievements {
         if (isGuest(event.riderId, event.roomOwnerId)) {
             ledger.credit(event.roomOwnerId, GameEvents.HORSE_JUMP_BY_GUEST, 1)
         }
+        ledger.liftTo(event.riderId, GameEvents.HORSE_JUMP_STREAK, event.streak)
     }
 
     /** Only a horse is rented, not any rideable pet. */

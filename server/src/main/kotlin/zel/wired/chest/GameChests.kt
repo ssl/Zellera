@@ -3,6 +3,7 @@ package zel.wired.chest
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import zel.core.Configuration
+import zel.core.rules.rules
 import zel.db.first
 import zel.db.write
 import zel.game.achievements.GameEvents
@@ -64,11 +65,14 @@ class GameChests(
     }
 
     override fun mayTrade(playerId: Int): Boolean =
-        clients
-            .onlinePlayer(playerId)
-            ?.stats
-            ?.standing
-            ?.mayTrade() ?: store.mayTrade(playerId)
+        rules.trading &&
+            (
+                clients
+                    .onlinePlayer(playerId)
+                    ?.stats
+                    ?.standing
+                    ?.mayTrade() ?: store.mayTrade(playerId)
+            )
 
     override fun offered(
         playerId: Int,

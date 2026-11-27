@@ -60,10 +60,17 @@ class PlayerStats internal constructor(
         }
     }
 
-    fun storeMute() = store.storeMutedUntil(standing.mutedUntil)
+    @Volatile
+    private var muteStoredHere = false
+
+    fun storeMute() {
+        muteStoredHere = true
+        store.storeMutedUntil(standing.mutedUntil)
+    }
 
     @Synchronized
     fun dispose() {
+        if (!muteStoredHere) store.readMutedUntil()?.let(standing::refreshMutedUntil)
         run()
         store.close()
     }

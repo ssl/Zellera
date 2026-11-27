@@ -42,6 +42,11 @@ class PlayerStanding internal constructor(
         mutedUntil = 0
     }
 
+    @Synchronized
+    fun refreshMutedUntil(stored: Int) {
+        mutedUntil = maxOf(mutedUntil, stored)
+    }
+
     fun mayTrade(): Boolean = mayTrade(tradePass, tradeLockedUntil, now())
 
     fun safetyAllows(): Boolean = !safetyLocked

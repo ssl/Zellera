@@ -30,6 +30,9 @@ private const val SAVE_DISCORD_SQL =
 
 private const val WRITE_MUTE_SQL = "UPDATE player_standing SET muted_until = ? WHERE player_id = ?"
 
+private const val READ_MUTE_SQL =
+    "SELECT COALESCE(muted_until, 0) AS muted_until FROM player_standing WHERE player_id = ?"
+
 internal class PlayerStatsStore(
     private val services: GameServices,
     private val playerId: Int,
@@ -108,6 +111,16 @@ internal class PlayerStatsStore(
     private data class MuteLane(
         val playerId: Int,
     )
+
+    fun readMutedUntil(): Int? =
+        try {
+            services.database.queries
+                .select(READ_MUTE_SQL, playerId)
+                .first { it.getInt("muted_until") }
+        } catch (e: SqlFailure) {
+            log.error("Reading the current mute of user {} failed", playerId, e)
+            null
+        }
 
     @Throws(SqlFailure::class)
     fun startOfferPurchase(offerId: Int) {

@@ -27,6 +27,8 @@ import zel.room.tick.Audience
 import zel.room.tick.Lane
 import zel.room.tick.RoomClock
 import zel.room.unit.walk.Walking
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Semaphore
 
 class RoomEntry(
     private val registry: RoomRegistry,
@@ -43,11 +45,40 @@ class RoomEntry(
     private val pace: EntryPace = EntryPace(),
     private val attempts: DoorAttempts = DoorAttempts(),
 ) {
+    private val opens = ConcurrentHashMap<Int, OpenGate>()
+
+    private class OpenGate {
+        val turn = Semaphore(1)
+        var holders = 0
+    }
+
     init {
         leaving.promoteSpectator = { scope, playerId -> burst.promote(scope, leaving.doorOf(scope.room), playerId) }
     }
 
     fun open(
+        player: Player,
+        roomId: Int,
+        password: String,
+    ) {
+        val release = takeTurn(player.profile.id)
+        try {
+            openRoom(player, roomId, password)
+        } finally {
+            release()
+        }
+    }
+
+    private fun takeTurn(playerId: Int): () -> Unit {
+        val gate = checkNotNull(opens.compute(playerId) { _, open -> (open ?: OpenGate()).apply { holders++ } })
+        gate.turn.acquireUninterruptibly()
+        return {
+            gate.turn.release()
+            opens.computeIfPresent(playerId) { _, open -> open.takeIf { --it.holders > 0 } }
+        }
+    }
+
+    private fun openRoom(
         player: Player,
         roomId: Int,
         password: String,

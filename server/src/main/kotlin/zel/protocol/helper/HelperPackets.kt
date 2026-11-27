@@ -1,6 +1,7 @@
 package zel.protocol.helper
 
 import zel.core.Configuration
+import zel.core.rules.rules
 import zel.game.moderation.ModerationService
 import zel.game.moderation.MySanctionStatus
 import zel.game.moderation.Sanctions
@@ -45,6 +46,7 @@ class HelperPackets(
         val userId = checkNotNull(client.player).profile.id
         val report = moderation.myReports.ofReporter(userId, reportId)
         if (report == null || !report.appealable) return
+        if (moderation.tickets.filedBy(userId).size >= rules.limits.reportsOpenPerPlayer) return
         if (!moderation.myReports.appeal(userId, reportId, clock())) return
         moderation.tickets.reopenForAppeal(reportId)
         ModerationReplies.send(

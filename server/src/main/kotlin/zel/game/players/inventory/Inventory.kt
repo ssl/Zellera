@@ -29,6 +29,8 @@ class Inventory(
 
         val loaded: T get() = checkNotNull(value) { "$name not loaded" }
 
+        val orNull: T? get() = value
+
         fun dispose() {
             val held = value ?: return
             value = null
@@ -63,6 +65,7 @@ class Inventory(
     val bots: BotInventory get() = botPart.loaded
     val effects: AvatarEffects get() = effectPart.loaded
     val furni: FurniStash get() = furniPart.loaded
+    val furniOrNull: FurniStash? get() = furniPart.orNull
     val pets: PetInventory get() = petPart.loaded
     val wardrobe: Wardrobe get() = wardrobePart.loaded
 

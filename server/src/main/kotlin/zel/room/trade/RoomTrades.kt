@@ -295,9 +295,10 @@ class RoomTrades(
         to: Player,
         redeemed: Set<Int>,
     ) {
+        val stash = to.inventory.furniOrNull ?: return
         items.filter { it.id !in redeemed }.forEach { item ->
             item.userId = to.profile.id
-            to.inventory.furni.put(item)
+            stash.put(item)
         }
     }
 

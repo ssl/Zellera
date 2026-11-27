@@ -256,11 +256,12 @@ class RoomBots(
         hideName: Boolean? = null,
     ) {
         val unit = scope.room.units[bot.unitIndex] ?: return
-        val says = RoomEvent.Says(unit.index, text, shout, bot.bot.bubble)
+        val said = host.censor(text)
+        val says = RoomEvent.Says(unit.index, said, shout, bot.bot.bubble)
         scope.raise(says)
         if (says.hiding.hidden) return
         val kind = if (shout) ChatKind.Shout else ChatKind.Talk
-        UnitSpeech.toRoom(scope, unit, kind, text, bot.bot.bubble, width = width, hideName = hideName)
+        UnitSpeech.toRoom(scope, unit, kind, said, bot.bot.bubble, width = width, hideName = hideName)
         heard(scope, unit)
     }
 
@@ -274,10 +275,11 @@ class RoomBots(
     ) {
         val unit = scope.room.units[bot.unitIndex] ?: return
         // a bot's whisper fires the says stacks as its talk does; a user's never does
-        val says = RoomEvent.Says(unit.index, text, shout = false, styleId = bot.bot.bubble)
+        val said = host.censor(text)
+        val says = RoomEvent.Says(unit.index, said, shout = false, styleId = bot.bot.bubble)
         scope.raise(says)
         if (says.hiding.hidden) return
-        UnitSpeech.whisper(scope, unit, target, text, bot.bot.bubble, width, hideName)
+        UnitSpeech.whisper(scope, unit, target, said, bot.bot.bubble, width, hideName)
     }
 
     fun changed(

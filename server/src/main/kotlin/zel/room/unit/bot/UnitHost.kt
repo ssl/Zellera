@@ -30,6 +30,8 @@ interface UnitHost {
         text: String,
     ): String = text
 
+    fun censor(text: String): String = text
+
     fun config(
         key: String,
         default: Int,

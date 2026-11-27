@@ -272,6 +272,8 @@ class ServerWiring(
                     text: String,
                 ): String = game.wordFilter?.filter(text, null) ?: text
 
+                override fun censor(text: String): String = game.wordFilter?.filter(text, null) ?: text
+
                 override fun config(
                     key: String,
                     default: Int,

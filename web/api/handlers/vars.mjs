@@ -68,7 +68,7 @@ export const createVarsHandlers = ({ bridge = callBridge, now = () => Date.now()
     const take = (c, cost = 1) => ctx.limiter.take(`room:${roomId}:${c}`, enforcedRules(c), cost);
     const r = take(cls);
     if (!r.ok) return tooMany(r.retryAfter);
-    return run({ ctx, roomId, input, take, call: (op, args, codes) => ask(op, roomId, keys.boxes, args, codes) });
+    return run({ ctx, roomId, input, take, boxes: keys.boxes, call: (op, args, codes) => ask(op, roomId, keys.boxes, args, codes) });
   };
 
   const target = (ctx, { withName = true, withId = true, scope = scopeOf(ctx.params.scope) } = {}) => checkTarget({
@@ -146,8 +146,8 @@ export const createVarsHandlers = ({ bridge = callBridge, now = () => Date.now()
     countVariableHolders: wired({
       need: 'read', cls: 'wired.list',
       check: (ctx) => target(ctx, { withId: false }),
-      run: async ({ ctx, roomId, input: t, call }) => {
-        const key = `${roomId}\n${t.scope}\n${ctx.params.variableName}\n${t.kind}`;
+      run: async ({ ctx, roomId, input: t, boxes, call }) => {
+        const key = `${roomId}\n${t.scope}\n${ctx.params.variableName}\n${t.kind}\n${boxes.read}`;
         let count = counts.get(key);
         if (count === null) {
           const data = await call('countHolders', { scope: t.scope, name: ctx.params.variableName, kind: t.kind });

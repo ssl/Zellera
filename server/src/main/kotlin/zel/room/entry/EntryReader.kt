@@ -42,9 +42,19 @@ class EntryReader(
         return when {
             room.ownerId == id -> DoorCheck.OWNER
             player.isAnyOwner -> DoorCheck.STAFF
-            else -> maxOf(if (store.hasRights(room.id, id)) DoorCheck.RIGHTS else 0, groupLevel(room.groupId, id))
+            else -> withRights(store.hasRights(room.id, id), groupLevel(room.groupId, id))
         }
     }
+
+    private fun withRights(
+        rights: Boolean,
+        groupLevel: Int,
+    ): Int =
+        when {
+            !rights -> groupLevel
+            groupLevel == DoorCheck.GROUP_ADMIN -> groupLevel
+            else -> DoorCheck.RIGHTS
+        }
 
     private fun groupMember(
         groupId: Int,

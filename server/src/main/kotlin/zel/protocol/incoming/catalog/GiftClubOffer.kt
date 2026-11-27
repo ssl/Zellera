@@ -101,7 +101,7 @@ internal class GiftClubOffer(
         val running =
             subscriptions
                 .ofPlayer(receiverId)
-                .filter { it.type == type && it.isActive }
+                .filter { it.type == type && it.isActive && it.secondsLeft > 0 }
                 .maxByOrNull { it.endsAt }
         val grown =
             running?.also { it.extend(seconds) {} }

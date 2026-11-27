@@ -8,6 +8,11 @@ service_installed() {
   [ -f "$UNIT_DIR/zel.target" ] && grep -qF "# root: $ROOT" "$UNIT_DIR/zel.target" 2>/dev/null
 }
 
+service_manages() {
+  service_installed || return 1
+  ! { [ "$1" = tunnel ] && [ "$TUNNEL_MODE" = quick ]; }
+}
+
 unit_text() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; s=${s//%/%%}; s=${s//\$/\$\$}; printf '"%s"' "$s"; }
 
 # The process's environment as a file only this user reads; systemd hands it to the unit.
@@ -58,7 +63,7 @@ service_write() {
   mkdir -p "$UNIT_DIR"
   for name in $PROCESSES; do
     file=$UNIT_DIR/zel-$name.service
-    if ! process_wanted "$name"; then
+    if ! process_wanted "$name" || ! service_manages "$name"; then
       [ ! -f "$file" ] || { systemctl --user disable --now "zel-$name.service" >/dev/null 2>&1 || true; rm -f "$file"; changed=0; }
       continue
     fi

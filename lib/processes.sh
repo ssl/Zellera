@@ -61,7 +61,7 @@ process_marker() { # name
 
 process_pid() { # name; empty when it does not run
   local pid command
-  if service_installed; then
+  if service_manages "$1"; then
     pid=$(systemctl --user show -p MainPID --value "zel-$1.service" 2>/dev/null || true)
     [ -z "$pid" ] || [ "$pid" = 0 ] || echo "$pid"
     return 0
@@ -94,10 +94,10 @@ log_open() { # name
 
 process_start() { # name
   local name=$1
-  ! service_installed || service_env_file "$name"
+  ! service_manages "$name" || service_env_file "$name"
   if process_alive "$name"; then note "$name already runs (pid $(process_pid "$name"))"; return 0; fi
   log_open "$name"
-  if service_installed; then
+  if service_manages "$name"; then
     systemctl --user start "zel-$name.service" || fail "zel-$name.service did not start (.data/logs/$name.log)"
   else
     process_command "$name"
@@ -114,7 +114,7 @@ process_stop() { # name
   pid=$(process_pid "$name")
   if [ -n "$pid" ]; then
     case $name in server) halves=360 ;; db) halves=240 ;; esac
-    if service_installed; then
+    if service_manages "$name"; then
       systemctl --user stop "zel-$name.service" || return 1
     else
       kill "$pid" 2>/dev/null || true
@@ -122,7 +122,7 @@ process_stop() { # name
       ! kill -0 "$pid" 2>/dev/null || return 1
     fi
     note "$name stopped"
-  elif service_installed; then
+  elif service_manages "$name"; then
     systemctl --user stop "zel-$name.service" 2>/dev/null || true
   fi
   rm -f "$RUN/$name.pid"

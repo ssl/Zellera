@@ -17,7 +17,10 @@ import java.sql.ResultSet
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
-/** A hidden profile shows others only name, look, motto and level. */
+/**
+ * A hidden profile shows others only name, look, motto and level.
+ * A player who appears offline shows others no last-online time, as on the site and in the public API.
+ */
 class UserProfile private constructor(
     val profile: PlayerProfile,
     val player: Player?,
@@ -35,8 +38,10 @@ class UserProfile private constructor(
 
     override fun message(): ExtendedProfileOut {
         val id = profile.id
-        val (achievementScore, hidden) = scoreAndVisibility(profile)
-        val concealed = hidden && viewer.profile.id != id
+        val (achievementScore, hidden, appearsOffline) = scoreAndVisibility(profile)
+        val self = viewer.profile.id == id
+        val concealed = hidden && !self
+        val lastOnlineHidden = concealed || (appearsOffline && !self)
         val boards = services.badgeCaches.leaderboard
         val totals = boards.board(BadgeLeaderboard.TYPE_TOTAL_BADGES, -1)
         val levels = boards.board(BadgeLeaderboard.TYPE_ACHIEVEMENT_LEVEL, -1)
@@ -53,7 +58,7 @@ class UserProfile private constructor(
             boolean2 = messenger?.requests?.isWaiting(id, viewer.profile.id) ?: false,
             byte1 = (if (concealed) STATUS_HIDDEN else onlineStatus(profile)).toByte(),
             list1 = if (concealed) emptyList() else guildsOf(profile).map { guildEntry(it, id) },
-            int4 = if (concealed) CONCEALED else services.unixTimestamp() - profile.lastOnlineAt,
+            int4 = if (lastOnlineHidden) CONCEALED else services.unixTimestamp() - profile.lastOnlineAt,
             boolean3 = openWindow,
             boolean4 = hidden,
             int5 = level.level,
@@ -94,10 +99,19 @@ class UserProfile private constructor(
         )
     }
 
-    private fun scoreAndVisibility(profile: PlayerProfile): Pair<Int, Boolean> {
-        player?.stats?.let { return it.tally.achievementScore to it.settings.privateProfile }
-        return stored(SETTINGS_SQL, profile.id) { it.getInt("achievement_score") to it.getBoolean("hide_profile") }
-            ?: (0 to false)
+    private data class Visibility(
+        val achievementScore: Int,
+        val hidden: Boolean,
+        val appearsOffline: Boolean,
+    )
+
+    private fun scoreAndVisibility(profile: PlayerProfile): Visibility {
+        player?.stats?.let {
+            return Visibility(it.tally.achievementScore, it.settings.privateProfile, it.settings.appearOffline)
+        }
+        return stored(SETTINGS_SQL, profile.id) {
+            Visibility(it.getInt("achievement_score"), it.getBoolean("hide_profile"), it.getBoolean("hide_online"))
+        } ?: Visibility(0, hidden = false, appearsOffline = false)
     }
 
     private fun guildsOf(profile: PlayerProfile): List<Guild> {
@@ -140,7 +154,7 @@ class UserProfile private constructor(
         const val STATUS_ONLINE = 1
         const val STATUS_HIDDEN = 2
         const val SETTINGS_SQL =
-            "SELECT s.achievement_score, pr.hide_profile FROM player_stats s " +
+            "SELECT s.achievement_score, pr.hide_profile, pr.hide_online FROM player_stats s " +
                 "INNER JOIN player_preferences pr ON pr.player_id = s.player_id WHERE s.player_id = ? LIMIT 1"
         const val BADGE_COUNT_SQL =
             "SELECT COUNT(DISTINCT badge_code) AS total_badges FROM player_badges WHERE player_id = ?"

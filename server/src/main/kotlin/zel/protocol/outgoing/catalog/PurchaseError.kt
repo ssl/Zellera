@@ -7,6 +7,7 @@ enum class PurchaseError(
 ) {
     GENERIC(0),
     BADGE_OWNED(1),
+    EFFECT_OWNED(5),
     CHAT_STYLE_OWNED(11),
     NO_SUCH_RECEIVER(14),
 }

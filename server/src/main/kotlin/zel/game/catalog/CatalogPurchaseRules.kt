@@ -13,7 +13,7 @@ object CatalogPurchaseRules {
      */
     fun hasBulkDiscount(offer: CatalogOffer): Boolean =
         offer.hasOffer && offer.quantity == 1 && offer.bundle.isEmpty() && !offer.isLimited &&
-            offer.products.none { CreditFurni.credits(it) > 0 || isCompanion(it) }
+            offer.products.none { CreditFurni.credits(it) > 0 || isCompanion(it) || it.isPermanentEffect }
 
     private fun isCompanion(item: Item): Boolean = item.isBot || item.isPet || item.name.startsWith(RENTABLE_BOT)
 

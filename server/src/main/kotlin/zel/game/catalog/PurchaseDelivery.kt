@@ -30,7 +30,6 @@ import zel.protocol.outgoing.catalog.CatalogMessages
 import zel.protocol.outgoing.catalog.CatalogReplies
 import zel.protocol.outgoing.catalog.PurchaseError
 import zel.protocol.outgoing.catalog.PurchaseNotAllowed
-import zel.protocol.outgoing.generic.alerts.BubbleAlertMessage
 import zel.protocol.outgoing.inventory.AddBot
 import zel.protocol.outgoing.inventory.AddPet
 import zel.protocol.outgoing.inventory.AddRoomItem
@@ -106,7 +105,7 @@ internal class PurchaseDelivery(
                 }
 
                 products.any { it.type == ProductKind.AVATAR_EFFECT && ownsPermanently(player, it) } -> {
-                    client?.send(BubbleAlertMessage(PERMANENT_EFFECT_OWNED))
+                    client?.let { CatalogReplies.purchaseFailed(it, PurchaseError.EFFECT_OWNED) }
                     true
                 }
 
@@ -380,7 +379,6 @@ internal class PurchaseDelivery(
 
     private companion object {
         const val BOT_TYPE = "generic"
-        const val PERMANENT_EFFECT_OWNED = "permanent_effect_exists"
         const val FORUM_PARAMS = "forum"
 
         fun isForum(item: Item) = item.interaction.name == ItemInteraction.GUILD_FURNI && item.params == FORUM_PARAMS

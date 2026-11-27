@@ -2,6 +2,7 @@ package zel.room
 
 import zel.core.rules.rules
 import zel.protocol.typed.PacketPackage
+import zel.room.entry.DoorCheck
 import zel.room.furni.behaviour.use.PostIts
 import zel.room.persist.RoomVotes
 import zel.room.protocol.PlayerActionPackets
@@ -58,7 +59,9 @@ internal fun sidePackets(
             core.trades,
             core.tradeMessages,
             core.entryStore,
-            TradeRequests(core.trades, { rules.trading }, services.clients::onlinePlayer),
+            TradeRequests(core.trades, { rules.trading }, services.clients::onlinePlayer) { scope, playerId ->
+                core.leaving.doorOf(scope.room).levelOf(playerId) >= DoorCheck.RIGHTS
+            },
         ),
         PlayerActionPackets(
             registry,

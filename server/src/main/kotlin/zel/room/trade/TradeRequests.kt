@@ -10,6 +10,7 @@ class TradeRequests(
     private val trades: RoomTrades,
     private val tradingEnabled: () -> Boolean,
     private val playerById: (Int) -> Player?,
+    private val hasRights: (RoomScope, Int) -> Boolean,
 ) {
     @Suppress("ReturnCount") // one early answer per step
     fun judge(
@@ -39,7 +40,7 @@ class TradeRequests(
         val roomAllows =
             when (tradeMode) {
                 NO_TRADING -> false
-                OWNER_TRADES -> asker.profile.id == scope.room.info.ownerId
+                OWNER_TRADES -> asker.profile.id == scope.room.info.ownerId || hasRights(scope, asker.profile.id)
                 else -> true
             }
         return if (roomAllows) null else TradeStartFailure.ROOM_TRADING_NOT_ALLOWED

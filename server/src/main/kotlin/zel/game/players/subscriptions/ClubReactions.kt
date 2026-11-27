@@ -48,14 +48,16 @@ class ClubReactions(
         val profile = players.profileOf(subscription.playerId) ?: return
         val player = players.find(subscription.playerId)
         val stats = profile.loadStats()
-        stats.standing.maxFriends = rules.maxFriends
-        stats.standing.maxRooms = rules.maxRooms
-        services.threading.run(stats)
-        if (player != null && LookValidation.validateOnHcExpire) {
-            profile.figure = LookValidation.allowedLook(player, profile.figure, profile.gender.name)
-            services.threading.run(profile)
-            player.client?.send(UpdateUserLook(player))
-            services.game.rooms.appearanceChanged(profile.id)
+        if (!stats.club.isMember) {
+            stats.standing.maxFriends = rules.maxFriends
+            stats.standing.maxRooms = rules.maxRooms
+            services.threading.run(stats)
+            if (player != null && LookValidation.validateOnHcExpire) {
+                profile.figure = LookValidation.allowedLook(player, profile.figure, profile.gender.name)
+                services.threading.run(profile)
+                player.client?.send(UpdateUserLook(player))
+                services.game.rooms.appearanceChanged(profile.id)
+            }
         }
         player?.let(::tellStatus)
     }

@@ -97,7 +97,8 @@ class PostIts(
             scope.room.furni[itemId]
                 ?.takeIf { Interactions.of(it.definition) in THROWN_AWAY }
                 ?: return
-        if (note.ownerId != playerId && level < DoorCheck.OWNER) return
+        val roomOwnerMay = level >= DoorCheck.OWNER && Interactions.of(note.definition) == Interactions.POST_IT
+        if (note.ownerId != playerId && !roomOwnerMay) return
         scope.room.furni.remove(note.id) ?: return
         scope.out.send(Lane.Now, Audience.Room, ItemRemoveOutCodec, FurniWire.itemRemove(note, note.ownerId))
         deleted(scope.room.info.id, note.rowId)

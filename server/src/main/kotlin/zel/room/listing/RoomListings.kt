@@ -54,7 +54,7 @@ class RoomListings(
         )
 
     fun countOwned(ownerId: Int): Int =
-        single("SELECT COUNT(*) FROM rooms WHERE owner_id = ?", listOf(ownerId)) { it.getInt(1) } ?: 0
+        single("SELECT COUNT(*) FROM rooms WHERE owner_id = ?", listOf(ownerId)) { it.getInt(1) } ?: COUNT_UNAVAILABLE
 
     fun countFurni(
         roomId: Int,
@@ -435,6 +435,8 @@ class RoomListings(
     ): T? = LOGGER.orFallback(query, null) { sql.select(query) { args.forEach { value(it) } }.first(read) }
 
     companion object {
+        const val COUNT_UNAVAILABLE = Int.MAX_VALUE / 2
+
         const val POPULAR_EMPTY_PADDING = 20
 
         const val TEXT_SEARCH_MAX_ROOMS = 75

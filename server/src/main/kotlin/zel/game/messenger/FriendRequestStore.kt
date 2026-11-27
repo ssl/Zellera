@@ -52,8 +52,8 @@ class FriendRequestStore(
 
     /** Requests [playerId] sent that nobody answered yet. */
     fun sentBy(playerId: Int): Int =
-        LOGGER.orFallback("friend requests sent by $playerId", 0) {
-            sql.select(COUNT_SENT, playerId).first { it.getInt(1) } ?: 0
+        LOGGER.orFallback("friend requests sent by $playerId", COUNT_UNAVAILABLE) {
+            sql.select(COUNT_SENT, playerId).first { it.getInt(1) } ?: COUNT_UNAVAILABLE
         }
 
     fun waitingCount(playerId: Int): Int =
@@ -88,6 +88,8 @@ class FriendRequestStore(
     }
 
     internal companion object {
+        const val COUNT_UNAVAILABLE = Int.MAX_VALUE / 2
+
         private val LOGGER = LoggerFactory.getLogger(FriendRequestStore::class.java)
         private const val BETWEEN =
             "SELECT sender_id FROM friend_requests WHERE (sender_id, target_id) IN ((?, ?), (?, ?))"

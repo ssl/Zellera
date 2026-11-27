@@ -1,5 +1,6 @@
 import { crossSite } from '../cms/lib/http.mjs';
-import { sql } from '../cms/lib/sql.mjs';
+import { sql, unixNow } from '../cms/lib/sql.mjs';
+import { PIECES, deviceBanCatch, deviceBanExempt } from './devices-shared.mjs';
 
 export const owner = 'shared';
 
@@ -26,7 +27,10 @@ export const grants = [
   { table: 'player_accounts', select: ['id', 'last_ip', 'machine_id'] },
   { table: 'ranks', select: ['id', 'name'] },
   { table: 'rank_permissions', select: ['rank_id', 'permission_code'] },
-  { table: 'bans', select: ['id', 'player_id', 'ends_at', 'barred_address', 'barred_machine'] },
+  { table: 'bans', select: ['id', 'player_id', 'issued_by', 'ends_at', 'barred_address', 'barred_machine', 'avatar_only'] },
+  { table: 'player_devices', select: ['player_id', ...PIECES] },
+  { table: 'device_bans', select: ['id', ...PIECES.map((p) => `p_${p}`), 'staff_id', 'expires_at'] },
+  { table: 'device_ban_exemptions', select: ['player_id'] },
   { table: 'staff_actions', insert: ['acted_at', 'staff_id', 'action', 'subject_type', 'subject_id', 'subject_label', 'detail', 'success'] },
 ];
 
@@ -38,7 +42,10 @@ const activeBan = async (ctx, u) => {
   if (machine) conds.push(sql`b.barred_machine = ${machine}`);
   const [ban] = await ctx.db.query(sql`SELECT b.id FROM bans b
     WHERE b.ends_at > UNIX_TIMESTAMP() AND (${sql.join(conds, ' OR ')}) LIMIT 1`);
-  return ban ?? null;
+  if (ban) return ban;
+  if (await deviceBanExempt(ctx, u.id)) return null;
+  const caught = await deviceBanCatch(ctx, u.id, unixNow());
+  return caught.matched ? { id: 0 } : null;
 };
 
 const staffOfRequest = new WeakMap();

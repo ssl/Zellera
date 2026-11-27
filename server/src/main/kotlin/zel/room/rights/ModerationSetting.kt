@@ -16,7 +16,7 @@ object ModerationSetting {
         level: Int,
         groupId: Int,
     ): Boolean {
-        val rights = level == DoorCheck.RIGHTS || level >= DoorCheck.OWNER
+        val rights = level >= DoorCheck.RIGHTS
         val groupAdmin = groupId != 0 && level >= DoorCheck.GROUP_ADMIN
         return when (setting) {
             RIGHTS -> rights

@@ -1,6 +1,7 @@
 const GROUPS = ['il1|!', 'o0', 'e3', 'a4@', 's5$', 'z2', 't7+', 'b8', 'g9'];
 const GROUP_OF = new Map(GROUPS.flatMap((group) => [...group].map((c) => [c, group[0]])));
 const LETTER_OR_DIGIT = /^[\p{L}\p{Nd}]$/u;
+const MAX_PASSES = 8;
 
 const HOMOGLYPHS = new Map([
   ['а', 'a'], ['в', 'b'], ['с', 'c'], ['е', 'e'], ['н', 'h'], ['і', 'i'], ['ј', 'j'], ['к', 'k'],
@@ -83,13 +84,19 @@ export const wordList = (words, normalising = false) => {
   return Object.freeze({
     hides: (text) => hiding(text).length > 0,
     censor: (text) => {
-      let out = '';
-      let at = 0;
-      for (const [from, to, w] of censoring(text)) {
-        out += text.slice(at, from) + w.replacement;
-        at = to;
+      let current = text;
+      for (let pass = 0; pass < MAX_PASSES; pass++) {
+        const hits = censoring(current);
+        if (!hits.length) break;
+        let out = '';
+        let at = 0;
+        for (const [from, to, w] of hits) {
+          out += current.slice(at, from) + w.replacement;
+          at = to;
+        }
+        current = out + current.slice(at);
       }
-      return out + text.slice(at);
+      return current;
     },
   });
 };

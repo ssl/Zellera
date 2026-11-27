@@ -17,16 +17,22 @@ class WordList(
     fun hides(text: String): Boolean = hiding.matches(text).isNotEmpty()
 
     fun censor(text: String): Censored {
-        val hits = censoring.matches(text)
-        if (hits.isEmpty()) return Censored(text, emptyList())
-        val out = StringBuilder(text.length)
-        var at = 0
-        for ((range, word) in hits) {
-            out.append(text, at, range.first).append(word.replacement.orEmpty())
-            at = range.last + 1
+        var current = text
+        val found = LinkedHashSet<FilteredWord>()
+        repeat(MAX_PASSES) {
+            val hits = censoring.matches(current)
+            if (hits.isEmpty()) return Censored(current, found.toList())
+            val out = StringBuilder(current.length)
+            var at = 0
+            for ((range, word) in hits) {
+                out.append(current, at, range.first).append(word.replacement.orEmpty())
+                at = range.last + 1
+            }
+            out.append(current, at, current.length)
+            found += hits.map { it.second }
+            current = out.toString()
         }
-        out.append(text, at, text.length)
-        return Censored(out.toString(), hits.map { it.second }.distinct())
+        return Censored(current, found.toList())
     }
 
     /** Finds [words] in a text read through [fold]. */
@@ -54,5 +60,9 @@ class WordList(
             }
             return hits
         }
+    }
+
+    private companion object {
+        const val MAX_PASSES = 8
     }
 }

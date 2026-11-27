@@ -13,6 +13,7 @@ import zel.game.players.Player
 import zel.game.players.PlayerSaveQueue
 import zel.game.players.PlayerStates
 import zel.game.quests.CountedAction
+import zel.game.quests.QuestSubject
 import zel.net.clients.ClientConnection
 import zel.protocol.outgoing.users.UserCredits
 import zel.protocol.outgoing.users.UserCurrency
@@ -118,6 +119,7 @@ class RewardTrackService internal constructor(
         player: Player,
         action: CountedAction,
         amount: Int,
+        subject: QuestSubject? = null,
     ) {
         if (amount <= 0) return
         val boost = rules.premiumPass.pointsFactor
@@ -125,10 +127,11 @@ class RewardTrackService internal constructor(
         standings.change(playerId) { standing ->
             for (track in tracks) {
                 val state = standing.on(track)
+                val premium = premiumOf(state)
                 val factor = if (state.hasPass()) boost else 1.0
                 for (task in track.tasks) {
-                    if (task.goal != action || (task.premium && !premiumOf(state))) continue
-                    val moved = state.advance(task, amount, factor) ?: continue
+                    if (task.goal != action || (task.premium && !premium) || !task.admits(subject)) continue
+                    val moved = state.advance(task, amount, factor, premium) ?: continue
                     standings.write(playerId) { store?.saveProgress(playerId, track.id, task.id, moved) }
                     player.client?.let { messages.progress(it, track.id, task.id, moved.count, moved.points) }
                 }

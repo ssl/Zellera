@@ -38,13 +38,14 @@ class PlayerTrack {
         task: RewardTrackDefinition.Task,
         amount: Int,
         pointsFactor: Double = 1.0,
+        premiumOpen: Boolean = false,
     ): Moved? {
         val before = progressOf(task.id)
         val last = task.lastCount()
         if (before >= last) return null
         val after = minOf(last.toLong(), before.toLong() + amount).toInt()
         progress[task.id] = after
-        points += (task.pointsBetween(before, after) * pointsFactor).toInt()
+        points += (task.pointsBetween(before, after, premiumOpen) * pointsFactor).toInt()
         return Moved(after, points)
     }
 

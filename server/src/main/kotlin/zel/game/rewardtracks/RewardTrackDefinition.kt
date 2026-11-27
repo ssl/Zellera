@@ -1,6 +1,7 @@
 package zel.game.rewardtracks
 
 import zel.game.quests.CountedAction
+import zel.game.quests.QuestSubject
 
 data class RewardTrackDefinition(
     val id: String,
@@ -28,7 +29,19 @@ data class RewardTrackDefinition(
         fun pointsBetween(
             before: Int,
             after: Int,
-        ): Int = levels.filter { it.requiredCount > before && it.requiredCount <= after }.sumOf { it.points }
+            premiumOpen: Boolean,
+        ): Int =
+            levels
+                .filter { it.requiredCount > before && it.requiredCount <= after && (premiumOpen || !it.premium) }
+                .sumOf { it.points }
+
+        fun admits(subject: QuestSubject?): Boolean =
+            when {
+                parameter.isBlank() -> true
+                subject is QuestSubject.Furni -> subject.name.equals(parameter, ignoreCase = true)
+                subject is QuestSubject.Size -> parameter.trim().toIntOrNull()?.let { subject.amount >= it } == true
+                else -> false
+            }
     }
 
     /** A prize; [productType]: 1 floor furni, 0 wall furni, 4 badge, 6 bot, 8 activity points, 10 pet, 12 icon. */

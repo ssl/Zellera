@@ -47,7 +47,9 @@ class ActionCounting(
         val online = player.online() ?: return
         counting("quests", online) { quests.count(online, action.goal, 1, QuestSubject.Furni(furniName)) }
         counting("daily tasks", online) { dailyTasks.countFurniUse(online, action, furniName) }
-        counting("reward tracks", online) { rewardTracks.progress(online, action.goal, 1) }
+        counting("reward tracks", online) {
+            rewardTracks.progress(online, action.goal, 1, QuestSubject.Furni(furniName))
+        }
     }
 
     override fun reached(
@@ -58,7 +60,7 @@ class ActionCounting(
         val online = players.find(playerId).online() ?: return
         counting("quests", online) { quests.count(online, goal, 1, QuestSubject.Size(size)) }
         counting("daily tasks", online) { dailyTasks.countGoal(online, goal, 1) }
-        counting("reward tracks", online) { rewardTracks.progress(online, goal, 1) }
+        counting("reward tracks", online) { rewardTracks.progress(online, goal, 1, QuestSubject.Size(size)) }
     }
 
     override fun pet(

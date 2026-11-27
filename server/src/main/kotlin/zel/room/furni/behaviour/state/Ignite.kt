@@ -25,7 +25,10 @@ class Ignite(
     ) {
         val before = furni.state
         super.onUse(scope, furni, playerId, param)
-        if (furni.state != before && furni.state == fire(furni).burnt.toString()) {
+        if (furni.state != before &&
+            furni.state == fire(furni).burnt.toString() &&
+            part.of(scope.room).ignited.add(furni.id)
+        ) {
             part.hooks.progress(playerId, GameEvents.FURNI_IGNITED, 1)
         }
     }

@@ -36,4 +36,6 @@ class RoomStates {
     var furniHidden: Boolean? = null
 
     val gym = HashMap<Int, GymSession>()
+
+    val ignited = HashSet<Int>()
 }

@@ -34,6 +34,7 @@ export const createUserContent = ({ dir, currentUser, limiter, access = DEFAULT_
     return sendText(res, 404, 'not found');
   };
   const login = () => Promise.resolve().then(() => currentUser(req)).catch(() => null);
+  if (!/^[\x20-\x7e]*$/.test(String(rel))) return missing();
   const file = safeJoin(dir, userContentPath(String(rel)));
   if (!file || !isFile(file)) return missing();
   const inside = relative(dir, file).split(sep).join('/');

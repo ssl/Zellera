@@ -88,7 +88,7 @@ const ROOM = `SELECT r.id, r.name, r.description, r.created_at, g.id AS group_id
   LEFT JOIN guilds g ON g.id = r.guild_id
   LEFT JOIN room_categories c ON c.id = r.category_id`;
 
-export const roomById = (db, id) => db.one(`${ROOM} WHERE r.id = ? LIMIT 1`, [id]);
+export const roomById = (db, id) => db.one(`${ROOM} WHERE r.id = ? AND r.door_mode <> 'invisible' LIMIT 1`, [id]);
 
 export const userRooms = (db, userId) => db.query(`${ROOM}
   WHERE r.owner_id = ? AND r.door_mode <> 'invisible' ORDER BY r.id LIMIT ${LIMITS.rooms}`, [userId]);

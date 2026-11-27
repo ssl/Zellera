@@ -40,7 +40,7 @@ data class IconRoster(
     ) {
         /** The set's offer for what the player still lacks; null for a free set or one already gathered. */
         fun restOfSetOffer(): IconPurchase? {
-            val lacking = icons.filterNot { it.state.countsForSet }.map(Icon::id)
+            val lacking = icons.filter { it.state == IconState.PURCHASABLE }.map(Icon::id)
             if (!price.forSale() || lacking.isEmpty()) return null
             return IconPurchase(0, "${textPrefix()}collection_$name", price, lacking)
         }

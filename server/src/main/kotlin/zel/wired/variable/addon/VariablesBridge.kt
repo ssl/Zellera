@@ -1,6 +1,5 @@
 package zel.wired.variable.addon
 
-import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonSyntaxException
@@ -98,7 +97,9 @@ class VariablesBridge(
             val op = body.get("op")?.asString.orEmpty()
             val roomId = body.get("roomId")?.asInt ?: throw BridgeRefusal(BAD_REQUEST, NOT_FOUND)
             registry.load(roomId)
-            val data = registry.withRoom(roomId) { scope -> ops.run(scope, op, body) } ?: JsonNull.INSTANCE
+            val data =
+                registry.withRoom(roomId) { scope -> ops.run(scope, op, body) }
+                    ?: throw BridgeRefusal(UNAVAILABLE, "maintenance")
             JsonObject().apply {
                 addProperty("ok", true)
                 add("data", data)

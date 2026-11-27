@@ -302,7 +302,8 @@ class BridgeOps(
             }
         val order = if (descending) sort.reversed() else sort
         val sorted = holdersOf(room, variable, args.get("kind").asString).sortedWith(order)
-        val shown = sorted.drop((page - 1) * size).take(size)
+        val offset = ((page.toLong() - 1) * size).coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+        val shown = sorted.drop(offset).take(size)
         val userNames = variables().names(shown.mapNotNull { (it.second.key as? Holder.Player)?.id })
         val holders = JsonArray()
         shown.forEach { (id, held) ->

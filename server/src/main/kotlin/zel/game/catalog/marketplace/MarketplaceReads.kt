@@ -34,11 +34,16 @@ internal class MarketplaceReads(
 
     private val queries get() = services.database.queries
 
-    fun listingsOf(playerId: Int): MutableSet<MarketplaceListing> =
-        log
+    fun listingsOf(playerId: Int): MutableSet<MarketplaceListing> {
+        val settings = services.settings
+        val unstamped = settings.marketplaceCurrency.takeUnless { settings.soldCreditsGoToEarnings() }
+        return log
             .orFallback("marketplace: own offers of player $playerId", emptyList()) {
-                queries.select(OWN_LISTINGS_SQL) { int(playerId) }.rows { MarketplaceListing.ownRow(it, ::definition) }
+                queries.select(OWN_LISTINGS_SQL) { int(playerId) }.rows {
+                    MarketplaceListing.ownRow(it, ::definition, unstamped)
+                }
             }.toHashSet()
+    }
 
     fun browse(filter: MarketplaceSearch.ListingFilter): ListingPage =
         log.orFallback("marketplace: search", ListingPage.EMPTY) {
@@ -86,7 +91,7 @@ internal class MarketplaceReads(
         private val log = LoggerFactory.getLogger(MarketplaceReads::class.java)
 
         private const val OWN_LISTINGS_SQL =
-            "SELECT l.id, l.furni_id, l.player_id, l.price, l.listed_at, l.sold_at, l.state," +
+            "SELECT l.id, l.furni_id, l.player_id, l.price, l.listed_at, l.sold_at, l.state, l.payout_currency," +
                 " f.definition_id, f.limited_number, f.limited_total" +
                 " FROM marketplace_listings l INNER JOIN furni f ON f.id = l.furni_id WHERE l.player_id = ?"
 

@@ -19,10 +19,13 @@ class MarketplaceListing(
     val editionSize: Int,
     val averagePrice: Int = price,
     val listingCount: Int = 1,
+    payoutCurrency: Int? = null,
 ) {
     @Volatile var state: ListingState = state
 
     @Volatile var soldAt: Int = soldAt
+
+    @Volatile var payoutCurrency: Int? = payoutCurrency
 
     val type: Int
         get() =
@@ -64,18 +67,29 @@ class MarketplaceListing(
         fun ownRow(
             row: ResultSet,
             definition: (Int) -> Item?,
-        ): MarketplaceListing = read(row, definition, row.getInt("price"), 1)
+            unstamped: Int?,
+        ): MarketplaceListing {
+            val stamped = row.getInt("payout_currency")
+            val payoutCurrency =
+                when {
+                    row.wasNull() -> unstamped
+                    stamped == MarketplaceStore.NO_PAYOUT_CURRENCY -> null
+                    else -> stamped
+                }
+            return read(row, definition, row.getInt("price"), 1, payoutCurrency)
+        }
 
         fun searchRow(
             row: ResultSet,
             definition: (Int) -> Item?,
-        ): MarketplaceListing = read(row, definition, row.getInt("average_price"), row.getInt("listing_count"))
+        ): MarketplaceListing = read(row, definition, row.getInt("average_price"), row.getInt("listing_count"), null)
 
         private fun read(
             row: ResultSet,
             definition: (Int) -> Item?,
             averagePrice: Int,
             listingCount: Int,
+            payoutCurrency: Int?,
         ): MarketplaceListing =
             MarketplaceListing(
                 offerId = row.getInt("id"),
@@ -90,6 +104,7 @@ class MarketplaceListing(
                 editionSize = row.getInt("limited_total"),
                 averagePrice = averagePrice,
                 listingCount = listingCount,
+                payoutCurrency = payoutCurrency,
             )
     }
 }

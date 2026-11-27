@@ -15,7 +15,9 @@ internal object MarketplaceStore {
     private const val OPEN =
         "INSERT INTO marketplace_listings (furni_id, player_id, price, listed_at, state) VALUES (?, ?, ?, ?, ?)"
     const val SELL =
-        "UPDATE marketplace_listings SET state = 2, sold_at = ? WHERE id = ? AND state = 1 AND listed_at > ?"
+        "UPDATE marketplace_listings SET state = 2, sold_at = ?, payout_currency = ?" +
+            " WHERE id = ? AND state = 1 AND listed_at > ?"
+    const val NO_PAYOUT_CURRENCY = Int.MIN_VALUE
     const val DETACH = "UPDATE marketplace_listings SET player_id = NULL WHERE id = ? AND player_id = ? AND state = 2"
     const val CLOSE = "UPDATE marketplace_listings SET state = 3 WHERE id = ? AND state = 1"
 
@@ -63,9 +65,11 @@ internal object MarketplaceStore {
         connection: Connection,
         offerId: Int,
         soldAt: Int,
+        payoutCurrency: Int?,
     ): Boolean =
         connection.write(SELL) {
             int(soldAt)
+            int(payoutCurrency ?: NO_PAYOUT_CURRENCY)
             int(offerId)
             int(MarketplacePrices.openSince(soldAt))
         } > 0

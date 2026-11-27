@@ -23,6 +23,7 @@ class SaleSettlement(
         val soldAt: Int,
         val sellerId: Int,
         val sellerEarnings: Int,
+        val payoutCurrency: Int?,
     ) {
         val isWellFormed: Boolean
             get() =
@@ -51,7 +52,7 @@ class SaleSettlement(
         connection: Connection,
         sale: Sale,
     ): BalanceChange? {
-        if (!MarketplaceStore.markSold(connection, sale.offerId, sale.soldAt)) return null
+        if (!MarketplaceStore.markSold(connection, sale.offerId, sale.soldAt, sale.payoutCurrency)) return null
         if (!MarketplaceStore.handOver(connection, sale.furniId, sale.buyerId)) return null
         val paid = LedgerTransaction(connection).post(charge(sale))
         if (sale.sellerEarnings > 0) {

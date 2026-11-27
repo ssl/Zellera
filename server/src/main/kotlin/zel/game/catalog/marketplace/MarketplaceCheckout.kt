@@ -68,6 +68,7 @@ internal class MarketplaceCheckout(
     ) {
         val soldAt = services.now()
         val earnings = if (services.settings.soldCreditsGoToEarnings()) fee.sellerGets(offer.price) else 0
+        val payoutCurrency = currency.ledgerType.takeUnless { services.settings.soldCreditsGoToEarnings() }
         val sale =
             SaleSettlement.Sale(
                 offerId,
@@ -78,6 +79,7 @@ internal class MarketplaceCheckout(
                 soldAt,
                 offer.sellerId,
                 earnings,
+                payoutCurrency,
             )
         val committed =
             WalletWrites.locked(buyer) {
@@ -93,7 +95,7 @@ internal class MarketplaceCheckout(
         services.offerCache.clear()
         hand(furni, buyer)
         showPurchase(client, buyer, furni, charge, offerId)
-        tellSeller(offer.sellerId, offerId, soldAt, earnings)
+        tellSeller(offer.sellerId, offerId, soldAt, earnings, payoutCurrency)
     }
 
     private fun hand(
@@ -131,10 +133,12 @@ internal class MarketplaceCheckout(
         offerId: Int,
         soldAt: Int,
         earnings: Int,
+        payoutCurrency: Int?,
     ) {
         services.clients()?.onlinePlayer(sellerId)?.inventory?.listings?.find(offerId)?.let {
             it.state = ListingState.SOLD
             it.soldAt = soldAt
+            it.payoutCurrency = payoutCurrency
         }
         if (earnings > 0) services.incomeRewards.notifyNew(sellerId, IncomeRewards.MARKETPLACE)
         AchievementEvents.explore().marketplaceItemSold(sellerId)

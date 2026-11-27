@@ -18,35 +18,40 @@ internal class MarketplacePayout(
         val listings = player.inventory.listings
         val sold = listings.all.filter { it.state == ListingState.SOLD }
         if (sold.isEmpty()) return
-        val currency = MarketplaceCurrency(services.settings.marketplaceCurrency)
-        val paidIn = currency.ledgerType.takeUnless { services.settings.soldCreditsGoToEarnings() }
         val sellerId = player.profile.id
         val fee = services.settings.marketplaceFee
-        val due = sold.sumOf { fee.sellerGets(it.price).toLong() }
-        if (paidIn != null && currency.balanceOf(player).toLong() + due > Int.MAX_VALUE) {
+        val dueByCurrency =
+            sold
+                .mapNotNull { listing -> listing.payoutCurrency?.let { it to fee.sellerGets(listing.price).toLong() } }
+                .groupBy({ it.first }, { it.second })
+                .mapValues { (_, amounts) -> amounts.sum() }
+        val overflows =
+            dueByCurrency.any { (ledger, due) ->
+                MarketplaceCurrency(ledger).balanceOf(player).toLong() + due > Int.MAX_VALUE
+            }
+        if (overflows) {
             log.warn("Marketplace payout of player {} does not fit the wallet", sellerId)
             return
         }
         val collected =
             WalletWrites.locked(player) {
-                settle(sellerId, sold, paidIn, fee)?.also { done ->
-                    done.balance?.let { WalletWrites.publish(player, currency.ledgerType, it.after) }
+                settle(sellerId, sold, fee)?.also { done ->
+                    done.balances.forEach { (ledger, change) -> WalletWrites.publish(player, ledger, change.after) }
                 }
             } ?: return
         sold.filter { it.offerId in collected.offerIds }.forEach(listings::remove)
-        collected.balance?.let { currency.tell(player, it) }
+        collected.balances.forEach { (ledger, change) -> MarketplaceCurrency(ledger).tell(player, change) }
     }
 
     @Suppress("TooGenericExceptionCaught") // a failed statement and a refused post both mean: nothing collected
     private fun settle(
         sellerId: Int,
         sold: List<MarketplaceListing>,
-        paidIn: Int?,
         fee: MarketplaceFee,
     ): Collected? =
         try {
             services.database.dataSource.connection.use { connection ->
-                connection.allOrNothing { collect(connection, sellerId, sold, paidIn, fee) }
+                connection.allOrNothing { collect(connection, sellerId, sold, fee) }
             }
         } catch (e: Exception) {
             log.error("Marketplace payout of player {} not collected", sellerId, e)
@@ -55,7 +60,7 @@ internal class MarketplacePayout(
 
     data class Collected(
         val offerIds: Set<Int>,
-        val balance: BalanceChange?,
+        val balances: Map<Int, BalanceChange>,
     )
 
     companion object {
@@ -66,23 +71,25 @@ internal class MarketplacePayout(
             connection: Connection,
             sellerId: Int,
             sold: List<MarketplaceListing>,
-            paidIn: Int?,
             fee: MarketplaceFee = MarketplaceFee.Standard,
         ): Collected {
             val detached = sold.filter { MarketplaceStore.detach(connection, it.offerId, sellerId) }
             val ledger = LedgerTransaction(connection)
             val changes =
-                if (paidIn == null) {
-                    emptyList()
-                } else {
-                    detached
-                        .map { it to fee.sellerGets(it.price) }
-                        .filter { (_, amount) -> amount > 0 }
-                        .map { (listing, amount) -> ledger.post(payment(sellerId, paidIn, listing, amount)) }
-                }
-            val balance =
-                changes.lastOrNull()?.let { BalanceChange(it.after, changes.sumOf(BalanceChange::amount), false) }
-            return Collected(detached.mapTo(HashSet()) { it.offerId }, balance)
+                detached
+                    .mapNotNull { listing ->
+                        listing.payoutCurrency?.let { Triple(listing, it, fee.sellerGets(listing.price)) }
+                    }.filter { (_, _, amount) -> amount > 0 }
+                    .map { (listing, paidIn, amount) ->
+                        paidIn to ledger.post(payment(sellerId, paidIn, listing, amount))
+                    }
+            val balances =
+                changes
+                    .groupBy({ it.first }, { it.second })
+                    .mapValues { (_, posted) ->
+                        BalanceChange(posted.last().after, posted.sumOf(BalanceChange::amount), false)
+                    }
+            return Collected(detached.mapTo(HashSet()) { it.offerId }, balances)
         }
 
         private fun payment(

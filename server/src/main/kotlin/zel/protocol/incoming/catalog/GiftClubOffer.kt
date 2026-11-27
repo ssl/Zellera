@@ -19,10 +19,13 @@ import zel.protocol.outgoing.catalog.PurchaseError
 import zel.protocol.outgoing.catalog.PurchaseNotAllowed
 import zel.protocol.outgoing.generic.alerts.BubbleAlert
 import zel.protocol.outgoing.generic.alerts.BubbleAlertMessage
+import java.util.concurrent.ConcurrentHashMap
 
 internal class GiftClubOffer(
     private val services: CatalogServices,
 ) {
+    private val receiverLocks = ConcurrentHashMap<Int, Any>()
+
     @Suppress("ReturnCount") // one early answer per refusal
     fun gift(
         client: ClientConnection,
@@ -98,15 +101,17 @@ internal class GiftClubOffer(
     ): Boolean {
         services.players.find(receiverId)?.let { return it.stats.club.create(type, seconds) != null }
         val subscriptions = services.game.subscriptions ?: return false
-        val running =
-            subscriptions
-                .ofPlayer(receiverId)
-                .filter { it.type == type && it.isActive && it.secondsLeft > 0 }
-                .maxByOrNull { it.endsAt }
-        val grown =
-            running?.also { it.extend(seconds) {} }
-                ?: subscriptions.open(receiverId, type, services.now(), seconds)?.also { it.started() }
-        return grown != null
+        return synchronized(receiverLocks.computeIfAbsent(receiverId) { Any() }) {
+            val running =
+                subscriptions
+                    .ofPlayer(receiverId)
+                    .filter { it.type == type && it.isActive && it.secondsLeft > 0 }
+                    .maxByOrNull { it.endsAt }
+            val grown =
+                running?.also { it.extend(seconds) {} }
+                    ?: subscriptions.open(receiverId, type, services.now(), seconds)?.also { it.started() }
+            grown != null
+        }
     }
 
     private fun subscriptionType(offer: MembershipOffer): String =

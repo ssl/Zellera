@@ -16,9 +16,6 @@ class AvatarEffects(
     private val playerId: Int get() = player.profile.id
     private val byId = HashMap<Int, AvatarEffect>()
 
-    /** Effects put on since they were last stored; written when the inventory is let go. Guarded by [byId]. */
-    private val unsaved = HashSet<Int>()
-
     @Volatile
     var worn = 0
         private set
@@ -49,10 +46,7 @@ class AvatarEffects(
                 if (owned == null) {
                     AvatarEffect(effectId, playerId, duration).also(store::add)
                 } else {
-                    owned.addCopy(duration)?.also {
-                        store.write(it)
-                        unsaved.remove(effectId)
-                    } ?: owned
+                    owned.addCopy(duration)?.also(store::write) ?: owned
                 }
             show(effect)
             effect
@@ -60,8 +54,8 @@ class AvatarEffects(
 
     fun accept(effect: AvatarEffect) =
         synchronized(byId) {
-            unsaved.remove(effect.id)
             show(effect)
+            settle(services.unixTimestamp())
         }
 
     fun wear(effectId: Int) {
@@ -74,7 +68,7 @@ class AvatarEffects(
                 if (!owned.isActivated && !usable) player.client?.send(PlayerEffectExpired(owned))
                 (if (usable) owned.wornFrom(now) else owned).also {
                     byId[effectId] = it
-                    if (it !== owned) unsaved.add(effectId)
+                    if (it !== owned) store.activate(it)
                 }
             }
         worn = effectId
@@ -90,10 +84,7 @@ class AvatarEffects(
 
     fun remove(effectId: Int) {
         val effect =
-            synchronized(byId) {
-                unsaved.remove(effectId)
-                byId.remove(effectId)
-            } ?: return
+            synchronized(byId) { byId.remove(effectId) } ?: return
         store.remove(effect)
         if (worn == effectId) takeOff()
         player.client?.send(PlayerEffectExpired(effect))
@@ -102,8 +93,6 @@ class AvatarEffects(
     fun dispose() {
         synchronized(byId) {
             settle(services.unixTimestamp())
-            store.writeAll(playerId, unsaved.mapNotNull(byId::get))
-            unsaved.clear()
             byId.clear()
         }
     }
@@ -115,7 +104,6 @@ class AvatarEffects(
     private fun settle(now: Int) {
         val spent = byId.values.mapNotNull { effect -> effect.spentBy(now).takeIf { it != effect } }
         spent.forEach { effect ->
-            unsaved.remove(effect.id)
             if (effect.copies > 0) {
                 byId[effect.id] = effect
                 store.write(effect)

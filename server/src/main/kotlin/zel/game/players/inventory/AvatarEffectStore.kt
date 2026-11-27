@@ -6,7 +6,6 @@ import zel.db.Sql
 import zel.db.SqlFailure
 import zel.db.first
 import zel.db.write
-import zel.db.writeEach
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -21,6 +20,8 @@ private const val ADD_SQL =
     "INSERT INTO player_effects (player_id, effect_id, duration_seconds, activated_at, remaining) VALUES (?, ?, ?, ?, ?)"
 private const val WRITE_SQL =
     "UPDATE player_effects SET duration_seconds = ?, activated_at = ?, remaining = ? WHERE player_id = ? AND effect_id = ?"
+private const val ACTIVATE_SQL =
+    "UPDATE player_effects SET activated_at = ? WHERE player_id = ? AND effect_id = ? AND activated_at IS NULL"
 private const val REMOVE_SQL = "DELETE FROM player_effects WHERE player_id = ? AND effect_id = ?"
 
 /** A bought copy is added to the row; a permanent row stays permanent, and a permanent purchase makes it one. */
@@ -32,7 +33,7 @@ private const val BUY_SQL =
         "duration_seconds = IF(duration_seconds <= 0 OR VALUES(duration_seconds) <= 0, 0, VALUES(duration_seconds))"
 
 internal class AvatarEffectStore(
-    private val pool: DataSource,
+    pool: DataSource,
 ) {
     private val sql = Sql(pool)
 
@@ -68,22 +69,11 @@ internal class AvatarEffectStore(
             key(effect)
         }
 
-    fun writeAll(
-        playerId: Int,
-        effects: Collection<AvatarEffect>,
-    ) {
-        if (effects.isEmpty()) return
-        try {
-            pool.connection.use { connection ->
-                connection.writeEach(WRITE_SQL, effects) {
-                    values(it)
-                    key(it)
-                }
-            }
-        } catch (e: SQLException) {
-            log.error("effects of player {} not written", playerId, e)
+    fun activate(effect: AvatarEffect) =
+        writeLogged(ACTIVATE_SQL, effect, "activated") {
+            intOrNullWhenNotPositive(effect.activatedAt)
+            key(effect)
         }
-    }
 
     fun remove(effect: AvatarEffect) = writeLogged(REMOVE_SQL, effect, "deleted") { key(effect) }
 

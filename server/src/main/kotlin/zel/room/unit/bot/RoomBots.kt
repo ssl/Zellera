@@ -22,6 +22,7 @@ import zel.protocol.outgoing.inventory.BotGenderLetter
 import zel.room.Room
 import zel.room.RoomPart
 import zel.room.RoomScope
+import zel.room.RoomWrites
 import zel.room.chat.ChatKind
 import zel.room.event.RoomEvent
 import zel.room.furni.Steppable
@@ -47,7 +48,7 @@ class RoomBots(
     private val host: UnitHost,
     /** Listeners' heads turn toward a bot's talk or shout as toward a user's. */
     private val heard: (RoomScope, RoomUnit) -> Unit = { _, _ -> },
-    private val persist: (Runnable) -> Unit,
+    private val writes: RoomWrites,
 ) : RoomPart {
     /** Shared by all rooms; a room's entry is only touched under that room's lock. */
     private val rooms = ConcurrentHashMap<Room, MutableMap<Int, RoomBot>>()
@@ -90,7 +91,7 @@ class RoomBots(
         }
         val rows = bots.values.filterNot { isPasserBy(it.bot) }.map { bot -> rowIn(scope, bot) }
         bots.values.forEach { bot -> scope.room.units.remove(bot.unitIndex) }
-        if (rows.isNotEmpty()) persist(Runnable { store.saveAll(rows) })
+        if (rows.isNotEmpty()) writes.write(scope.room.info.id, Runnable { store.saveAll(rows) })
     }
 
     fun all(scope: RoomScope): List<Pair<RoomBot, RoomUnit>> =
@@ -239,7 +240,7 @@ class RoomBots(
             return
         }
         remove(scope, placed)
-        persist(Runnable { store.save(rowOf(bot, null, null, placed.dance)) })
+        writes.write(scope.room.info.id, Runnable { store.save(rowOf(bot, null, null, placed.dance)) })
         receiver ?: return
         receiver.inventory.bots.put(bot)
         val added = BotAddedToInventoryOut(bot.id, bot.name, bot.motto, BotGenderLetter.of(bot), bot.figure, true)
@@ -416,7 +417,7 @@ class RoomBots(
     ) {
         if (isPasserBy(placed.bot)) return
         val row = rowIn(scope, placed)
-        persist(Runnable { store.save(row) })
+        writes.write(scope.room.info.id, Runnable { store.save(row) })
     }
 
     /** The bot on its spot, not where a wired box last moved or turned it. */

@@ -29,7 +29,7 @@ internal class BotsAndPets(
     writes: RoomWrites,
 ) {
     private val units = services.units
-    val bots = RoomBots(BotStore(services.dataSource), walking, units, heads::heard, services.persist)
+    val bots = RoomBots(BotStore(services.dataSource), walking, units, heads::heard, writes)
     val pets =
         RoomPets(
             PetStore(services.dataSource),

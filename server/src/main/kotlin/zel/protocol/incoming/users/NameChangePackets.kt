@@ -109,7 +109,7 @@ class NameChangePackets(
         val standing = player.stats.standing
         if (!standing.mayChangeName) return
         if (requested.equals(player.profile.name, ignoreCase = true)) {
-            standing.mayChangeName = false
+            markNameChangeUsed(player)
             tell(client, player)
             countNamePicked(player)
             return
@@ -120,7 +120,7 @@ class NameChangePackets(
             client.send(ChangeNameCheckResult(NameVerdict.TAKEN, requested))
             return
         }
-        standing.mayChangeName = false
+        markNameChangeUsed(player)
         standing.checkedNewName = ""
         rename(player, requested)
         tell(client, player)
@@ -157,6 +157,15 @@ class NameChangePackets(
         client.send(UserData(player))
     }
 
+    private fun markNameChangeUsed(player: Player) {
+        player.stats.standing.mayChangeName = false
+        try {
+            services.database.queries.write(CLEAR_RENAME_SQL, player.profile.id)
+        } catch (e: SqlFailure) {
+            log.error("Clearing the rename grant of player {} failed", player.profile.id, e)
+        }
+    }
+
     private fun countNamePicked(player: Player) {
         services.game.achievements?.count(player, GameEvents.PLAYER_NAME_CHANGED)
     }
@@ -182,5 +191,6 @@ class NameChangePackets(
         private val LAST_CHECK: AttributeKey<ChangeNameCheckResult> = AttributeKey.valueOf("name-check-answer")
         private const val RECORD_SQL =
             "INSERT INTO name_changes (player_id, old_name, new_name, changed_at) VALUES (?, ?, ?, ?)"
+        private const val CLEAR_RENAME_SQL = "UPDATE player_standing SET may_change_name = 0 WHERE player_id = ?"
     }
 }

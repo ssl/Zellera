@@ -1,4 +1,4 @@
-import { sql } from '../cms/lib/sql.mjs';
+import { sql, unixNow } from '../cms/lib/sql.mjs';
 
 export const PIECES = Object.freeze(['id', 'gpu', 'scr', 'cpu', 'tz', 'fnt', 'cnv', 'aud', 'gl', 'ua']);
 export const COMBO = Object.freeze(['gpu', 'scr', 'fnt']);
@@ -56,6 +56,48 @@ export const loadUser = async (ctx, id) => {
   return u ?? null;
 };
 export const userNotFound = (ctx, res) => ctx.send.notFound(res, 'There is no user with this id.');
+
+const DAY_SECONDS = 86400;
+const banRules = async (ctx) => {
+  const rows = await ctx.db.query(sql`SELECT name, value FROM settings
+    WHERE name IN (${sql.in(['login.device.ban.days', 'login.device.ban.others'])})`);
+  const setting = (name, fallback) => {
+    const v = Number([...rows].find((r) => r.name === name)?.value);
+    return Number.isInteger(v) ? v : fallback;
+  };
+  return { window: setting('login.device.ban.days', 30) * DAY_SECONDS, others: setting('login.device.ban.others', 0) };
+};
+
+const idsOf = (devs) => [...new Set(devs.map((r) => String(r.id)).filter(usable))];
+const combosOf = (devs) => [...new Map(devs.filter((r) => COMBO.every((name) => usable(r[name])))
+  .map((r) => [COMBO.map((name) => String(r[name])).join('-'), r])).values()];
+const devicesOf = (ctx, id, since) => ctx.db.query(sql`SELECT d.id, d.gpu, d.scr, d.fnt FROM player_devices d
+  WHERE d.player_id = ${id} AND d.last_seen_at >= ${since}`);
+
+export const deviceSharerTopRank = async (ctx, playerId, now = unixNow()) => {
+  const id = Number(playerId);
+  const { window, others } = await banRules(ctx);
+  const devs = await devicesOf(ctx, id, now - window);
+  const ids = idsOf(devs);
+  const tops = [];
+  if (ids.length) {
+    tops.push(...await ctx.db.query(sql`SELECT COALESCE(MAX(p.rank_id), 0) AS top
+      FROM player_devices o JOIN players p ON p.id = o.player_id
+      WHERE o.player_id <> ${id} AND o.id IN (${sql.in(ids)})
+        AND NOT EXISTS (SELECT 1 FROM device_ban_exemptions e WHERE e.player_id = o.player_id)`));
+  }
+  for (const c of combosOf(devs)) {
+    const [gpu, scr, fnt] = COMBO.map((name) => String(c[name]));
+    tops.push(...await ctx.db.query(sql`SELECT COALESCE(MAX(p.rank_id), 0) AS top
+      FROM player_devices o JOIN players p ON p.id = o.player_id
+      WHERE o.gpu = ${gpu} AND o.scr = ${scr} AND o.fnt = ${fnt} AND o.player_id <> ${id}
+        AND NOT EXISTS (SELECT 1 FROM device_ban_exemptions e WHERE e.player_id = o.player_id)
+        AND (SELECT COUNT(DISTINCT q.player_id) FROM player_devices q
+          WHERE q.gpu = ${gpu} AND q.scr = ${scr} AND q.fnt = ${fnt} AND q.player_id <> o.player_id AND q.player_id <> ${id}
+            AND NOT EXISTS (SELECT 1 FROM bans z WHERE z.player_id = q.player_id AND z.ends_at > ${now})) <= ${others}`));
+  }
+  return Math.max(0, ...tops.map((r) => Number(r?.top) || 0));
+};
 
 export const loadDevice = async (ctx, userId, reading) => {
   const values = parseReading(reading);

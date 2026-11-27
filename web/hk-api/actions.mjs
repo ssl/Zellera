@@ -5,6 +5,7 @@ import { HK_API } from './index.mjs';
 import { audit, higherRank } from './_guard.mjs';
 import { PERMANENT, banActive, banEnds, charCount, findUser, oneLine, unbanRefusal } from './actions-lib.mjs';
 import { BAN_COLUMNS, banCovers, isPermanent, ref } from './users-shared.mjs';
+import { PIECES, deviceSharerTopRank } from './devices-shared.mjs';
 import { SECONDS_PER_HOUR } from '../lib/time.mjs';
 
 export const owner = 'hk-actions';
@@ -19,6 +20,7 @@ export const grants = [
     insert: ['player_id', 'issued_by', 'issued_at', 'ends_at', 'reason'],
     update: ['ends_at', 'lifted_by'],
   },
+  { table: 'player_devices', select: ['player_id', ...PIECES] },
   COMMAND_GRANT,
 ];
 
@@ -55,7 +57,12 @@ const targetOf = (t) => ({
   online: String(t.online) === '1',
 });
 
-const whyNot = (ctx, target) => higherRank(ctx.staff, target.rank, target.username);
+const whyNot = async (ctx, target) => {
+  const own = higherRank(ctx.staff, target.rank, target.username);
+  if (own) return own;
+  const top = await deviceSharerTopRank(ctx, Number(target.id));
+  return higherRank(ctx.staff, top, 'An account that shares this player’s device');
+};
 
 export const validateBan = (form) => {
   const errors = [];
@@ -82,7 +89,7 @@ const banGet = async (req, res, ctx) => {
   const target = found && await loadTarget(ctx, Number(found.id));
   if (!target) return ctx.send.notFound(res, `No user has the name or id “${wanted.slice(0, 50)}”.`);
   const bans = await activeBans(ctx, target);
-  const refusal = whyNot(ctx, target);
+  const refusal = await whyNot(ctx, target);
   if (refusal) return ctx.send.error(res, 403, 'Not for your rank', refusal, { target: targetOf(target), bans });
   return ctx.send.json(res, 200, { ok: true, target: targetOf(target), bans, ...form });
 };
@@ -94,7 +101,7 @@ const banPost = async (req, res, ctx) => {
   const target = userId && await loadTarget(ctx, userId);
   if (!target) return ctx.send.notFound(res, 'No user has that id.');
   const label = String(target.username);
-  const refusal = whyNot(ctx, target);
+  const refusal = await whyNot(ctx, target);
   if (refusal) {
     await audit(ctx, { action: 'hk.ban', targetType: 'user', targetId: Number(target.id), label, detail: `refused: ${refusal}`, success: false });
     return ctx.send.error(res, 403, 'Not for your rank', refusal);

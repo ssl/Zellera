@@ -17,6 +17,7 @@ import zel.room.furni.Usable
 import zel.room.furni.behaviour.special.SpecialStuff
 import zel.room.furni.behaviour.state.StateShow
 import zel.room.furni.place.FurniPickup
+import zel.room.furni.place.Placeable
 import zel.room.furni.place.StuffOnWire
 import zel.room.map.Point
 import zel.room.tick.Audience
@@ -32,7 +33,9 @@ class RentableSpace(
     private val tileCredits: () -> Int,
     private val nowSeconds: () -> Int,
     private val renterName: (Int) -> String,
+    private val freed: (renter: Int, spaceId: Int) -> Unit,
 ) : Usable,
+    Placeable,
     StuffOnWire,
     ClosedToWalks {
     private data class Rent(
@@ -57,6 +60,15 @@ class RentableSpace(
     ): Boolean = rented(furni)
 
     override fun passage(furni: RoomFurni): Passage = Passage.Rented(rentOf(furni).renter)
+
+    override fun onPickedUp(
+        scope: RoomScope,
+        furni: RoomFurni,
+    ) {
+        val rent = rentOf(furni)
+        if (rent.renter > 0) free(rent.renter, furni.id)
+        furni.state = FREE
+    }
 
     override fun onUse(
         scope: RoomScope,
@@ -159,12 +171,19 @@ class RentableSpace(
             pickups()?.sweep(scope, rent.renter) { other ->
                 other.ownerId == rent.renter && other !== furni && other.tiles().any { it in inside }
             }
-            player(rent.renter)?.stats?.let {
-                it.rentedSpaceId = 0
-                it.rentedUntil = 0
-            }
+            free(rent.renter, furni.id)
         }
         StateShow.whole(scope, furni, FREE)
+    }
+
+    private fun free(
+        renter: Int,
+        spaceId: Int,
+    ) {
+        val stats = player(renter)?.stats ?: return freed(renter, spaceId)
+        if (stats.rentedSpaceId != spaceId) return
+        stats.rentedSpaceId = 0
+        stats.rentedUntil = 0
     }
 
     private fun errorFor(

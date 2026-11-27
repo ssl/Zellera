@@ -1,5 +1,9 @@
 package zel.room
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import zel.db.Sql
+import zel.db.orFallback
 import zel.game.items.FurniParams
 import zel.game.items.Item
 import zel.game.items.ItemInteraction
@@ -54,6 +58,7 @@ internal class FurniUseWiring(
             { services.config.getInt(RENT_PRICE_KEY, DEFAULT_RENT_PRICE) },
             core.nowSeconds,
             furni.special.host::playerName,
+            ::freeStoredRent,
         )
     val gifts =
         Gifts(
@@ -116,7 +121,25 @@ internal class FurniUseWiring(
                 services.config.getInt(JUKEBOX_NORMAL_KEY, JUKEBOX_NORMAL)
             }
 
+    private fun freeStoredRent(
+        renter: Int,
+        spaceId: Int,
+    ) = services.persist(
+        Runnable {
+            log.orFallback("freeing the rent of player $renter", Unit) {
+                Sql(services.dataSource).write(FREE_RENT) {
+                    int(renter)
+                    int(spaceId)
+                }
+            }
+        },
+    )
+
     private companion object {
+        val log: Logger = LoggerFactory.getLogger(FurniUseWiring::class.java)
+        const val FREE_RENT =
+            "UPDATE player_stats SET rented_space_furni_id = NULL, rented_space_ends_at = NULL " +
+                "WHERE player_id = ? AND rented_space_furni_id = ?"
         const val RENT_DAYS_KEY = "furni.rentable_space.rent.days"
         const val DEFAULT_RENT_DAYS = 7
         const val RENT_PRICE_KEY = "furni.rentable_space.tile.credits"

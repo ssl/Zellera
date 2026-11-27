@@ -1,6 +1,8 @@
 package zel.protocol.incoming.guilds
 
 import zel.game.guilds.Guild
+import zel.game.guilds.forums.ForumAccess
+import zel.game.guilds.forums.ForumThread
 import zel.protocol.generated.RoomMessageNotificationOut
 import zel.protocol.generated.RoomMessageNotificationOutCodec
 import zel.protocol.typed.PacketIds
@@ -72,7 +74,7 @@ internal class ForumPosting(
     ) {
         val thread = threads.thread(threadId)?.takeIf { it.guildId == guild.id }
         val access = answers.access(caller, guild)
-        if (thread == null || (thread.isLocked && !access.isStaff) || !access.mayPostMessage) {
+        if (thread == null || !mayReply(thread, access)) {
             answers.outdated(caller, guild)
             return
         }
@@ -85,6 +87,15 @@ internal class ForumPosting(
         messages.sendNewMessage(caller.client, guild.id, post.threadId, presenter.post(post, true))
         tellRoomOwner(caller, guild)
     }
+
+    private fun mayReply(
+        thread: ForumThread,
+        access: ForumAccess,
+    ): Boolean =
+        access.mayRead &&
+            (!thread.state.isHidden || access.maySeeHidden) &&
+            (!thread.isLocked || access.isStaff) &&
+            access.mayPostMessage
 
     private fun countAuthor(
         caller: Caller,

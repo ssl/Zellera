@@ -95,6 +95,6 @@ object LookValidation {
                 owned,
                 !current.ownedItemsOnly,
             )
-        return LookCleaner(current.figuredata).clean(look, wearer)
+        return Figure.clampToMaxLength(LookCleaner(current.figuredata).clean(look, wearer))
     }
 }

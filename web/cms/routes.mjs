@@ -69,6 +69,7 @@ export const createCms = ({
     const account = await db.sessionAccount(session.accountId, session.nonce);
     if (!sessionMatchesUser(session, account)) return null;
     const user = session.avatarId > 0 ? await db.accountAvatar(account.id, session.avatarId) : null;
+    if (user && await db.activeBan(user.id, clientIp(req))) return null;
     return { session, account, user: user && { ...user, password: account.password } };
   };
 
@@ -81,7 +82,12 @@ export const createCms = ({
     const session = readSession(sessionValue(req));
     if (!session || !(session.avatarId > 0)) return null;
     const ban = await db.sessionBan(session.accountId, session.avatarId, session.nonce);
-    return ban && sessionMatchesUser(session, ban) ? banNotice(ban) : null;
+    if (ban) return sessionMatchesUser(session, ban) ? banNotice(ban) : null;
+    const account = await db.sessionAccount(session.accountId, session.nonce);
+    if (!sessionMatchesUser(session, account)) return null;
+    const user = await db.accountAvatar(account.id, session.avatarId);
+    const barred = user && await db.activeBan(user.id, clientIp(req));
+    return barred ? banNotice(barred) : null;
   };
 
   const sessionEnd = async (req) => {

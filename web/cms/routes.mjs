@@ -277,7 +277,7 @@ export const createCms = ({
     const me = await currentUser(req);
     if (!me) return sessionOver(res);
     if (limited(res, `ticket:${me.user.id}`, 6, 60)) return;
-    const ban = await db.activeBan(me.user.id, clientIp(req));
+    const ban = await db.activeBan(me.user.id, clientIp(req)) ?? await db.accountBan(me.account.id);
     if (ban) return fail(res, 403, banNotice(ban));
     const ticket = newTicket();
     await db.issueTicket(me.user.id, ticket, clientIp(req));
@@ -393,7 +393,7 @@ export const createCms = ({
     const problem = usernameProblem(name);
     if (problem) return fail(res, 400, problem, 'name');
     if (!(await db.nameAllowed(name))) return fail(res, 400, NAME_UNFIT, 'name');
-    const ban = await db.addressBan(clientIp(req));
+    const ban = await db.addressBan(clientIp(req)) ?? await db.accountBan(me.account.id);
     if (ban) return fail(res, 403, banNotice(ban));
     const avatar = await newAvatar(name, clientIp(req));
     let id;
@@ -456,7 +456,7 @@ export const createCms = ({
   const freshPlayTicket = async (req) => {
     const me = await currentUser(req);
     if (!me || !limiter.hit(`ticket:${me.user.id}`, 6, 60).ok) return null;
-    if (await db.activeBan(me.user.id, clientIp(req))) return null;
+    if (await db.activeBan(me.user.id, clientIp(req)) || await db.accountBan(me.account.id)) return null;
     const ticket = newTicket();
     await db.issueTicket(me.user.id, ticket, clientIp(req));
     return ticket;

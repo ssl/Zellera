@@ -1,17 +1,29 @@
 package zel.game.players
 
+import java.text.Normalizer
+
 class CustomFilter {
-    private val words = LinkedHashSet<String>()
+    private val words = LinkedHashMap<String, String>()
     private var mask: Regex? = null
 
     @Synchronized
-    fun add(word: String?): Boolean = normalize(word)?.let(words::add)?.also { if (it) mask = null } ?: false
+    fun add(word: String?): Boolean {
+        val normalized = normalize(word) ?: return false
+        if (words.putIfAbsent(collationKey(normalized), normalized) != null) return false
+        mask = null
+        return true
+    }
 
     @Synchronized
-    fun remove(word: String?): Boolean = normalize(word)?.let(words::remove)?.also { if (it) mask = null } ?: false
+    fun remove(word: String?): Boolean {
+        val normalized = normalize(word) ?: return false
+        if (words.remove(collationKey(normalized)) == null) return false
+        mask = null
+        return true
+    }
 
     @Synchronized
-    fun contains(word: String?): Boolean = normalize(word) in words
+    fun contains(word: String?): Boolean = normalize(word)?.let { collationKey(it) in words } ?: false
 
     @Synchronized
     fun isEmpty(): Boolean = words.isEmpty()
@@ -20,7 +32,7 @@ class CustomFilter {
     fun size(): Int = words.size
 
     @Synchronized
-    fun words(): List<String> = words.toList()
+    fun words(): List<String> = words.values.toList()
 
     /** [replacement] is taken literally. */
     fun apply(
@@ -36,7 +48,7 @@ class CustomFilter {
     private fun mask(): Regex? {
         if (words.isEmpty()) return null
         return mask
-            ?: words
+            ?: words.values
                 .joinToString("|", transform = Regex::escape)
                 .toRegex(RegexOption.IGNORE_CASE)
                 .also { mask = it }
@@ -45,6 +57,8 @@ class CustomFilter {
     companion object {
         const val LONGEST_WORD = 25
 
+        private val COMBINING = Regex("\\p{Mn}+")
+
         /** Null when nothing is left of the word. */
         fun normalize(word: String?): String? =
             word
@@ -52,5 +66,8 @@ class CustomFilter {
                 ?.lowercase()
                 ?.take(LONGEST_WORD)
                 ?.takeIf { it.isNotEmpty() }
+
+        fun collationKey(word: String): String =
+            COMBINING.replace(Normalizer.normalize(word.lowercase(), Normalizer.Form.NFD), "").replace("ß", "ss")
     }
 }

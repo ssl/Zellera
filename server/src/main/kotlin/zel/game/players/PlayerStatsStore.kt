@@ -33,6 +33,15 @@ private const val WRITE_MUTE_SQL = "UPDATE player_standing SET muted_until = ? W
 private const val READ_MUTE_SQL =
     "SELECT COALESCE(muted_until, 0) AS muted_until FROM player_standing WHERE player_id = ?"
 
+private const val READ_RESPECTS_SQL =
+    "SELECT daily_respect_left, daily_pet_respect_left, daily_respect_refills_left FROM player_stats WHERE player_id = ?"
+
+internal data class RespectCounters(
+    val respectsLeft: Int,
+    val petRespectsLeft: Int,
+    val refillsLeft: Int,
+)
+
 internal class PlayerStatsStore(
     private val services: GameServices,
     private val playerId: Int,
@@ -115,6 +124,20 @@ internal class PlayerStatsStore(
                 .first { it.getInt("muted_until") }
         } catch (e: SqlFailure) {
             log.error("Reading the current mute of user {} failed", playerId, e)
+            null
+        }
+
+    fun readRespectRefill(): RespectCounters? =
+        try {
+            services.database.queries.select(READ_RESPECTS_SQL, playerId).first {
+                RespectCounters(
+                    it.getInt("daily_respect_left"),
+                    it.getInt("daily_pet_respect_left"),
+                    it.getInt("daily_respect_refills_left"),
+                )
+            }
+        } catch (e: SqlFailure) {
+            log.error("Reading the daily respects of user {} failed", playerId, e)
             null
         }
 

@@ -52,6 +52,7 @@ class LoginFollowUps(
             player.services.game.players
                 ?.reloadRank(player)
         }
+        step("respect refill", id) { player.stats.reloadRespectRefill() }
         step("moderation data", id) { game.moderation.sendLoginData(player) }
         step("build pass rooms", id) { player.rooms.syncBuildPassRooms(id) }
         client.send(BadgePointLimits(game.achievements))

@@ -76,6 +76,15 @@ class PlayerStats internal constructor(
     }
 
     @Synchronized
+    fun reloadRespectRefill() {
+        store.readRespectRefill()?.let {
+            tally.respectsLeft = it.respectsLeft
+            tally.petRespectsLeft = it.petRespectsLeft
+            tally.respectRefillsLeft = it.refillsLeft
+        }
+    }
+
+    @Synchronized
     fun addGuild(guildId: Int) {
         if (guildId !in guildIds) guildIds += guildId
     }

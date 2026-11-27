@@ -120,6 +120,20 @@ class GuildMemberStore(
         }
     }
 
+    fun clearFavourite(
+        userId: Int,
+        guildId: Int,
+    ) {
+        guildStorageLog.orFallback("guild storage: clear favourite", Unit) {
+            dataSource.connection.use { connection ->
+                connection.write(CLEAR_FAVOURITE) {
+                    int(userId)
+                    int(guildId)
+                }
+            }
+        }
+    }
+
     fun <T : Any> inTransaction(
         fallback: T,
         work: (Connection) -> T,
@@ -237,6 +251,8 @@ class GuildMemberStore(
         const val DELETE_BLOCKED = "DELETE FROM guild_members WHERE player_id = ? AND guild_id = ? AND level = ?"
         const val SET_RANK = "UPDATE guild_members SET level = ? WHERE player_id = ? AND guild_id = ?"
         const val DELETE_MEMBER = "DELETE FROM guild_members WHERE player_id = ? AND guild_id = ?"
+        const val CLEAR_FAVOURITE =
+            "UPDATE player_stats SET favourite_guild_id = NULL WHERE player_id = ? AND favourite_guild_id = ?"
         const val COUNT_GROUPS_OF_USER = "SELECT COUNT(*) FROM guild_members WHERE player_id = ? AND level <> ?"
         const val COUNT_ACTIVE = "SELECT COUNT(*) FROM guild_members WHERE guild_id = ? AND level < ?"
         const val COUNT_ROW = "SELECT COUNT(*) FROM guild_members WHERE guild_id = ? AND player_id = ?"

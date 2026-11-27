@@ -188,7 +188,7 @@ internal class GuildMemberAdmin(
         val live = services.live()
         val stillTheGroupRoom = live.summary(guild.roomId)?.groupId == guildId
         if (stillTheGroupRoom) live.ejectFurniOf(guild.roomId, targetId)
-        if (target != null) release(target, guild, wasFavourite)
+        if (target != null) release(target, guild, wasFavourite) else guilds.members.clearFavourite(targetId, guildId)
         for (client in removalNoticeClients(caller.client, target?.client)) {
             messages.sendMembershipRejected(client, guild, targetId)
             client.send(ExtendedProfileChangedOutCodec, ExtendedProfileChangedOut(targetId))

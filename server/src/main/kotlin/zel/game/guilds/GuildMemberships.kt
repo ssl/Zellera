@@ -124,6 +124,11 @@ class GuildMemberships(
         userId: Int,
     ) = rows.delete(guild.id, userId)
 
+    fun clearFavourite(
+        userId: Int,
+        guildId: Int,
+    ) = rows.clearFavourite(userId, guildId)
+
     fun makeAdmin(
         guild: Guild,
         userId: Int,

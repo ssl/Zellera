@@ -71,6 +71,7 @@ internal class WiredEffectWiring(
             filterText = ::filteredText,
             maxMessage = { services.config.getInt(SHOW_MESSAGE_LENGTH_KEY, UserEffectRules.MAX_MESSAGE) },
             maxLines = { services.config.getInt(SHOW_MESSAGE_LINES_KEY, UserEffectRules.MAX_LINES) },
+            badgeExists = services.badgeExists,
         ).validations +
             BotEffectRules(
                 { services.config.getInt(WIRED_NAME_LENGTH_KEY, BotEffectRules.MAX_NAME) },

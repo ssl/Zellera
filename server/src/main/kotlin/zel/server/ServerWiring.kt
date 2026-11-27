@@ -190,6 +190,7 @@ class ServerWiring(
                     }
                 },
                 leaderboard = { game.badgeCaches.leaderboard },
+                badgeExists = { code -> game.knownBadges.exists(code) },
                 accountLevels = { game.accountLevels },
                 wiredEarnings = { game.wiredCreditEarnings },
                 definitionByCode = { code -> game.items?.getItem(code) },

@@ -1,5 +1,6 @@
 package zel.wired.effect.user
 
+import zel.game.players.inventory.KnownBadges
 import zel.room.Room
 import zel.room.furni.place.Interactions
 import zel.room.games.TeamColor
@@ -18,6 +19,8 @@ class UserEffectRules(
     private val filterText: (Int, String) -> String = { _, text -> text },
     private val maxMessage: () -> Int = { MAX_MESSAGE },
     private val maxLines: () -> Int = { MAX_LINES },
+    /** Whether the game has that badge code ([zel.game.players.inventory.KnownBadges]). */
+    private val badgeExists: (String) -> Boolean = { false },
 ) {
     val validations: Map<String, BoxValidation> =
         mapOf(
@@ -50,16 +53,23 @@ class UserEffectRules(
             ints = listOf(settings.ints.getOrElse(0) { 0 }.takeIf { it in 0..WriteLog.MAX_LEVEL } ?: 0),
         )
 
-    /** Staff only; the box gives badges only, so a row with any other reward is refused. */
+    /**
+     * Staff only; the box gives badges only, so a row with any other reward is refused, and so is a badge the game
+     * does not have.
+     */
     private fun giveReward(
         settings: BoxSettings,
         request: SaveRequest,
-    ): SaveOutcome =
-        when {
+    ): SaveOutcome {
+        val rewards = StaffReward.parse(settings.text)
+        val missing by lazy { rewards.firstOrNull { !badgeExists(it.code) } }
+        return when {
             !superWired(request.saverId) -> SaveOutcome.Invalid(SAVE_FAILED, whisper = NOT_ALLOWED)
-            StaffReward.parse(settings.text).any { !it.isBadge } -> SaveOutcome.Invalid(SAVE_FAILED)
+            rewards.any { !it.isBadge } -> SaveOutcome.Invalid(SAVE_FAILED)
+            missing != null -> SaveOutcome.Invalid(SAVE_FAILED, whisper = missing?.let { KnownBadges.missing(it.code) })
             else -> SaveOutcome.Saved(settings)
         }
+    }
 
     /** A text longer than [MAX_SENT_MESSAGE] is refused and the box keeps its old one; a shorter one is cut. */
     private fun showMessage(

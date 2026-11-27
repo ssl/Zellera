@@ -6,7 +6,7 @@ HK.start((main) => HK.load(main, `/users/${HK.param(2)}/sanctions`, (r) => {
   HK.setTitle(`${r.user.name} · Sanctions`);
   const now = Math.floor(Date.now() / 1000);
   const DONE = {
-    ban: 'Banned. If they are online now, the ban starts at their next login: kick them from the in-client mod tool.',
+    ban: 'Banned.',
     unban: 'Unbanned. They can log in again.',
   };
   const done = DONE[new URLSearchParams(location.search).get('done')];

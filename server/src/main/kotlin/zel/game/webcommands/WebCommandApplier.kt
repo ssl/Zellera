@@ -27,6 +27,7 @@ class WebCommandApplier(
         val invalidateBadgeCaches: () -> Unit,
         val rooms: () -> RoomPort,
         val accountLevelChanged: (Int) -> Unit = {},
+        val kickBanned: (Int) -> Boolean = { false },
     )
 
     interface Ranks {
@@ -73,6 +74,7 @@ class WebCommandApplier(
             RELOAD_TV_PLAYLISTS -> reloadTvPlaylists(command)
             ASK_ROOM_QUESTION -> rooms.askQuestion(payload)
             SET_PRIVACY -> privacy.set(command, payload)
+            KICK_BANNED -> kickBanned(command)
             else -> profile.setMotto(command, payload)
         }
     }
@@ -89,6 +91,9 @@ class WebCommandApplier(
         return WebCommandResult.done("TV playlists are being read again.")
     }
 
+    private fun kickBanned(command: WebCommand): WebCommandResult =
+        WebCommandResult.done(if (services.kickBanned(command.userId)) "Disconnected." else "Not online.")
+
     companion object {
         const val SET_CURRENCY = "setCurrency"
         const val ADD_CURRENCY = "addCurrency"
@@ -100,6 +105,7 @@ class WebCommandApplier(
         const val RELOAD_TV_PLAYLISTS = "reloadTvPlaylists"
         const val ASK_ROOM_QUESTION = "askRoomQuestion"
         const val SET_PRIVACY = "setPrivacy"
+        const val KICK_BANNED = "kickBanned"
         val TYPES: Set<String> =
             setOf(
                 SET_CURRENCY,
@@ -112,6 +118,7 @@ class WebCommandApplier(
                 RELOAD_TV_PLAYLISTS,
                 ASK_ROOM_QUESTION,
                 SET_PRIVACY,
+                KICK_BANNED,
             )
 
         const val VIA_HOUSEKEEPING = "housekeeping"
@@ -134,6 +141,7 @@ class WebCommandApplier(
                 RELOAD_SETTINGS to Privilege.HOUSEKEEPING_SETTINGS,
                 RELOAD_TV_PLAYLISTS to Privilege.HOUSEKEEPING_YOUTUBE,
                 ASK_ROOM_QUESTION to Privilege.MODERATION_ROOM_ALERT,
+                KICK_BANNED to Privilege.MODERATION_PLAYER_BAN,
             )
 
         /** The kinds an account sends about itself, and nobody else about it. */

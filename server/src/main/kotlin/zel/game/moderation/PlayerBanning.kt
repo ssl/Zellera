@@ -58,6 +58,24 @@ class PlayerBanning(
 
     fun checkForBan(playerId: Int): PlayerBan? = store.runningFor(playerId, clock())
 
+    fun kickBanned(playerId: Int): Boolean {
+        val now = clock()
+        val ban = checkForBan(playerId)
+        val client = players.find(playerId)?.client
+        if (ban != null && client != null) disconnect(client, ban, now)
+        threading.run { kickDevices(now) }
+        return ban != null && client != null
+    }
+
+    private fun kickDevices(now: Int) =
+        players.all.forEach { player ->
+            val id = player.profile.id
+            val device = player.device
+            if (device != null && checkForBan(id) == null && devices.refusal(id, device, now) != null) {
+                player.client?.let { client -> clients().disconnect(client, DisconnectReason.JUST_BANNED) }
+            }
+        }
+
     fun banInfo(ban: PlayerBan): BanInfo = notice.ban(ban, clock())
 
     fun hasMachineBan(client: ClientConnection?): Boolean {

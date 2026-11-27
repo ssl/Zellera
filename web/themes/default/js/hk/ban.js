@@ -34,7 +34,6 @@ HK.start((main) => {
         meta: [h('span', null, `User #${t.id}`), pill(t.rankName ?? String(t.rank)), t.online ? pill('Online now', 'on') : pill('Offline'), h('span', null, `${r.bans.length} active ${r.bans.length === 1 ? 'ban' : 'bans'}`)],
       }),
       cols('', panel({ id: 'ban', title: 'Account ban', tone: 'red', body: [
-        t.online && !refusal ? HK.notice(`${t.name} is online now. A ban starts at their next login: after banning, kick them with the in-client mod tool.`, 'warn') : '',
         form] }),
       panel({ id: 'active', title: `Active bans (${r.bans.length})`, more: ['All bans and sanctions', urls.userSanctions(t.id)], body: bansTable(r.bans) })),
       h('p', { class: 'foot-note' }, NOT_HERE));

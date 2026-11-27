@@ -30,6 +30,7 @@ class WebCommandsModule(
     badgeExists: (String) -> Boolean,
     accountLevelChanged: (Int) -> Unit,
     reloadTvPlaylists: () -> Unit,
+    kickBanned: (Int) -> Boolean,
     rooms: () -> RoomPort,
 ) {
     val processor: WebCommandProcessor
@@ -50,6 +51,7 @@ class WebCommandsModule(
                     invalidateBadgeCaches = badgeCaches::invalidate,
                     rooms = rooms,
                     accountLevelChanged = accountLevelChanged,
+                    kickBanned = kickBanned,
                 ),
             )
         processor =

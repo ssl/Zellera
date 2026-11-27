@@ -2,7 +2,8 @@ import { fmtDateTime } from '../cms/lib/html.mjs';
 import { intParam, sql, unixNow } from '../cms/lib/sql.mjs';
 import { HK_API } from './index.mjs';
 import { audit } from './_guard.mjs';
-import { LENGTHS, REASON_MAX, validateBan } from './actions.mjs';
+import { LENGTHS, REASON_MAX, kickBanned, validateBan } from './actions.mjs';
+import { COMMAND_GRANT } from '../cms/lib/commands.mjs';
 import {
   COMBO, MIN_WITHOUT_ID, PIECES, anyOrEqual, deviceOf, loadDevice, loadUser, patternEqual, patternHas, patternRefusal, patternText,
   pieceNames, piecesEqual, userNotFound,
@@ -24,6 +25,7 @@ export const grants = [
     insert: [...P_COLUMNS, 'reason', 'staff_id', 'created_at', 'expires_at'],
     delete: true,
   },
+  COMMAND_GRANT,
 ];
 
 const PERM = 'moderation.player.ban';
@@ -157,9 +159,10 @@ const createPost = async (req, res, ctx) => {
     action: 'hk.device.ban', targetId: Number(u.id), label,
     detail: `device ban #${result.insertId}, ${about}, ${ends}, matches ${info.matches}: ${reason}`,
   });
+  const kicked = await kickBanned(ctx, Number(u.id));
   return ctx.send.json(res, 200, {
     ok: true, pattern: { id: Number(result.insertId) }, matches: info.matches,
-    message: 'Saved. Players on a matching device are refused at their next login; who is online now stays until they leave.',
+    message: kicked ? 'Saved.' : 'Saved. The game was not told: who is online now stays until they leave.',
   });
 };
 

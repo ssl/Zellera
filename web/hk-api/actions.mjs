@@ -1,4 +1,5 @@
 import { fmtDateTime } from '../cms/lib/html.mjs';
+import { COMMAND_GRANT } from '../cms/lib/commands.mjs';
 import { intParam, sql, unixNow } from '../cms/lib/sql.mjs';
 import { HK_API } from './index.mjs';
 import { audit } from './_guard.mjs';
@@ -18,6 +19,7 @@ export const grants = [
     insert: ['player_id', 'issued_by', 'issued_at', 'ends_at', 'reason'],
     update: ['ends_at', 'lifted_by'],
   },
+  COMMAND_GRANT,
 ];
 
 const PERM = 'moderation.player.ban';
@@ -126,10 +128,21 @@ const banPost = async (req, res, ctx) => {
     action: 'hk.ban', targetType: 'user', targetId: Number(target.id), label,
     detail: `ban #${result.insertId}, ${lengthLabel} (${ends}): ${reason}`,
   });
+  const kicked = await kickBanned(ctx, Number(target.id));
   return ctx.send.json(res, 200, {
     ok: true, ban: { id: Number(result.insertId) }, userId: Number(target.id),
-    message: 'Banned. If they are online now, the ban starts at their next login: kick them from the in-client mod tool.',
+    message: kicked ? 'Banned.' : 'Banned. The game was not told: they stay online until they log out.',
   });
+};
+
+export const kickBanned = async (ctx, userId) => {
+  try {
+    await ctx.command('kickBanned', {}, { userId });
+    return true;
+  } catch (e) {
+    ctx.log(`kickBanned of user ${userId}: ${e?.message ?? e}`);
+    return false;
+  }
 };
 
 const loadBan = async (ctx, id) => {

@@ -261,6 +261,7 @@ class Game(
                         configuration.reload()
                         Thread.ofVirtual().name("tv-playlists").start { this.items?.youtube?.load() }
                     },
+                    kickBanned = { id -> moderationService?.banning?.kickBanned(id) == true },
                 ) { rooms }.processor
             }
         webCommandProcessor?.start()

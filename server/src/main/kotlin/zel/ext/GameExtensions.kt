@@ -199,8 +199,8 @@ class GameExtensions private constructor(
             config: Configuration,
             serverVersion: String,
         ): GameExtensions {
-            val list = config.valueOrNull(LIST_KEY).orEmpty()
-            val custom = config.valueOrNull(FOLDER_KEY)?.let(Path::of)
+            val list = config.startupValueOrNull(LIST_KEY).orEmpty()
+            val custom = config.startupValueOrNull(FOLDER_KEY)?.let(Path::of)
             val found =
                 folders(list, custom).mapNotNull { folder ->
                     try {

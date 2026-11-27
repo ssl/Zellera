@@ -63,6 +63,8 @@ class Configuration(
 
     fun valueOrNull(key: String): String? = layers[key]
 
+    fun startupValueOrNull(key: String): String? = startup[key]
+
     fun getValue(key: String): String = getValue(key, "")
 
     fun getValue(

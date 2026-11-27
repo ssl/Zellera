@@ -36,7 +36,6 @@ export const logRow = (r) => ({
 export const BAN_COLUMNS = sql`b.id, b.reason, b.issued_at, b.ends_at, b.issued_by, b.lifted_by,
   b.barred_address IS NOT NULL AS bars_address, b.barred_machine IS NOT NULL AS bars_machine`;
 
-export const barsMore = (b) => on(b.bars_address) || on(b.bars_machine);
 export const banCovers = (b) => ['player', on(b.bars_address) ? 'address' : '', on(b.bars_machine) ? 'machine' : ''].filter(Boolean).join(' + ');
 
 export const banRow = (b, now) => ({

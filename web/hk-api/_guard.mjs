@@ -106,6 +106,8 @@ export const requireStaff = async (ctx, res, perm) => {
   return r.staff;
 };
 
+export const higherRank = (staff, rank, name) => (Number(rank) > staff.rank ? `${name} has a higher rank than you.` : null);
+
 export const audit = (ctx, { action, targetType = 'user', targetId = 0, label = '', detail = '', success = true }) => {
   if (!ctx.staff) throw new Error('audit: no staff on this request');
   if (ctx.req && ctx.req.method !== 'POST' && crossSite(ctx.req)) {

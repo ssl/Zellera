@@ -5,10 +5,10 @@ import { HK_API } from './index.mjs';
 import { badgeNameOrCode } from '../lib/badges.mjs';
 import { badgeImagePath } from '../lib/client-profile.mjs';
 import { gameRules } from '../lib/game-rules.mjs';
-import { audit } from './_guard.mjs';
+import { audit, higherRank } from './_guard.mjs';
 import { PIECES, readingOf, usable } from './devices-shared.mjs';
-import { topRank, unbanRefusal } from './actions-lib.mjs';
-import { BADGE_PERM, CURRENCY_PERM, commandOf, editRefusal, rankLevels, rankRefusal } from './actions-user.mjs';
+import { unbanRefusal } from './actions-lib.mjs';
+import { BADGE_PERM, CURRENCY_PERM, RANK_PERM, commandOf, rankLevels } from './actions-user.mjs';
 import {
   BAN_COLUMNS, LOG_COLUMNS, banRow, isTradeLocked, logRow, nextCursor, readCursor, ref, userIdParam, userOf,
 } from './users-shared.mjs';
@@ -160,7 +160,8 @@ const detail = async (req, res, ctx) => {
   const account = await accountOf(ctx, u.account_id);
   const { staff } = ctx;
   const wallet = new Map(currency.map((c) => [Number(c.type), Number(c.amount)]));
-  const canRank = rankRefusal(staff, u) === null;
+  const editable = higherRank(staff, u.rank_id, u.username) === null;
+  const canRank = editable && staff.can(RANK_PERM);
   const named = (code) => Boolean(ctx.texts?.get?.(`badge_name_${code}`, ''));
   return ctx.send.json(res, 200, {
     ok: true,
@@ -189,9 +190,9 @@ const detail = async (req, res, ctx) => {
     badgesMore: badges.length > BADGE_ROWS,
     commands,
     can: {
-      ban: staff.can('moderation.player.ban') && Number(u.id) !== staff.id && Number(u.rank_id) < staff.rank,
-      wallet: editRefusal(staff, { ...u, rank: u.rank_id }) === null && staff.can(CURRENCY_PERM),
-      badges: editRefusal(staff, { ...u, rank: u.rank_id }) === null && staff.can(BADGE_PERM),
+      ban: editable && staff.can('moderation.player.ban'),
+      wallet: editable && staff.can(CURRENCY_PERM),
+      badges: editable && staff.can(BADGE_PERM),
       rank: canRank,
     },
     levels: canRank ? await rankLevels(ctx) : [],
@@ -205,10 +206,8 @@ const sanctionsPage = async (req, res, ctx) => {
   const now = unixNow();
   const { staff } = ctx;
   const canBan = staff.can('moderation.player.ban');
-  const top = canBan ? await topRank(ctx) : 0;
   const [bans, sanctions, [standing], permLog, hkLog] = await Promise.all([
-    ctx.db.query(sql`SELECT ${BAN_COLUMNS}, s.name AS staff_name,
-        s.\`rank_id\` AS staff_rank
+    ctx.db.query(sql`SELECT ${BAN_COLUMNS}, s.name AS staff_name
       FROM bans b LEFT JOIN players s ON s.id = b.issued_by
       WHERE b.player_id = ${id} ORDER BY b.issued_at DESC, b.id DESC LIMIT ${LOG_PAGE}`),
     ctx.db.query(sql`SELECT s.id, s.step AS level, s.kind, l.hours, s.probation_ends_at, s.reason,
@@ -228,11 +227,11 @@ const sanctionsPage = async (req, res, ctx) => {
   return ctx.send.json(res, 200, {
     ok: true,
     user: userOf(u),
-    can: { ban: canBan && Number(u.rank_id) < staff.rank && id !== staff.id },
+    can: { ban: canBan && higherRank(staff, u.rank_id, u.username) === null },
     bans: bans.map((b) => ({
       ...banRow(b, now),
       canLift: canBan && Number(b.ends_at) > now
-        && unbanRefusal(ctx, { ...b, player_id: id, username: u.username, target_rank: u.rank_id }, top) === null,
+        && unbanRefusal(ctx, { ...b, player_id: id, username: u.username, target_rank: u.rank_id }) === null,
     })),
     standing: standing ? {
       reportsSent: n(standing.cfh_send), reportsAbusive: n(standing.cfh_abusive), cautions: n(standing.cfh_warnings),

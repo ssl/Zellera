@@ -1,6 +1,6 @@
 import { intParam, sql, unixNow } from '../cms/lib/sql.mjs';
 import { HK_API } from './index.mjs';
-import { audit } from './_guard.mjs';
+import { audit, higherRank } from './_guard.mjs';
 import { findUser } from './actions-lib.mjs';
 import {
   COMBO, PIECES, anyOrEqual, deviceOf, loadUser, parseReading, piecesEqual, readingOf, usable, userNotFound,
@@ -52,11 +52,7 @@ const matchingBans = async (ctx, userId, now) => {
   return out;
 };
 
-const exemptRefusal = (staff, u) => {
-  if (Number(u.id) === staff.id) return 'Not your own account: another staff member changes it.';
-  if (Number(u.rank_id) >= staff.rank) return `${u.username} has the rank ${u.rank_name ?? u.rank_id}, which is not below yours (${staff.rankName}).`;
-  return null;
-};
+const exemptRefusal = (staff, u) => higherRank(staff, u.rank_id, u.username);
 
 const devices = async (req, res, ctx) => {
   const u = await loadUser(ctx, userIdParam(ctx.params.id));
@@ -199,7 +195,7 @@ const exemptPost = async (req, res, ctx) => {
     result = on
       ? await ctx.db.write(sql`INSERT INTO device_ban_exemptions (player_id, staff_id, created_at)
           SELECT p.id, ${ctx.staff.id}, UNIX_TIMESTAMP() FROM players p
-          WHERE p.id = ${id} AND p.rank_id < ${ctx.staff.rank} AND p.id <> ${ctx.staff.id}
+          WHERE p.id = ${id} AND p.rank_id <= ${ctx.staff.rank}
             AND NOT EXISTS (SELECT 1 FROM device_ban_exemptions e WHERE e.player_id = p.id)`)
       : await ctx.db.remove(sql`DELETE FROM device_ban_exemptions WHERE player_id = ${id}`);
   } catch (e) {

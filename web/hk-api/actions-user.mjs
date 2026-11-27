@@ -4,7 +4,7 @@ import { DbRefused } from '../cms/lib/db.mjs';
 import { intParam, sql } from '../cms/lib/sql.mjs';
 import { HK_API } from './index.mjs';
 import { gameRules } from '../lib/game-rules.mjs';
-import { audit } from './_guard.mjs';
+import { audit, higherRank } from './_guard.mjs';
 
 export const owner = 'hk-actions';
 
@@ -19,8 +19,7 @@ export const grants = [
 
 export const CURRENCY_PERM = 'housekeeping.wallet';
 export const BADGE_PERM = 'housekeeping.badges';
-const RANK_PERM = 'housekeeping.ranks';
-const SUPER_USER = 9;
+export const RANK_PERM = 'housekeeping.ranks';
 const BALANCE_MAX = 2147483647;
 export const BADGE_CODE = /^[A-Za-z0-9_]{1,32}$/;
 const EDIT_LIMIT = ['hk-edit', 60, 3600];
@@ -30,14 +29,6 @@ const loadTarget = async (ctx, id) => {
   const [u] = await ctx.db.query(sql`SELECT u.id, u.name AS username, u.rank_id AS \`rank\`, r.name AS rank_name
     FROM players u LEFT JOIN ranks r ON r.id = u.rank_id WHERE u.id = ${id} LIMIT 1`);
   return u ?? null;
-};
-
-export const editRefusal = (staff, target) => {
-  if (Number(target.id) === staff.id) return 'This is your own account: another staff member changes its wallet and badges.';
-  if (Number(target.rank) >= staff.rank) {
-    return `${target.username} has the rank ${target.rank_name ?? target.rank}, which is not below yours (${staff.rankName}).`;
-  }
-  return null;
 };
 
 export const balance = (value) => {
@@ -90,7 +81,7 @@ const start = async (ctx, res, action) => {
     ctx.send.notFound(res, 'No user has that id.');
     return null;
   }
-  const refusal = editRefusal(ctx.staff, target);
+  const refusal = higherRank(ctx.staff, target.rank, target.username);
   if (refusal) {
     await audit(ctx, { action, targetId: Number(target.id), label: String(target.username), detail: `refused: ${refusal}`, success: false });
     ctx.send.error(res, 403, 'Not for your rank', refusal);
@@ -142,27 +133,15 @@ const takeBadgePost = async (req, res, ctx) => {
   return send(ctx, res, target, [{ type: 'takeBadge', payload: { badge: String(had.badge_code) }, action: 'hk.take.badge', detail: `badge ${had.badge_code}${worn}` }]);
 };
 
-export const rankRefusal = (staff, target) => {
-  if (staff.rank < SUPER_USER || !staff.can(RANK_PERM)) return 'Only a super user (level 9) changes levels.';
-  if (Number(target.id) === staff.id) return 'Not your own account: another super user changes it.';
-  return null;
-};
-
 const rankPost = async (req, res, ctx) => {
-  if (!ctx.rateLimit(res, ...EDIT_LIMIT)) return;
-  const target = await loadTarget(ctx, intParam(ctx.params.id));
-  if (!target || Number(target.id) <= 0) return ctx.send.notFound(res, 'No user has that id.');
-  const refusal = rankRefusal(ctx.staff, target);
-  if (refusal) {
-    await audit(ctx, { action: 'hk.set.rank', targetId: Number(target.id), label: String(target.username), detail: `refused: ${refusal}`, success: false });
-    return ctx.send.error(res, 403, 'Not for your rank', refusal);
-  }
-  const levels = (await ctx.db.query(sql`SELECT id FROM ranks ORDER BY id`)).map((r) => Number(r.id));
+  const target = await start(ctx, res, 'hk.set.rank');
+  if (!target) return;
+  const levels = (await ctx.db.query(sql`SELECT id FROM ranks WHERE id < ${ctx.staff.rank} ORDER BY id`)).map((r) => Number(r.id));
   const level = Number(String(ctx.form.get('level') ?? '').trim());
-  if (!/^\d{1,2}$/.test(String(ctx.form.get('level') ?? '').trim()) || !levels.includes(level)) {
+  const before = Number(target.rank);
+  if (!/^\d{1,2}$/.test(String(ctx.form.get('level') ?? '').trim()) || !(levels.includes(level) || level === before)) {
     return ctx.send.error(res, 400, 'Not sent', `Pick a level from ${levels[0]} to ${levels.at(-1)}.`, { field: 'level' });
   }
-  const before = Number(target.rank);
   if (before === level) {
     return ctx.send.json(res, 200, { ok: true, unchanged: true, commands: [], message: 'Nothing was sent: that was already the level.' });
   }
@@ -207,7 +186,7 @@ export const rankLevels = async (ctx) => {
     const id = Number(r.id);
     const prev = i > 0 ? Number(ranks[i - 1].id) : null;
     return {
-      id, name: String(r.name), text: LEVEL_TEXT[id] ?? '',
+      id, name: String(r.name), text: LEVEL_TEXT[id] ?? '', give: id < ctx.staff.rank,
       keys: keys.filter((d) => on(d, id) && (prev == null || !on(d, prev)))
         .map((d) => ({ key: String(d.code), comment: String(d.description ?? '') })),
     };

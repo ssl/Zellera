@@ -86,7 +86,7 @@ HK.start((main) => {
     });
     const levels = d.can.rank ? panel({ id: 'rank-edit', title: 'Level', body: [
       HK.jsonForm(h('form', { class: 'inline-form' },
-        HK.field({ id: 'rank-level', name: 'level', label: 'Level', type: 'select', value: String(u.rank), options: d.levels.map((l) => [String(l.id), `${l.id} ${l.name}`]) }),
+        HK.field({ id: 'rank-level', name: 'level', label: 'Level', type: 'select', value: String(u.rank), options: d.levels.filter((l) => l.give || l.id === u.rank).map((l) => [String(l.id), `${l.id} ${l.name}`]) }),
         h('button', { class: 'btn', type: 'submit', 'data-busy': 'Saving…' }, 'Save')), `/users/${u.id}/rank`, {
         body: (f) => ({ level: f.elements.level.value, was_level: String(u.rank) }), onDone: reloadWith,
       }),

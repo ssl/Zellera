@@ -1,7 +1,6 @@
 package zel.game.webcommands
 
 import zel.db.write
-import zel.game.permissions.SecurityLevel
 import zel.game.players.Mottos
 import zel.protocol.generated.ExtendedProfileChangedOut
 import zel.protocol.generated.ExtendedProfileChangedOutCodec
@@ -22,12 +21,12 @@ internal class ProfileWebCommands(
         val ranks = services.ranks
         if (!ranks.exists(level)) return WebCommandResult.failed("There is no level $level.")
         val before = ranks.stored(command.userId) ?: return WebCommandResult.failed("No user has id ${command.userId}.")
-        val sender = command.createdBy?.let { ranks.stored(it) }
-        rankRefusal(sender ?: 0, command.createdBy ?: 0, command.userId)?.let { return WebCommandResult.failed(it) }
         WebCommandApplier.senderRefusal(ranks, command, WebCommandApplier.SET_RANK)?.let {
             return WebCommandResult.failed(it)
         }
         if (before == level) return WebCommandResult.done("Unchanged: level $level.")
+        val sender = command.createdBy?.let { ranks.stored(it) }
+        rankRefusal(sender ?: 0, before, level)?.let { return WebCommandResult.failed(it) }
 
         return try {
             ranks.set(command.userId, level, command.createdBy)
@@ -89,15 +88,14 @@ internal class ProfileWebCommands(
     internal companion object {
         private const val MOTTO_MAX_SENT = 255
 
-        /** Why the sender may not make this change, or null; only level 9 changes levels, never its own. */
         fun rankRefusal(
             senderLevel: Int,
-            senderId: Int,
-            targetId: Int,
+            before: Int,
+            level: Int,
         ): String? =
             when {
-                senderLevel < SecurityLevel.SUPER_USER -> "Only a super user (level 9) changes levels."
-                senderId == targetId -> "Not your own account."
+                before > senderLevel -> "A higher rank than yours."
+                level >= senderLevel -> "Only a level below yours."
                 else -> null
             }
     }

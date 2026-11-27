@@ -1,7 +1,7 @@
 import { fmtDateTime } from '../cms/lib/html.mjs';
 import { intParam, sql, unixNow } from '../cms/lib/sql.mjs';
 import { HK_API } from './index.mjs';
-import { audit } from './_guard.mjs';
+import { audit, higherRank } from './_guard.mjs';
 import { LENGTHS, REASON_MAX, kickBanned, validateBan } from './actions.mjs';
 import { COMMAND_GRANT } from '../cms/lib/commands.mjs';
 import {
@@ -57,7 +57,7 @@ const list = async (req, res, ctx) => {
   const pageNo = intParam(ctx.query.get('page'), { max: 1000 }) ?? 1;
   const now = unixNow();
   const rows = await ctx.db.query(sql`SELECT b.id, b.p_id, b.p_gpu, b.p_scr, b.p_cpu, b.p_tz, b.p_fnt, b.p_cnv, b.p_aud, b.p_gl, b.p_ua,
-      b.reason, b.staff_id, b.created_at, b.expires_at, s.name AS staff_name, s.rank_id AS staff_rank
+      b.reason, b.staff_id, b.created_at, b.expires_at, s.name AS staff_name
     FROM device_bans b LEFT JOIN players s ON s.id = b.staff_id
     ORDER BY b.id DESC LIMIT ${PAGE + 1} OFFSET ${(pageNo - 1) * PAGE}`);
   const shown = rows.slice(0, PAGE);
@@ -70,7 +70,7 @@ const list = async (req, res, ctx) => {
       id: n(r.id), pieces: patternOf(r), reason: String(r.reason ?? ''), staff: ref(r.staff_id, r.staff_name),
       createdAt: n(r.created_at), expiresAt: r.expires_at == null ? null : n(r.expires_at), active: active(r, now),
       matches: active(r, now) ? counts.get(n(r.id)) ?? 0 : null,
-      canDelete: staff.can(PERM) && n(r.staff_rank) <= staff.rank,
+      canDelete: staff.can(PERM),
     })),
   });
 };
@@ -84,17 +84,12 @@ const source = async (ctx, res, userId, reading) => {
 };
 
 const matchInfo = async (ctx, row, names) => {
-  const [m] = await ctx.db.query(sql`SELECT COUNT(DISTINCT d.player_id) AS n, COALESCE(MAX(p.rank_id), 0) AS top,
-      COALESCE(MAX(d.player_id = ${ctx.staff.id}), 0) AS own
+  const [m] = await ctx.db.query(sql`SELECT COUNT(DISTINCT d.player_id) AS n, COALESCE(MAX(p.rank_id), 0) AS top
     FROM player_devices d JOIN players p ON p.id = d.player_id WHERE ${piecesEqual(row, names)}`);
-  return { matches: n(m?.n), top: n(m?.top), own: n(m?.own) === 1 };
+  return { matches: n(m?.n), top: n(m?.top) };
 };
 
-const rankRefusal = (staff, info) => {
-  if (info.own) return 'This pattern matches a device of your own account: it would keep you out as well.';
-  if (info.top >= staff.rank) return `This pattern matches an account with a rank (${info.top}) that is not below yours (${staff.rankName}).`;
-  return null;
-};
+const rankRefusal = (staff, info) => higherRank(staff, info.top, 'An account this pattern matches');
 
 const newGet = async (req, res, ctx) => {
   const src = await source(ctx, res, ctx.query.get('user'), ctx.query.get('reading'));
@@ -170,21 +165,13 @@ const deletePost = async (req, res, ctx) => {
   if (!ctx.rateLimit(res, 'hk-action', 30, 3600)) return;
   const id = intParam(ctx.params.id);
   const [row] = id ? await ctx.db.query(sql`SELECT b.id, b.p_id, b.p_gpu, b.p_scr, b.p_cpu, b.p_tz, b.p_fnt, b.p_cnv, b.p_aud, b.p_gl, b.p_ua,
-      b.reason, b.staff_id, s.name AS staff_name, s.rank_id AS staff_rank
-    FROM device_bans b LEFT JOIN players s ON s.id = b.staff_id WHERE b.id = ${id} LIMIT 1`) : [];
+      b.reason FROM device_bans b WHERE b.id = ${id} LIMIT 1`) : [];
   if (!row) return ctx.send.notFound(res, 'No device ban has that id.');
-  const { staff } = ctx;
   const target = { targetType: 'device', targetId: id, label: `Device ban #${id}` };
   const about = `pattern (${patternText(patternOf(row))}): ${row.reason}`;
-  if (n(row.staff_rank) > staff.rank) {
-    const refusal = `This device ban was made by ${row.staff_name ?? `user #${row.staff_id}`}, whose rank is above yours (${staff.rankName}).`;
-    await audit(ctx, { action: 'hk.device.unban', ...target, detail: `refused: ${refusal}`, success: false });
-    return ctx.send.error(res, 403, 'Not for your rank', refusal);
-  }
   let result;
   try {
-    result = await ctx.db.remove(sql`DELETE b FROM device_bans b LEFT JOIN players i ON i.id = b.staff_id
-      WHERE b.id = ${id} AND COALESCE(i.rank_id, 0) <= ${staff.rank}`);
+    result = await ctx.db.remove(sql`DELETE FROM device_bans WHERE id = ${id}`);
   } catch (e) {
     await audit(ctx, { action: 'hk.device.unban', ...target, detail: `failed: ${about}`, success: false });
     throw e;

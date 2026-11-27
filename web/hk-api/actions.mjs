@@ -2,8 +2,8 @@ import { fmtDateTime } from '../cms/lib/html.mjs';
 import { COMMAND_GRANT } from '../cms/lib/commands.mjs';
 import { intParam, sql, unixNow } from '../cms/lib/sql.mjs';
 import { HK_API } from './index.mjs';
-import { audit } from './_guard.mjs';
-import { PERMANENT, banActive, banEnds, charCount, findUser, oneLine, topRank, unbanRefusal } from './actions-lib.mjs';
+import { audit, higherRank } from './_guard.mjs';
+import { PERMANENT, banActive, banEnds, charCount, findUser, oneLine, unbanRefusal } from './actions-lib.mjs';
 import { BAN_COLUMNS, banCovers, isPermanent, ref } from './users-shared.mjs';
 import { SECONDS_PER_HOUR } from '../lib/time.mjs';
 
@@ -37,16 +37,16 @@ const loadTarget = async (ctx, id) => {
   return u ?? null;
 };
 
-const queryActiveBans = (ctx, userId) => ctx.db.query(sql`SELECT ${BAN_COLUMNS}, s.name AS staff_name, s.rank_id AS staff_rank
+const queryActiveBans = (ctx, userId) => ctx.db.query(sql`SELECT ${BAN_COLUMNS}, s.name AS staff_name
   FROM bans b LEFT JOIN players s ON s.id = b.issued_by
   WHERE b.player_id = ${userId} AND b.ends_at > UNIX_TIMESTAMP() ORDER BY b.id DESC LIMIT 50`);
 
 const activeBans = async (ctx, target) => {
-  const [rows, top] = await Promise.all([queryActiveBans(ctx, Number(target.id)), topRank(ctx)]);
+  const rows = await queryActiveBans(ctx, Number(target.id));
   return rows.map((b) => ({
     id: Number(b.id), covers: banCovers(b), reason: String(b.reason ?? ''), bannedAt: Number(b.issued_at), expiresAt: Number(b.ends_at),
     permanent: isPermanent(b.ends_at), staff: ref(b.issued_by, b.staff_name),
-    canLift: unbanRefusal(ctx, { ...b, player_id: target.id, username: target.username, target_rank: target.rank }, top) === null,
+    canLift: unbanRefusal(ctx, { ...b, player_id: target.id, username: target.username, target_rank: target.rank }) === null,
   }));
 };
 
@@ -55,13 +55,7 @@ const targetOf = (t) => ({
   online: String(t.online) === '1',
 });
 
-const whyNot = (ctx, target) => {
-  if (Number(target.id) === ctx.staff.id) return 'You can not ban yourself.';
-  if (Number(target.rank) >= ctx.staff.rank) {
-    return `${target.username} has the rank ${target.rank_name ?? target.rank}, which is not below yours (${ctx.staff.rankName}).`;
-  }
-  return null;
-};
+const whyNot = (ctx, target) => higherRank(ctx.staff, target.rank, target.username);
 
 export const validateBan = (form) => {
   const errors = [];
@@ -115,7 +109,7 @@ const banPost = async (req, res, ctx) => {
     result = await ctx.db.write(sql`INSERT INTO bans (player_id, issued_by, issued_at, ends_at, reason)
       SELECT p.id, ${ctx.staff.id}, UNIX_TIMESTAMP(), ${expire}, ${reason}
       FROM players p
-      WHERE p.id = ${Number(target.id)} AND p.rank_id < ${ctx.staff.rank} AND p.id <> ${ctx.staff.id} LIMIT 1`);
+      WHERE p.id = ${Number(target.id)} AND p.rank_id <= ${ctx.staff.rank} LIMIT 1`);
   } catch (e) {
     await audit(ctx, { action: 'hk.ban', targetType: 'user', targetId: Number(target.id), label, detail: `failed (${lengthLabel}): ${reason}`, success: false });
     throw e;
@@ -147,7 +141,7 @@ export const kickBanned = async (ctx, userId) => {
 
 const loadBan = async (ctx, id) => {
   const [b] = await ctx.db.query(sql`SELECT ${BAN_COLUMNS}, b.player_id,
-      u.name AS username, u.rank_id AS target_rank, s.name AS staff_name, s.rank_id AS staff_rank
+      u.name AS username, u.rank_id AS target_rank, s.name AS staff_name
     FROM bans b LEFT JOIN players u ON u.id = b.player_id LEFT JOIN players s ON s.id = b.issued_by
     WHERE b.id = ${id} LIMIT 1`);
   return b ?? null;
@@ -163,7 +157,7 @@ const unbanGet = async (req, res, ctx) => {
   const id = intParam(ctx.query.get('ban'));
   const ban = id && await loadBan(ctx, id);
   if (!ban) return ctx.send.notFound(res, 'No ban has that id.');
-  const refusal = unbanRefusal(ctx, ban, await topRank(ctx));
+  const refusal = unbanRefusal(ctx, ban);
   if (refusal) return ctx.send.error(res, 403, 'Not for your rank', refusal, { ban: banOf(ban, unixNow()) });
   return ctx.send.json(res, 200, { ok: true, ban: banOf(ban, unixNow()), noteMax: NOTE_MAX });
 };
@@ -176,7 +170,7 @@ const unbanPost = async (req, res, ctx) => {
   if (!ban) return ctx.send.notFound(res, 'No ban has that id.');
   const userId = Number(ban.player_id);
   const label = String(ban.username ?? '');
-  const refusal = unbanRefusal(ctx, ban, await topRank(ctx));
+  const refusal = unbanRefusal(ctx, ban);
   if (refusal) {
     await audit(ctx, { action: 'hk.unban', targetType: 'user', targetId: userId, label, detail: `ban #${ban.id} refused: ${refusal}`, success: false });
     return ctx.send.error(res, 403, 'Not for your rank', refusal);
@@ -189,11 +183,8 @@ const unbanPost = async (req, res, ctx) => {
     const { staff } = ctx;
     result = await ctx.db.write(sql`UPDATE bans b
         LEFT JOIN players t ON t.id = b.player_id
-        LEFT JOIN players i ON i.id = b.issued_by
       SET b.ends_at = UNIX_TIMESTAMP(), b.lifted_by = ${staff.id}
-      WHERE b.id = ${Number(ban.id)} AND b.ends_at > UNIX_TIMESTAMP() AND b.player_id <> ${staff.id}
-        AND COALESCE(t.rank_id, 0) < ${staff.rank} AND COALESCE(i.rank_id, 0) <= ${staff.rank}
-        AND ((b.barred_address IS NULL AND b.barred_machine IS NULL) OR ${staff.rank} >= (SELECT MAX(id) FROM ranks))`);
+      WHERE b.id = ${Number(ban.id)} AND b.ends_at > UNIX_TIMESTAMP() AND COALESCE(t.rank_id, 0) <= ${staff.rank}`);
   } catch (e) {
     await audit(ctx, { action: 'hk.unban', targetType: 'user', targetId: userId, label, detail: `failed: ${about}`, success: false });
     throw e;
@@ -201,7 +192,7 @@ const unbanPost = async (req, res, ctx) => {
   if (Number(result?.affectedRows) !== 1) {
     const fresh = (await loadBan(ctx, Number(ban.id))) ?? ban;
     const active = banActive(fresh, unixNow());
-    const late = active ? unbanRefusal(ctx, fresh, await topRank(ctx)) : null;
+    const late = active ? unbanRefusal(ctx, fresh) : null;
     const why = !active ? 'already ended' : late ? `refused: ${late}` : 'not lifted';
     await audit(ctx, { action: 'hk.unban', targetType: 'user', targetId: userId, label, detail: `${why}: ${about}`, success: false });
     const shown = banOf(active ? fresh : { ...fresh, ends_at: Math.min(Number(fresh.ends_at), now) }, now);

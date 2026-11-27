@@ -44,6 +44,8 @@ class PlayerStanding internal constructor(
 
     fun mayTrade(): Boolean = mayTrade(tradePass, tradeLockedUntil, now())
 
+    fun safetyAllows(): Boolean = !safetyLocked
+
     /** A lock only ever grows. */
     @Synchronized
     fun lockTrade(until: Int) {

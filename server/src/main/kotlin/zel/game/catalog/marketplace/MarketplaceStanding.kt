@@ -13,6 +13,7 @@ internal object MarketplaceStanding {
         return when {
             !standing.tradePass -> MarketplaceSellStatus.NO_TRADE_PASS
             !standing.mayTrade() -> MarketplaceSellStatus.CLOSED
+            !standing.safetyAllows() -> MarketplaceSellStatus.CLOSED
             else -> null
         }
     }

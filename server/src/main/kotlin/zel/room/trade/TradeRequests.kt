@@ -59,6 +59,7 @@ class TradeRequests(
             when {
                 trades.tradeOf(scope.room, player.profile.id) != null -> role.busy
                 !player.stats.standing.mayTrade() -> role.barred
+                !player.stats.standing.safetyAllows() -> role.barred
                 else -> return null
             }
         return TradeOpening.Refused(failure, if (role.named) player.profile.name else "")

@@ -56,9 +56,11 @@ class RightsPackets(
             PacketRoute(AssignRightsInCodec) { session, m ->
                 if (giveCooldown.acquire(session.client)) rights.give(id(session), m.userId)
             },
-            PacketRoute(RemoveRightsInCodec) { session, m -> rights.take(id(session), m.userIds) },
+            PacketRoute(RemoveRightsInCodec) { session, m ->
+                if (safetyAllows(session)) rights.take(id(session), m.userIds)
+            },
             PacketRoute(RemoveAllRightsInCodec) { session, m ->
-                rights.takeAll(id(session), m.int1, owns(session, m.int1), reply(session))
+                if (safetyAllows(session)) rights.takeAll(id(session), m.int1, owns(session, m.int1), reply(session))
             },
             PacketRoute(RemoveOwnRoomRightsRoomInCodec) { session, m ->
                 rights.giveUp(id(session), m.roomId)
@@ -117,6 +119,12 @@ class RightsPackets(
         session.client.player
             ?.profile
             ?.id ?: 0
+
+    private fun safetyAllows(session: PacketSession): Boolean =
+        player(session)
+            ?.stats
+            ?.standing
+            ?.safetyAllows() == true
 
     private fun anyRoom(player: Player): Boolean = player.isAnyOwner
 

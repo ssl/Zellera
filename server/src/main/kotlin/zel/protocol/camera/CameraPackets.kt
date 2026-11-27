@@ -127,7 +127,7 @@ class CameraPackets(
         val client = session.client
         val player = client.player ?: return
         val userId = player.profile.id
-        if (camera.preview(userId) == null) return
+        if (camera.preview(userId) == null || !player.stats.standing.safetyAllows()) return
 
         val price = CameraPrices.from(services.config).photo
         if (player.profile.credits < price.credits) {
@@ -162,7 +162,7 @@ class CameraPackets(
         val player = client.player ?: return
         val userId = player.profile.id
         val stored = camera.photo(userId).takeIf { camera.preview(userId) != null }
-        if (stored == null) {
+        if (stored == null || !player.stats.standing.safetyAllows()) {
             session.publishStatus(false, "")
             return
         }

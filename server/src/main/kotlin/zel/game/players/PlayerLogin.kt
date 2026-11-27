@@ -60,7 +60,9 @@ internal class PlayerLogin(
         stored: DeviceReading?,
         sent: DeviceReading?,
     ): TicketLogin.Refused? {
-        if (stored == null || sent == null) return TicketLogin.Refused(TicketLogin.Reason.NO_DEVICE)
+        if (stored == null || sent == null || !stored.sharesPieceWith(sent)) {
+            return TicketLogin.Refused(TicketLogin.Reason.NO_DEVICE)
+        }
         val differing = stored.differingFrom(sent)
         return if (differing.isEmpty()) null else TicketLogin.Refused(TicketLogin.Reason.DEVICE_MISMATCH, differing)
     }

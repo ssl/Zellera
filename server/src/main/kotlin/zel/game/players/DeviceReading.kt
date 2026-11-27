@@ -17,6 +17,9 @@ class DeviceReading private constructor(
             .filter { compared(pieces[it]) && compared(other.pieces[it]) && pieces[it] != other.pieces[it] }
             .map(NAMES::get)
 
+    fun sharesPieceWith(other: DeviceReading): Boolean =
+        NAMES.indices.any { compared(pieces[it]) && compared(other.pieces[it]) }
+
     /** This reading with each piece it lacks taken from [other]; null when nothing usable is left. */
     fun filledFrom(other: DeviceReading?): DeviceReading? {
         val filled = pieces.mapIndexed { i, piece -> if (compared(piece)) piece else other?.pieces?.get(i) ?: piece }

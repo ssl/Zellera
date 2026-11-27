@@ -31,6 +31,7 @@ import zel.protocol.generated.RequestCameraConfigurationInCodec
 import zel.protocol.generated.ThumbnailStatusOut
 import zel.protocol.generated.ThumbnailStatusOutCodec
 import zel.protocol.outgoing.catalog.CatalogReplies
+import zel.protocol.outgoing.catalog.PurchaseError
 import zel.protocol.outgoing.inventory.AddRoomItem
 import zel.protocol.typed.ClientCooldown
 import zel.protocol.typed.PacketPackage
@@ -54,6 +55,7 @@ class CameraPackets(
     private val pictureCooldown = ClientCooldown("camera.picture", FRAME_GAP_MS)
     private val thumbnailCooldown = ClientCooldown("camera.thumbnail", FRAME_GAP_MS)
     private val publishCooldown = ClientCooldown("camera.publish", PUBLISH_GAP_MS)
+    private val purchaseCooldown = ClientCooldown("camera.purchase", PURCHASE_GAP_MS)
     private val competitionCooldown = ClientCooldown("camera.competition", COMPETITION_GAP_MS)
 
     override val name = "camera"
@@ -74,7 +76,10 @@ class CameraPackets(
                 if (!thumbnailCooldown.acquire(session.client)) return@PacketRoute
                 thumbnail(session, m.length, m.frame)
             },
-            PacketRoute(PurchasePhotoInCodec) { session, _ -> purchase(session) },
+            PacketRoute(PurchasePhotoInCodec) { session, _ ->
+                if (!purchaseCooldown.acquire(session.client)) return@PacketRoute
+                purchase(session)
+            },
             PacketRoute(PublishPhotoInCodec) { session, _ ->
                 if (!publishCooldown.acquire(session.client)) return@PacketRoute
                 publish(session)
@@ -144,6 +149,10 @@ class CameraPackets(
         val items = checkNotNull(services.game.items)
         val item = items.getItem(services.config.getInt("camera.photo.furni_id"))
         if (item == null || "display.image" != item.interaction.name) return
+        if (camera.secondsUntilNewPhoto(userId) > 0) {
+            CatalogReplies.purchaseFailed(client, PurchaseError.GENERIC)
+            return
+        }
         if (!price.takeFrom(player.wallet, LedgerEntry.newKey("camera:buy:$userId"))) return
         val stored = camera.photo(userId)
         val photo = stored?.let { items.newFurni(userId, item, 0, 0, CameraService.itemData(it)) }
@@ -173,6 +182,11 @@ class CameraPackets(
             CatalogReplies.notEnoughBalance(client, false, true, price.pointsType)
             return
         }
+        val wait = camera.secondsUntilNewPhoto(userId)
+        if (wait > 0) {
+            session.publishStatus(false, "", wait)
+            return
+        }
         if (!price.takeFrom(player.wallet, LedgerEntry.newKey("camera:publish:$userId"))) {
             session.publishStatus(false, "")
             return
@@ -190,9 +204,10 @@ class CameraPackets(
     private fun PacketSession.publishStatus(
         ok: Boolean,
         photoId: String,
+        wait: Int = 0,
     ) = send(
         CameraPublishStatusOutCodec,
-        CameraPublishStatusOut(ok, 0, photoId.ifEmpty { null }),
+        CameraPublishStatusOut(ok, wait, photoId.ifEmpty { null }),
     )
 
     private fun enterCompetition(session: PacketSession) {
@@ -259,6 +274,7 @@ class CameraPackets(
         /** One frame per 250 ms per connection; a faster one is dropped unanswered before it is inflated. */
         const val FRAME_GAP_MS = 250L
         private const val PUBLISH_GAP_MS = 1000L
+        private const val PURCHASE_GAP_MS = 1000L
         private const val COMPETITION_GAP_MS = 2000L
         private const val TOO_MANY = "too-many-submits"
         private const val FAILED = "error"

@@ -220,6 +220,23 @@ class CameraService(
         }
     }
 
+    fun secondsUntilNewPhoto(
+        userId: Int,
+        now: Long = System.currentTimeMillis(),
+    ): Int {
+        val preview = preview(userId) ?: return 0
+        if (photos.containsKey(preview.file)) return 0
+        val limit = maxOf(1, config.getInt(PHOTOS_PER_DAY_KEY, DEFAULT_PHOTOS_PER_DAY))
+        val reachedAt =
+            try {
+                sql.select(LIMIT_REACHED_AT, userId, now - DAY_MS, limit - 1).first { it.getLong(1) }
+            } catch (failure: SqlFailure) {
+                logger.error("Camera photos of user {} could not be counted", userId, failure)
+                now
+            } ?: return 0
+        return maxOf(1, ((reachedAt + DAY_MS - now) / MS_PER_SECOND).toInt())
+    }
+
     fun purchased(photo: Stored) {
         update("UPDATE camera_photos SET purchases = purchases + 1 WHERE id = ?", photo.id)
     }
@@ -347,9 +364,17 @@ class CameraService(
         private const val CACHED_ONLY = "x-zel-cached-only"
 
         private const val PREVIEW_LIFETIME_MS = 60L * 60 * 1000
+        private const val DAY_MS = 24L * 60 * 60 * 1000
+        private const val MS_PER_SECOND = 1000L
+        private const val LIMIT_REACHED_AT =
+            "SELECT created_at_ms FROM camera_photos WHERE player_id = ? AND created_at_ms > ? " +
+                "AND (purchases > 0 OR published = 1) ORDER BY created_at_ms DESC LIMIT 1 OFFSET ?"
         private const val MIN_RENDER_INTERVAL_MS = 250L
         internal const val RENDER_THREADS = 2
         internal const val MAX_QUEUED = 8
+
+        const val PHOTOS_PER_DAY_KEY = "camera.photos_per_day"
+        const val DEFAULT_PHOTOS_PER_DAY = 100
 
         fun itemData(
             stored: Stored,

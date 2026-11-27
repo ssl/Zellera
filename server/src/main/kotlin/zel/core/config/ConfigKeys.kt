@@ -8,6 +8,7 @@ import zel.core.load.LoadWatch
 import zel.db.Database
 import zel.db.WriterSize
 import zel.game.camera.CameraAssets
+import zel.game.camera.CameraService
 import zel.net.NetModule
 import zel.net.TransportSettings
 import zel.net.WireLimits
@@ -382,6 +383,11 @@ internal object ConfigKeys {
                 "competition.entries_per_day",
                 default = 3,
                 description = "Photo competition entries one player may send a day; at least 1.",
+            )
+            int(
+                CameraService.PHOTOS_PER_DAY_KEY.removePrefix("camera."),
+                default = CameraService.DEFAULT_PHOTOS_PER_DAY,
+                description = "Different photos one player may buy or publish a day; at least 1.",
             )
         }
 

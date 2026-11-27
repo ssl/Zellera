@@ -1,7 +1,10 @@
 package zel.game.moderation
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import zel.core.Configuration
 import zel.core.threading.GameThreads
+import zel.db.SqlFailure
 import zel.game.players.DeviceReading
 import zel.game.players.Player
 import zel.game.players.Players
@@ -62,7 +65,13 @@ class PlayerBanning(
 
     fun kickBanned(playerId: Int): Boolean {
         val now = clock()
-        val ban = checkForBan(playerId)
+        val ban =
+            try {
+                checkForBan(playerId)
+            } catch (failure: SqlFailure) {
+                log.error("kick of banned player {} could not read the ban", playerId, failure)
+                null
+            }
         val client = players.find(playerId)?.client
         if (ban != null && client != null) disconnect(client, ban, now)
         threading.run { kickDevices(now) }
@@ -73,7 +82,14 @@ class PlayerBanning(
         players.all.forEach { player ->
             val id = player.profile.id
             val device = player.device
-            if (device != null && checkForBan(id) == null && devices.refusal(id, device, now) != null) {
+            val refused =
+                try {
+                    device != null && checkForBan(id) == null && devices.refusal(id, device, now) != null
+                } catch (failure: SqlFailure) {
+                    log.error("device ban of player {} could not be read during a kick", id, failure)
+                    false
+                }
+            if (refused) {
                 player.client?.let { client -> clients().disconnect(client, DisconnectReason.JUST_BANNED) }
             }
         }
@@ -112,6 +128,7 @@ class PlayerBanning(
     }
 
     private companion object {
+        val log: Logger = LoggerFactory.getLogger(PlayerBanning::class.java)
         const val DISCONNECT_DELAY_MILLIS = 1000L
     }
 }

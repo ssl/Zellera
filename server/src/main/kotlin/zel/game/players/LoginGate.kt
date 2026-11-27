@@ -2,6 +2,7 @@ package zel.game.players
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import zel.db.SqlFailure
 import zel.game.moderation.PlayerBanning
 import zel.net.clients.ClientConnection
 import zel.net.server.proxy.ClientAddress
@@ -27,7 +28,12 @@ internal class LoginGate(
         val bans =
             player.services.game.moderationService
                 ?.banning ?: return false
-        return bars.none { barred -> barred(bans, connection) }
+        return try {
+            bars.none { barred -> barred(bans, connection) }
+        } catch (failure: SqlFailure) {
+            log.warn("login of player {} refused: the ban checks could not be read", player.profile.id, failure)
+            false
+        }
     }
 
     private fun accountBanned(

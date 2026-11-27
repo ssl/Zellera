@@ -33,10 +33,7 @@ class BanStore(
     fun runningFor(
         playerId: Int,
         now: Int,
-    ): PlayerBan? =
-        log.orFallback("running ban of player $playerId", null) {
-            sql.select(LONGEST_RUNNING, playerId, now).first(::ban)
-        }
+    ): PlayerBan? = sql.select(LONGEST_RUNNING, playerId, now).first(::ban)
 
     fun barsMachine(
         machineId: String,
@@ -53,7 +50,7 @@ class BanStore(
         value: String,
         now: Int,
     ): Boolean =
-        log.orFallback("ban by $column", false) {
+        log.orFallback("ban by $column", true) {
             sql
                 .select("SELECT id FROM bans WHERE $column = ? AND ends_at > ? LIMIT 1", value, now)
                 .first { true } == true

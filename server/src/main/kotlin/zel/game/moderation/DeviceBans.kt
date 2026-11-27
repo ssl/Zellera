@@ -26,10 +26,7 @@ class DeviceBans(
         playerId: Int,
         device: DeviceReading,
         now: Int,
-    ): String? =
-        log.orFallback("device ban of player $playerId", null) {
-            if (exempt(playerId)) null else byBannedPlayer(playerId, device, now) ?: byPattern(device, now)
-        }
+    ): String? = if (exempt(playerId)) null else byBannedPlayer(playerId, device, now) ?: byPattern(device, now)
 
     /** The players of [online] a ban on [bannedId] keeps out from now on, by rule 1 or 2. */
     fun keptOutBy(

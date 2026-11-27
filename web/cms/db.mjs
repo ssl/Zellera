@@ -210,7 +210,7 @@ export const activeBan = async (userId, ip) => (await query(
 
 export const accountBan = async (accountId) => (await query(
   `SELECT b.reason, b.ends_at AS expires_at, 1 AS own
-   FROM players p JOIN bans b ON b.player_id = p.id AND b.ends_at > UNIX_TIMESTAMP()
+   FROM players p JOIN bans b ON b.player_id = p.id AND b.ends_at > UNIX_TIMESTAMP() AND b.avatar_only = 0
    WHERE p.account_id = ? ORDER BY b.ends_at DESC LIMIT 1`, [accountId]))[0] ?? null;
 
 export const addressBan = async (ip) => (ip ? (await query(

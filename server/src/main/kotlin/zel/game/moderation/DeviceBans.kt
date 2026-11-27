@@ -132,13 +132,14 @@ class DeviceBans(
         // a device of another player whose account is banned now, seen in the days before that ban or since
         const val RULE_1 =
             "SELECT 1 FROM player_devices d JOIN bans b ON b.player_id = d.player_id " +
-                "WHERE d.id = ? AND d.player_id <> ? AND d.last_seen_at + ? >= b.issued_at AND b.ends_at > ?"
+                "WHERE d.id = ? AND d.player_id <> ? AND d.last_seen_at + ? >= b.issued_at AND b.ends_at > ? " +
+                "AND b.avatar_only = 0"
 
         // the same, and few enough players who are not banned themselves share the three pieces
         const val RULE_2 =
             "SELECT 1 FROM player_devices d JOIN bans b ON b.player_id = d.player_id " +
                 "WHERE d.gpu = ? AND d.scr = ? AND d.fnt = ? AND d.player_id <> ? " +
-                "AND d.last_seen_at + ? >= b.issued_at AND b.ends_at > ? " +
+                "AND d.last_seen_at + ? >= b.issued_at AND b.ends_at > ? AND b.avatar_only = 0 " +
                 "AND (SELECT COUNT(DISTINCT o.player_id) FROM player_devices o " +
                 "WHERE o.gpu = ? AND o.scr = ? AND o.fnt = ? AND o.player_id <> ? AND NOT EXISTS " +
                 "(SELECT 1 FROM bans x WHERE x.player_id = o.player_id AND x.ends_at > ?)) <= ?"

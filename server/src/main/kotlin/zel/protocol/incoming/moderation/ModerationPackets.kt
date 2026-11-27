@@ -313,6 +313,7 @@ class ModerationPackets(
                                 message,
                                 banDuration(m.int3),
                                 m.int2,
+                                m.int3 == BAN_AVATAR_ONLY_100_YEARS,
                             )
                     ModerationReplies.actionResult(s.client, m.int1, issued.isNotEmpty())
                 }

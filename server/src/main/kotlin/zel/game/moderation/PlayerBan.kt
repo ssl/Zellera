@@ -8,4 +8,5 @@ data class PlayerBan(
     val endsAt: Int,
     val reason: String,
     val topicId: Int,
+    val avatarOnly: Boolean = false,
 )

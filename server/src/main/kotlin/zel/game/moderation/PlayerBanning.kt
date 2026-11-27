@@ -36,6 +36,7 @@ class PlayerBanning(
         reason: String?,
         seconds: Int,
         topicId: Int,
+        avatarOnly: Boolean = false,
     ): List<PlayerBan> {
         if (seconds <= 0 || moderator == null || !reach.canModerate(moderator, playerId)) return emptyList()
         if (players.profileOf(playerId) == null) return emptyList()
@@ -48,11 +49,12 @@ class PlayerBanning(
                 endsAt = minOf(now.toLong() + seconds, Int.MAX_VALUE.toLong()).toInt(),
                 reason = reason.orEmpty(),
                 topicId = topicId,
+                avatarOnly = avatarOnly,
             )
         if (!store.insert(ban)) return emptyList()
         standing.count(playerId, StandingCounter.BANS_RECEIVED)
         players.find(playerId)?.client?.let { client -> disconnect(client, ban, now) }
-        threading.run { disconnectDevicesOf(ban, now) }
+        if (!avatarOnly) threading.run { disconnectDevicesOf(ban, now) }
         return listOf(ban)
     }
 

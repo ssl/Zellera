@@ -25,6 +25,7 @@ class BanStore(
                 int(ban.endsAt)
                 string(ban.reason.take(REASON_LENGTH))
                 intOrNullWhenNotPositive(ban.topicId)
+                int(if (ban.avatarOnly) 1 else 0)
             } == 1
         }
 
@@ -66,15 +67,17 @@ class BanStore(
             endsAt = row.getLong("ends_at").coerceAtMost(Int.MAX_VALUE.toLong()).toInt(),
             reason = row.getString("reason").orEmpty(),
             topicId = row.getInt("topic_id"),
+            avatarOnly = row.getInt("avatar_only") != 0,
         )
 
     private companion object {
         val log: Logger = LoggerFactory.getLogger(BanStore::class.java)
         const val REASON_LENGTH = 200
         const val INSERT =
-            "INSERT INTO bans (player_id, issued_by, issued_at, ends_at, reason, topic_id) VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO bans (player_id, issued_by, issued_at, ends_at, reason, topic_id, avatar_only) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)"
         const val LONGEST_RUNNING =
-            "SELECT player_id, issued_by, issued_at, ends_at, reason, topic_id FROM bans " +
+            "SELECT player_id, issued_by, issued_at, ends_at, reason, topic_id, avatar_only FROM bans " +
                 "WHERE player_id = ? AND ends_at > ? ORDER BY ends_at DESC LIMIT 1"
     }
 }

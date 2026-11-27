@@ -20,12 +20,21 @@ class AreaChat(
         speaker: RoomUnit,
         receiver: RoomUnit,
     ): Boolean {
-        val tent =
-            scope.room.furni
-                .at(speaker.tile)
-                .furni
-                .firstOrNull { it.behaviour is Tent }
+        val tent = tentAt(scope, speaker)
         if (tent != null && receiver.tile !in tent.tiles()) return false
         return next.hears(scope, speaker, receiver)
     }
+
+    override fun confinesToArea(
+        scope: RoomScope,
+        speaker: RoomUnit,
+    ): Boolean = tentAt(scope, speaker) != null || next.confinesToArea(scope, speaker)
+
+    private fun tentAt(
+        scope: RoomScope,
+        speaker: RoomUnit,
+    ) = scope.room.furni
+        .at(speaker.tile)
+        .furni
+        .firstOrNull { it.behaviour is Tent }
 }

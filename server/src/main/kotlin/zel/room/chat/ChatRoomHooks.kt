@@ -27,6 +27,11 @@ interface ChatRoomHooks {
         receiver: RoomUnit,
     ): Boolean = true
 
+    fun confinesToArea(
+        scope: RoomScope,
+        speaker: RoomUnit,
+    ): Boolean = false
+
     companion object {
         val None: ChatRoomHooks = object : ChatRoomHooks {}
     }

@@ -132,9 +132,11 @@ class RoomChat(
                 val tracking = if (receiver === line.unit && line.kind == ChatKind.Talk) line.trackingId else -1
                 ChatOut.send(scope, line.kind, playerId, line.bubble(receiver.index, tracking, heard(line, playerId)))
             }
-            scope.room.spectators
-                .filterNot { host.ignores(it, line.playerId) }
-                .forEach { ChatOut.send(scope, line.kind, it, line.bubble(NO_RECEIVER, -1, heard(line, it))) }
+            if (!hooks.confinesToArea(scope, line.unit)) {
+                scope.room.spectators
+                    .filterNot { host.ignores(it, line.playerId) }
+                    .forEach { ChatOut.send(scope, line.kind, it, line.bubble(NO_RECEIVER, -1, heard(line, it))) }
+            }
             heads.heard(scope, line.unit)
             if (scope.room.units
                     .playerIds()

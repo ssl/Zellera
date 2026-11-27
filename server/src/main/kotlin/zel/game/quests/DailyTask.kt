@@ -68,6 +68,8 @@ data class DailyTask(
         }
     }
 
+    val hasTargets: Boolean get() = goal.type !in TARGET_BOUND_GOALS || targetNames.isNotEmpty()
+
     fun matches(event: Event): Boolean =
         when (event) {
             is Event.Goal -> event.type !in TARGET_BOUND_GOALS && goal.type == event.type

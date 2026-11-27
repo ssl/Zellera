@@ -31,7 +31,7 @@ internal class DailyTaskRoster(
         playerId: Int,
         day: LocalDate,
     ): List<DailyTask> {
-        val (bonus, regular) = all.partition { it.isBonus }
+        val (bonus, regular) = all.filter { it.hasTargets }.partition { it.isBonus }
         val seed = (playerId.toLong() shl Int.SIZE_BITS) xor day.toString().hashCode().toLong()
         return regular
             .shuffled(Random(seed))

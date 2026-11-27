@@ -93,7 +93,7 @@ internal class MarketplaceReads(
         private const val OWN_LISTINGS_SQL =
             "SELECT l.id, l.furni_id, l.player_id, l.price, l.listed_at, l.sold_at, l.state, l.payout_currency," +
                 " f.definition_id, f.limited_number, f.limited_total" +
-                " FROM marketplace_listings l INNER JOIN furni f ON f.id = l.furni_id WHERE l.player_id = ?"
+                " FROM marketplace_listings l LEFT JOIN furni f ON f.id = l.furni_id WHERE l.player_id = ?"
 
         private const val LISTING_SQL =
             "SELECT l.furni_id, f.definition_id, l.player_id, l.price, l.state, l.listed_at," +

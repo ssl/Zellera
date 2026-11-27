@@ -1,4 +1,4 @@
-import { readForm } from '../cms/lib/http.mjs';
+import { crossSite, readForm } from '../cms/lib/http.mjs';
 import { DEVICE_SHAPE, renderDevicePage } from './device-page.mjs';
 import { sendText as send } from './files.mjs';
 import { ipLimitKey } from './limits.mjs';
@@ -16,7 +16,7 @@ export const createPlayRoute = ({ cms, playPage, limiter = null, clientIp = () =
     return send(res, 429, 'Too many requests. Try again soon.', 'text/plain; charset=utf-8', { 'retry-after': String(hit.retryAfter), ...PRIVATE });
   }
   const form = req.method === 'POST' ? await readForm(req, PLAY_FORM_MAX) : null;
-  const asked = req.method === 'POST' ? form?.get('sso') : url.searchParams.get('sso');
+  const asked = crossSite(req) ? null : (req.method === 'POST' ? form?.get('sso') : url.searchParams.get('sso'));
   const ticket = (asked ?? (req.method === 'GET' ? await cms.freshPlayTicket?.(req) : null)) ?? '';
   if (!ticket || !(await cms.checkPlayTicket(ticket))) return send(res, 303, '', 'text/plain', { location: '/me', ...PRIVATE });
   const device = form?.get('device') ?? '';

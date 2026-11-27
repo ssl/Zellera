@@ -296,7 +296,7 @@ class CameraService(
                 .mirrorPath(url)
                 ?.let { path ->
                     val stored = CameraSources.storedFile(path)
-                    if (stored == null) fetch(web + path, CameraSources.MAX_PICTURE_BYTES) else readStored(stored)
+                    if (stored == null) fetch(web + path, CameraSources.MAX_PICTURE_BYTES, true) else readStored(stored)
                 }?.let { CameraSources.picture(it, CameraSources.MAX_PICTURE_SIDE) }
         } catch (_: Exception) {
             null
@@ -313,8 +313,11 @@ class CameraService(
     private fun fetch(
         url: String,
         maxBytes: Int,
+        cachedOnly: Boolean = false,
     ): ByteArray? {
-        val request = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(FETCH_TIMEOUT_SECONDS)).build()
+        val builder = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(FETCH_TIMEOUT_SECONDS))
+        if (cachedOnly) builder.header(CACHED_ONLY, "1")
+        val request = builder.build()
         val response =
             try {
                 http.send(request, HttpResponse.BodyHandlers.ofInputStream())
@@ -341,6 +344,7 @@ class CameraService(
         private const val HTTP_CONNECT_SECONDS = 5L
         private const val FETCH_TIMEOUT_SECONDS = 20L
         private const val HTTP_OK = 200
+        private const val CACHED_ONLY = "x-zel-cached-only"
 
         private const val PREVIEW_LIFETIME_MS = 60L * 60 * 1000
         private const val MIN_RENDER_INTERVAL_MS = 250L

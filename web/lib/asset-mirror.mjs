@@ -190,7 +190,7 @@ export const createAssetMirror = ({
     if (own && isFile(own)) return sendFile(req, res, own, sent, { revalidate: true });
     const target = join(cacheDir, rel);
     if (isFile(target)) return sendFile(req, res, target, sent, { revalidate: true });
-    if (existsSync(target)) return sendText(res, 404, 'not found');
+    if (existsSync(target) || req.headers['x-zel-cached-only']) return sendText(res, 404, 'not found');
     const fixedSet = furni(rel) || (pageIconFurniId(rel) && furniById?.(pageIconFurniId(rel)));
     if (!knownMissing(rel) && limiter && !isLoopbackIp(ip) && !fixedSet) {
       const hit = limiter.hit(`assets:${ipLimitKey(ip)}`, ...MISS_LIMIT);

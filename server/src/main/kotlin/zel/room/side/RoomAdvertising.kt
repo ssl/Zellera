@@ -88,9 +88,9 @@ class RoomAdvertising(
         val blockedField = blocked(player, title, description)
         if (blockedField != null) return blockedDialog(client, blockedField)
         val price = offer.price
+        val running = stored(room.id)
         if (!CatalogWallet.chargeQuietly(player, price.credits, price.pointsType, price.points)) return
         client.send(UserCurrency(player))
-        val running = stored(room.id)
         val at = now()
         val event =
             if (running != null && running.end > at) {

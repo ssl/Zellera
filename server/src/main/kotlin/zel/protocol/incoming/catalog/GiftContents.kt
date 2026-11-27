@@ -59,7 +59,12 @@ internal class GiftContents(
                 senderName = profile.name,
                 senderLook = profile.figure,
             )
-        val gift = writeBox(sender, receiverId, box, wrap.state(), inside, reservation)
+        val state = wrap.state()
+        if (state == null) {
+            CatalogReplies.purchaseFailed(client, PurchaseError.GENERIC)
+            return null
+        }
+        val gift = writeBox(sender, receiverId, box, state, inside, reservation)
         if (gift == null) {
             CatalogReplies.purchaseFailed(client, PurchaseError.GENERIC)
             return null

@@ -15,10 +15,11 @@ data class GiftWrap(
     val shownLook: String get() = if (signed) senderLook else ""
 
     /** The note gives way first when the whole would not fit the state column. */
-    fun state(): String {
+    fun state(): String? {
         val whole = written(note)
         val over = whole.length - Items.MAX_STATE_LENGTH
-        return if (over <= 0) whole else written(note.dropLast(minOf(note.length, over * 2)))
+        if (over <= 0) return whole
+        return written(note.dropLast(minOf(note.length, over * 2))).takeIf { it.length <= Items.MAX_STATE_LENGTH }
     }
 
     private fun written(shownNote: String): String =

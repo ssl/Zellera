@@ -27,8 +27,9 @@ class RoomDeletion(
             port.emptyForDelete(roomId, player)
         ) {
             port.close(roomId)
+            val guild = if (room.groupId > 0) homeGuild(roomId, guilds.byId(room.groupId)) else null
             if (!remove(roomId)) return
-            if (room.groupId > 0) homeGuild(roomId, guilds.byId(room.groupId))?.let(guilds::delete)
+            guild?.let(guilds::delete)
         }
     }
 

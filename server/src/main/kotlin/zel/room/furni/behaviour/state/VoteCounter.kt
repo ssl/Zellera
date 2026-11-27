@@ -44,7 +44,7 @@ class VoteCounter(
         ) {
             return
         }
-        StateShow.whole(scope, furni, write(false, votes + sign))
+        StateShow.whole(scope, furni, write(false, votes + sign.coerceIn(MIN_SIGN, MAX_SIGN)))
     }
 
     private fun read(furni: RoomFurni): Pair<Boolean, Int> {
@@ -60,5 +60,7 @@ class VoteCounter(
 
     private companion object {
         const val VOTES = 3
+        const val MIN_SIGN = 0
+        const val MAX_SIGN = 17
     }
 }

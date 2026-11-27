@@ -55,7 +55,7 @@ class UpgradeGate(
     }
 
     private fun FullHttpRequest.isUpgrade(): Boolean =
-        headers().get(HttpHeaderNames.UPGRADE)?.let(HttpHeaderValues.WEBSOCKET::contentEqualsIgnoreCase) == true
+        headers().containsValue(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET, true)
 
     private fun forwardedAddress(
         peer: String?,

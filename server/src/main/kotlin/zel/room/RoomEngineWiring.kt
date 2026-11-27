@@ -429,6 +429,7 @@ class RoomEngineWiring(
                 life::active,
                 { scope, unit -> core.walking.sendNow(scope, listOf(unit)) },
                 life::sleep,
+                { services.chat.speaker(it)?.clubMember == true },
             )
         val commands =
             ChatCommands(services.chat, core.walking::changePosture) { scope, playerId, text ->

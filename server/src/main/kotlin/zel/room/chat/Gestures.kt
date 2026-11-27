@@ -12,6 +12,7 @@ import zel.room.event.RoomEvent
 import zel.room.tick.Audience
 import zel.room.tick.Lane
 import zel.room.unit.RoomUnit
+import zel.room.unit.UnitKind
 import zel.room.unit.UnitStatus
 
 class Gestures(
@@ -19,6 +20,7 @@ class Gestures(
     private val active: (RoomScope, RoomUnit) -> Unit,
     private val showNow: (RoomScope, RoomUnit) -> Unit,
     private val sleep: (RoomScope, RoomUnit) -> Unit = { _, _ -> },
+    private val clubMember: (Int) -> Boolean = { false },
 ) {
     fun dance(
         scope: RoomScope,
@@ -26,6 +28,7 @@ class Gestures(
         id: Int,
     ) {
         if (id !in 0..LAST_DANCE) return
+        if (id >= FIRST_CLUB_DANCE && !isClubMember(unit)) return
         active(scope, unit)
         dances.dance(scope, unit, id)
         if (id > 0) scope.raise(RoomEvent.Action(unit.index, PlayerAction.DANCE, id.toString()))
@@ -70,8 +73,14 @@ class Gestures(
         scope.out.send(Lane.Now, Audience.Room, PlayerTypingOutCodec, message)
     }
 
+    private fun isClubMember(unit: RoomUnit): Boolean {
+        val playerId = (unit.kind as? UnitKind.Player)?.playerId ?: return false
+        return clubMember(playerId)
+    }
+
     private companion object {
         const val LAST_DANCE = 4
+        const val FIRST_CLUB_DANCE = 2
         const val IDLE = 5
         const val SIXTY_SEVEN = 67
 

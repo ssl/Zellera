@@ -5,6 +5,8 @@ import zel.db.SqlFailure
 import zel.db.first
 import zel.protocol.outgoing.handshake.DisconnectReason.Companion.CONCURRENT_LOGIN
 import zel.server.GameServices
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Semaphore
 
 private val log = LoggerFactory.getLogger(PlayerLogin::class.java)
 
@@ -24,6 +26,13 @@ internal class PlayerLogin(
     private val players: Players,
     private val disconnectSaves: DisconnectSaves,
 ) {
+    private val gates = ConcurrentHashMap<Int, Gate>()
+
+    private class Gate {
+        val turn = Semaphore(1)
+        var holders = 0
+    }
+
     private class Ticket(
         val playerId: Int,
         val device: DeviceReading?,
@@ -51,8 +60,24 @@ internal class PlayerLogin(
     ): TicketLogin {
         val reusable = services.config.getBoolean("login.ticket.is_reusable", false)
         if (!reusable && !consumeSsoTicket(userId, filter, sso)) return TicketLogin.Unknown
-        val player = loadPlayer(userId) ?: return TicketLogin.Unknown
-        return TicketLogin.Admitted(player, device)
+        val release = waitTurn(userId)
+        var admitted = false
+        try {
+            val player = loadPlayer(userId) ?: return TicketLogin.Unknown
+            admitted = true
+            return TicketLogin.Admitted(player, device, release)
+        } finally {
+            if (!admitted) release()
+        }
+    }
+
+    private fun waitTurn(userId: Int): () -> Unit {
+        val gate = checkNotNull(gates.compute(userId) { _, open -> (open ?: Gate()).apply { holders++ } })
+        gate.turn.acquireUninterruptibly()
+        return {
+            gate.turn.release()
+            gates.computeIfPresent(userId) { _, open -> open.takeIf { --it.holders > 0 } }
+        }
     }
 
     /** The device stored with the ticket against the one the client sent. */

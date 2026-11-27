@@ -39,12 +39,16 @@ class PlayerSessions(
             return null
         }
         val player = login.player
-        player.device = login.device
-        clients.claim(player.profile.id, client)?.takeIf { it !== client }?.let { older ->
-            log.info("Player {} logs in again; the older session is closed", player.profile.id)
-            clients.disconnect(older, DisconnectReason.CONCURRENT_LOGIN)
+        try {
+            player.device = login.device
+            clients.claim(player.profile.id, client)?.takeIf { it !== client }?.let { older ->
+                log.info("Player {} logs in again; the older session is closed", player.profile.id)
+                clients.disconnect(older, DisconnectReason.CONCURRENT_LOGIN)
+            }
+            if (!enter(client, player)) return null
+        } finally {
+            login.release()
         }
-        if (!enter(client, player)) return null
         login.device?.let { players.loggedInFrom(player, it) }
         ExtensionBus.event(ServerEvent.LoggedIn(player.profile.id))
         return player

@@ -5,6 +5,7 @@ sealed interface TicketLogin {
     class Admitted(
         val player: Player,
         val device: DeviceReading? = null,
+        val release: () -> Unit = {},
     ) : TicketLogin
 
     /** No live ticket like it, or its player could not be loaded. */

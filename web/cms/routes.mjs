@@ -192,6 +192,8 @@ export const createCms = ({
     const rules = await accountRules();
     const ip = clientIp(req);
     if (limited(res, `register:ip:${ipLimitKey(ip)}`, 5, 3600)) return;
+    const ban = await db.addressBan(ip);
+    if (ban) return fail(res, 403, banNotice(ban));
     const username = str(body.username, 64).trim();
     const password = str(body.password, 256);
     const password2 = str(body.password2, 256);

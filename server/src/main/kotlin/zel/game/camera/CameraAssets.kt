@@ -19,6 +19,7 @@ class CameraAssets(
     private val locations: Locations,
     furnidata: ByteArray?,
     pets: Collection<String> = emptyList(),
+    private val maxBytes: Long = DEFAULT_MAX_BYTES.toLong(),
 ) {
     data class Locations(
         val furni: String,
@@ -27,12 +28,28 @@ class CameraAssets(
         val roomContent: String,
     )
 
-    /** What one frame may still fetch: bundles neither loaded nor known missing. One per frame, one thread. */
+    /**
+     * What one frame may still fetch: bundles neither loaded nor known missing, at most [bytes] of them all told, of
+     * the furni in [furni] only (null: any furni). One per frame, one thread.
+     */
     internal class Fetches(
         private var left: Int = MAX_FRAME_FETCHES,
+        private var bytes: Long = Long.MAX_VALUE,
+        private val furni: Set<String>? = null,
     ) {
         fun take(): Boolean = (left > 0).also { if (it) left-- }
+
+        /** Past its bytes the frame takes no new bundle at all. */
+        fun spend(planned: Long): Boolean =
+            (planned <= bytes).also { fits ->
+                if (fits) bytes -= planned else left = 0
+            }
+
+        fun mayShow(furniClass: String): Boolean = furni == null || furniClass in furni
     }
+
+    /** A frame's fetches: no more new bundles than the whole cache may hold, and only of the [furni] it may show. */
+    internal fun frameFetches(furni: Set<String>? = null): Fetches = Fetches(MAX_FRAME_FETCHES, maxBytes, furni)
 
     private val furniRevisions = furniRevisions(furnidata)
     private val figureLibraries = figureLibraries(source(locations.figure + "figuremap.xml"))
@@ -52,11 +69,22 @@ class CameraAssets(
 
     internal fun sprite(
         name: String,
-        fetches: Fetches = Fetches(),
+        fetches: Fetches = frameFetches(),
     ): AssetBundle.Image? {
         if (!SAFE_NAME.matches(name)) return null
         return orNull({ log.debug("Camera asset {}: {}", name, it.message) }) {
             bundleOfSprite(name, fetches)?.image(name)
+        }.also { trim() }
+    }
+
+    /** The size [sprite] draws [name] at, without decoding any sheet; null when there is no such sprite. */
+    internal fun spriteExtent(
+        name: String,
+        fetches: Fetches = frameFetches(),
+    ): AssetBundle.Extent? {
+        if (!SAFE_NAME.matches(name)) return null
+        return orNull({ log.debug("Camera asset {}: {}", name, it.message) }) {
+            bundleOfSprite(name, fetches)?.extent(name)
         }
     }
 
@@ -94,12 +122,15 @@ class CameraAssets(
         fetches: Fetches,
     ): AssetBundle? = bundle("${locations.figure}$library${AssetBundle.extension()}", fetches)
 
-    /** A furni of the furnidata, else a library the gamedata names in the figure folder; else none, unfetched. */
+    /**
+     * A furni of the furnidata the frame may show, else a library the gamedata names in the figure folder; else
+     * none, unfetched.
+     */
     private fun libraryBundle(
         library: String,
         fetches: Fetches,
     ): AssetBundle? {
-        val revision = furniRevisions[library]
+        val revision = furniRevisions[library]?.takeIf { fetches.mayShow(library) }
         return when {
             revision != null -> bundle("${locations.furni}$revision/$library${AssetBundle.extension()}", fetches)
             library in folderLibraries -> figureLibrary(library, fetches)
@@ -110,7 +141,7 @@ class CameraAssets(
     internal fun palette(
         spriteName: String,
         palette: String,
-        fetches: Fetches = Fetches(),
+        fetches: Fetches = frameFetches(),
     ): IntArray? {
         if (!SAFE_NAME.matches(palette)) return null
         return orNull({ log.debug("Camera palette {} of {}: {}", palette, spriteName, it.message) }) {
@@ -120,10 +151,10 @@ class CameraAssets(
 
     internal fun roomAsset(
         name: String,
-        fetches: Fetches = Fetches(),
+        fetches: Fetches = frameFetches(),
     ): AssetBundle.Image? {
         if (!SAFE_NAME.matches(name)) return null
-        return orNull { bundle(locations.roomContent, fetches)?.image(name) }
+        return orNull { bundle(locations.roomContent, fetches)?.image(name) }.also { trim() }
     }
 
     fun filterImage(name: String): BufferedImage? {
@@ -152,17 +183,45 @@ class CameraAssets(
             if (path in missing) return null
             bundles[path]?.let { return it }
         }
-        return if (fetches.take()) fetched(path) else null
+        return if (fetches.take()) fetched(path, fetches) else null
     }
 
-    private fun fetched(path: String): AssetBundle? {
-        val loaded = source(path)?.let { readBundle(path, it) }
+    /** A bundle bigger than the whole cache counts as missing; one past what the frame may still take, as unfetched. */
+    private fun fetched(
+        path: String,
+        fetches: Fetches,
+    ): AssetBundle? {
+        val loaded = source(path)?.let { readBundle(path, it) }?.takeIf { fits(path, it) }
+        if (loaded != null && !fetches.spend(loaded.plannedBytes)) return null
         return synchronized(this) {
             if (loaded == null) {
                 missing[path] = Unit
                 null
             } else {
                 bundles.getOrPut(path) { loaded }
+            }
+        }.also { trim() }
+    }
+
+    private fun fits(
+        path: String,
+        bundle: AssetBundle,
+    ): Boolean =
+        (bundle.plannedBytes <= maxBytes).also { fits ->
+            if (!fits) log.info("Camera library {} needs {} bytes, more than {} allows", path, bundle.plannedBytes, KEY)
+        }
+
+    /** What the cached bundles hold on the heap. */
+    internal fun heldBytes(): Long = synchronized(this) { bundles.values.sumOf { it.heldBytes() } }
+
+    /** Pushes out the least recently used bundles until what they hold fits [maxBytes]. */
+    private fun trim() {
+        synchronized(this) {
+            var held = heldBytes()
+            val oldestFirst = bundles.values.iterator()
+            while (held > maxBytes && oldestFirst.hasNext()) {
+                held -= oldestFirst.next().heldBytes()
+                oldestFirst.remove()
             }
         }
     }
@@ -192,11 +251,20 @@ class CameraAssets(
         private const val PET_TYPES = "pet.configuration"
         private const val MAX_BUNDLES = 400
 
+        /** The setting that sizes the cache, in bytes; read when the renderer is built. */
+        const val KEY: String = "camera.assets.max.bytes"
+
         /**
-         * Bundles one frame may fetch: as many as the cache keeps (a frame past that would only push out its own),
-         * far more than a typical photo needs with an empty cache.
+         * Most of the assets fit in far less: half of all bundles decode to under 64 KB, 99 in 100 to under 2 MB. The
+         * few room backgrounds past it (one is 144 MB decoded) are not drawn.
          */
-        internal const val MAX_FRAME_FETCHES = MAX_BUNDLES
+        const val DEFAULT_MAX_BYTES: Int = 64 * 1024 * 1024
+
+        /**
+         * New bundles one frame may fetch: a photo shows a few avatars (some ten figure libraries each, most shared)
+         * and the furni in view, so this is plenty with an empty cache; what is left out comes on the next photo.
+         */
+        internal const val MAX_FRAME_FETCHES = 128
         private const val INITIAL_CAPACITY = 64
         private const val LOAD_FACTOR = 0.75f
         internal const val MAX_MISSING = 4096

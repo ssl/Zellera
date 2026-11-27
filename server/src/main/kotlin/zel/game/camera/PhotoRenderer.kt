@@ -35,11 +35,14 @@ class PhotoRenderer(
         }
     }
 
-    private inner class Job {
+    private inner class Job(
+        furni: Set<String>?,
+    ) {
         private val deadline = System.nanoTime() + deadlineMs * NANOS_PER_MILLI
         private val sprites = HashMap<String, AssetBundle.Image?>()
+        private val extents = HashMap<String, AssetBundle.Extent?>()
         private val pictures = HashMap<String, BufferedImage?>()
-        val fetches = CameraAssets.Fetches()
+        val fetches = assets.frameFetches(furni)
         private var work = 0L
         private var urlSprites = 0
 
@@ -51,6 +54,13 @@ class PhotoRenderer(
 
         fun check() {
             require(System.nanoTime() - deadline <= 0) { "frame took too long" }
+        }
+
+        fun extent(name: String): AssetBundle.Extent? {
+            if (extents.containsKey(name)) return extents[name]
+            if (extents.size >= MAX_ASSET_NAMES) return null
+            check()
+            return assets.spriteExtent(name, fetches).also { extents[name] = it }
         }
 
         fun sprite(name: String): AssetBundle.Image? {
@@ -85,8 +95,12 @@ class PhotoRenderer(
         }
     }
 
-    fun render(frame: PhotoFrame): BufferedImage {
-        val job = Job()
+    /** [furni]: the furni classes the photo may show (those in the room), null for any. */
+    fun render(
+        frame: PhotoFrame,
+        furni: Set<String>? = null,
+    ): BufferedImage {
+        val job = Job(furni)
         val (width, height) = size(frame)
         val canvas = Canvas(width, height)
         val layers: List<Pair<Double, () -> Unit>> =
@@ -143,9 +157,10 @@ class PhotoRenderer(
         job: Job,
     ) {
         val isPicture = sprite.url || (sprite.name == BOX && sprite.width > 0 && sprite.height > 0)
-        val image = spriteImage(sprite, isPicture, job) ?: return
         val left = floor(sprite.x).toInt()
         val top = floor(sprite.y).toInt()
+        if (!isPicture && !showsOn(canvas, left, top, sprite.name, job)) return
+        val image = spriteImage(sprite, isPicture, job) ?: return
         val sx0 = max(0, -left)
         val sx1 = min(image.width, canvas.width - left)
         val sy0 = max(0, -top)
@@ -173,6 +188,19 @@ class PhotoRenderer(
                 }
             }
         }
+    }
+
+    /** Whether an asset sprite at [left], [top] reaches into the canvas: off it, its sheet is never decoded. */
+    private fun showsOn(
+        canvas: Canvas,
+        left: Int,
+        top: Int,
+        name: String,
+        job: Job,
+    ): Boolean {
+        if (left >= canvas.width || top >= canvas.height) return false
+        val extent = job.extent(name) ?: return false
+        return left + extent.width > 0 && top + extent.height > 0
     }
 
     private fun spriteImage(

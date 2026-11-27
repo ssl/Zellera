@@ -96,7 +96,8 @@ class CameraPackets(
         keepSample(userId, json)
         val queued =
             camera.submit {
-                session.url(camera.render(userId, roomId, json).orEmpty())
+                val url = camera.render(userId, roomId, json) { services.game.rooms.furniClasses(roomId) }
+                session.url(url.orEmpty())
             }
         if (!queued) session.url("")
     }
@@ -114,7 +115,7 @@ class CameraPackets(
         if (!owns) return
         val json = inflateFrame(length, frame) ?: return
         camera.submit {
-            if (camera.renderThumbnail(userId, roomId, json)) {
+            if (camera.renderThumbnail(userId, roomId, json) { rooms.furniClasses(roomId) }) {
                 session.send(ThumbnailStatusOutCodec, ThumbnailStatusOut(null))
             }
         }

@@ -22,22 +22,40 @@ internal class AssetBundle private constructor(
     private val sheetPng: ByteArray?,
     private val pngEntries: Map<String, ByteArray>,
     private val binaries: Map<String, ByteArray>,
+    private val storedBytes: Long,
 ) {
     data class Image(
         val image: BufferedImage,
         val flipH: Boolean,
     )
 
-    // sheet, cache and greyShades are guarded by this object.
+    data class Extent(
+        val width: Int,
+        val height: Int,
+    )
+
+    // sheet, cache, imageBytes and greyShades are guarded by this object.
     private var sheet: BufferedImage? = null
     private val cache = HashMap<String, Image?>()
+    private var imageBytes = 0L
+
+    /** What the sheet takes once decoded, read from its PNG header: 4 bytes a pixel. */
+    val sheetBytes: Long = sheetPng?.let(::pngExtent)?.let(::argbBytes) ?: 0L
+
+    /** The most this bundle holds before its images are cut: its files, and its sheet decoded. */
+    val plannedBytes: Long get() = storedBytes + sheetBytes
 
     /** Opaque grey pixels whose level is a key are drawn with the value's level instead. */
     var greyShades: Map<Int, Int> = emptyMap()
         @Synchronized set(value) {
             field = value.toMap()
             cache.clear()
+            imageBytes = 0
         }
+
+    /** The heap this bundle holds now: its files, its sheet once decoded and the images cut from it. */
+    @Synchronized
+    fun heldBytes(): Long = storedBytes + (if (sheet == null) 0 else sheetBytes) + imageBytes
 
     /** RGB triples, opaque, padded to 256 entries with 0; null when the bundle has no such entry. */
     fun palette(source: String): IntArray? =
@@ -61,18 +79,36 @@ internal class AssetBundle private constructor(
     @Throws(IOException::class)
     fun image(asset: String): Image? {
         if (asset in cache) return cache[asset]
-        return find(asset).also { cache[asset] = it }
+        return find(asset).also {
+            cache[asset] = it
+            // a cut of the sheet shares its pixels; a restored, shaded or turned copy has its own
+            val own = it?.image?.takeIf { image -> image.raster.dataBuffer !== sheet?.raster?.dataBuffer }
+            if (own != null) imageBytes += argbBytes(Extent(own.width, own.height))
+        }
+    }
+
+    /** The size [image] draws [asset] at, from the bundle's index alone: nothing is decoded. */
+    fun extent(asset: String): Extent? {
+        pngEntries[asset]?.let { return pngExtent(it) }
+        val frame = sheetFrame(asset)?.first?.takeIf { sheetPng != null }
+        val box = frame?.getAsJsonObject(if (isTrimmed(frame)) "sourceSize" else "frame")
+        return box?.let { Extent(it["w"].asInt, it["h"].asInt) }
     }
 
     private fun find(asset: String): Image? = pngEntries[asset]?.let { Image(readPng(it), false) } ?: sheetImage(asset)
 
-    private fun sheetImage(asset: String): Image? {
+    /** The sheet frame [asset] is cut from, and whether it is drawn mirrored. */
+    private fun sheetFrame(asset: String): Pair<JsonObject, Boolean>? {
         val alias = assets[asset]?.takeIf { it.isJsonObject }?.asJsonObject
         val source = alias?.get("source")?.asString ?: asset
         val flipH = alias?.get("flipH")?.asBoolean == true
         val frame = frame(source) ?: frame(asset).takeIf { source != asset }
-        val png = sheetPng
-        if (frame == null || png == null) return null
+        return frame?.let { it to flipH }
+    }
+
+    private fun sheetImage(asset: String): Image? {
+        val (frame, flipH) = sheetFrame(asset) ?: return null
+        val png = sheetPng ?: return null
         val cut = cropped(frame, sheet ?: readPng(png).also { sheet = it }) ?: return null
         val shadedCut = shaded(cut)
         val restored = if (isTrimmed(frame)) restoreTrim(frame, shadedCut) else shadedCut
@@ -158,8 +194,23 @@ internal class AssetBundle private constructor(
         private const val MIME_JSON = "application/json"
         private const val MIME_PNG = "image/png"
         private const val MIME_BINARY = "application/octet-stream"
+        private const val ARGB_BYTES = 4
+        private const val PNG_WIDTH_AT = 16
+        private const val PNG_HEADER_END = 24
+
+        /** About what a parsed library index takes on the heap per byte of its text. */
+        private const val JSON_HEAP_FACTOR = 4
 
         private fun channel(value: Byte): Int = value.toInt() and 0xFF
+
+        private fun argbBytes(extent: Extent): Long = extent.width.toLong() * extent.height * ARGB_BYTES
+
+        /** Width and height from a PNG's IHDR chunk; null for anything shorter. */
+        private fun pngExtent(png: ByteArray): Extent? {
+            if (png.size < PNG_HEADER_END) return null
+            val header = ByteBuffer.wrap(png, PNG_WIDTH_AT, PNG_HEADER_END - PNG_WIDTH_AT)
+            return Extent(header.getInt(), header.getInt()).takeIf { it.width > 0 && it.height > 0 }
+        }
 
         /** The file extension of a bundle, as the client profile names it; empty without one. */
         fun extension(): String = ClientStrings[ClientStrings.BUNDLE_EXTENSION].orEmpty()
@@ -179,6 +230,7 @@ internal class AssetBundle private constructor(
             var sheetPng: ByteArray? = null
             val pngEntries = HashMap<String, ByteArray>()
             val binaries = HashMap<String, ByteArray>()
+            var kept = 0L
             for (element in index.getAsJsonArray("entries")) {
                 val entry = element.asJsonObject
                 val entryName = entry["name"].asString
@@ -187,6 +239,7 @@ internal class AssetBundle private constructor(
                 when {
                     mime == MIME_JSON && entryName.endsWith(".json") -> {
                         val library = JsonParser.parseString(body.toString(Charsets.UTF_8)).asJsonObject
+                        kept += body.size.toLong() * JSON_HEAP_FACTOR
                         library["assets"]?.takeIf { it.isJsonObject }?.let { assets = it.asJsonObject }
                         library["spritesheet"]?.takeIf { it.isJsonObject }?.asJsonObject?.get("frames")?.let {
                             frames = it.asJsonObject
@@ -199,14 +252,18 @@ internal class AssetBundle private constructor(
 
                     mime == MIME_PNG -> {
                         pngEntries[entryName] = body
+                        kept += body.size
                     }
 
                     mime == MIME_BINARY && body.size <= MAX_PALETTE_BYTES -> {
                         binaries[entryName] = body
+                        kept += body.size
                     }
                 }
             }
-            return AssetBundle(index["name"]?.asString.orEmpty(), assets, frames, sheetPng, pngEntries, binaries)
+            kept += sheetPng?.size ?: 0
+            val name = index["name"]?.asString.orEmpty()
+            return AssetBundle(name, assets, frames, sheetPng, pngEntries, binaries, kept)
         }
 
         private fun entryBody(

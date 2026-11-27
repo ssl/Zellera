@@ -87,14 +87,18 @@ class CameraService(
         drawing.remove(userId)
     }
 
-    /** Null when refused, rate-limited or both render slots are taken. */
+    /**
+     * Null when refused, rate-limited or both render slots are taken. [furni] names the furni classes the photo may
+     * show, those in the room (null: any); it is asked only for a frame that is drawn.
+     */
     fun render(
         userId: Int,
         roomId: Int,
         frameJson: String,
+        furni: () -> Set<String>? = { null },
     ): String? {
         val now = System.currentTimeMillis()
-        return inTurn(userId, now, frameJson) { frame -> savePreview(frame, userId, roomId, now) }
+        return inTurn(userId, now, frameJson) { frame -> savePreview(frame, userId, roomId, now, furni) }
     }
 
     /** Also the room's full picture: the web serves the public API image from this file, so the path stays. */
@@ -102,7 +106,9 @@ class CameraService(
         userId: Int,
         roomId: Int,
         frameJson: String,
-    ): Boolean = inTurn(userId, System.currentTimeMillis(), frameJson) { frame -> saveThumbnail(frame, roomId) } == true
+        furni: () -> Set<String>? = { null },
+    ): Boolean =
+        inTurn(userId, System.currentTimeMillis(), frameJson) { frame -> saveThumbnail(frame, roomId, furni) } == true
 
     /** Runs [draw] on the parsed frame in the player's turn and a render slot; null when either is refused. */
     @Suppress("TooGenericExceptionCaught") // a frame that cannot be drawn only fails that frame
@@ -133,11 +139,12 @@ class CameraService(
         userId: Int,
         roomId: Int,
         now: Long,
+        furni: () -> Set<String>?,
     ): String? {
         if (frame.roomId != roomId) return null
         val relative = "servercamera/preview/${siteCode()}/$userId-$now.png"
         val file = storage().resolve(relative)
-        writePng(renderer().render(frame), file)
+        writePng(renderer().render(frame, furni()), file)
         previews.put(userId, Preview(file, now, roomId))?.let(::discard)
         forgetOld(now)
         return relative
@@ -158,9 +165,10 @@ class CameraService(
     private fun saveThumbnail(
         frame: PhotoFrame,
         roomId: Int,
+        furni: () -> Set<String>?,
     ): Boolean {
         if (frame.roomId != roomId) return false
-        writePng(renderer().render(frame), storage().resolve("navigator-thumbnail/${siteCode()}/$roomId.png"))
+        writePng(renderer().render(frame, furni()), storage().resolve("navigator-thumbnail/${siteCode()}/$roomId.png"))
         return true
     }
 
@@ -266,7 +274,15 @@ class CameraService(
                     CameraSources.path(variables["image.library.url"] ?: profilePath(ClientStrings.IMAGE_ROOT)),
                 roomContent = ClientStrings[ClientStrings.ROOM_CONTENT_FILE].orEmpty(),
             )
-        val assets = CameraAssets(source, locations, source("/gamedata/furnidata"), CameraAssets.pets(variables))
+        val maxBytes = config.getInt(CameraAssets.KEY, CameraAssets.DEFAULT_MAX_BYTES).takeIf { it > 0 }
+        val assets =
+            CameraAssets(
+                source,
+                locations,
+                source("/gamedata/furnidata"),
+                CameraAssets.pets(variables),
+                (maxBytes ?: CameraAssets.DEFAULT_MAX_BYTES).toLong(),
+            )
         return PhotoRenderer(assets) { url -> ownImage(web, url) }
     }
 

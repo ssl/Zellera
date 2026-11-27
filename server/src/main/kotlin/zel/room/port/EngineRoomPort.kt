@@ -117,6 +117,14 @@ class EngineRoomPort(
             scope.room.furni[furniId]?.let { PlacedFurni(it.id, it.ownerId, it.definition) }
         }
 
+    override fun furniClasses(roomId: Int): Set<String> =
+        registry
+            .withRoom(roomId) { scope ->
+                scope.room.furni
+                    .all()
+                    .mapTo(HashSet()) { it.definition.name.substringBefore('*') }
+            }.orEmpty()
+
     override fun nameChanged(playerId: Int) {
         val roomId = registry.roomOf(playerId) ?: return
         val look = card(playerId) ?: return

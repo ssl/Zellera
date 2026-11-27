@@ -41,6 +41,9 @@ interface RoomPort :
         furniId: Int,
     ): PlacedFurni?
 
+    /** The classes of the furni in the loaded room, colour variants by their base name; empty when it is not loaded. */
+    fun furniClasses(roomId: Int): Set<String> = emptySet()
+
     fun nameChanged(playerId: Int)
 
     fun groupRightsChanged(playerId: Int)

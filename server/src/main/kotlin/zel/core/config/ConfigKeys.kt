@@ -7,6 +7,7 @@ import zel.core.config.ConfigKey.Kind
 import zel.core.load.LoadWatch
 import zel.db.Database
 import zel.db.WriterSize
+import zel.game.camera.CameraAssets
 import zel.net.NetModule
 import zel.net.TransportSettings
 import zel.net.WireLimits
@@ -369,15 +370,26 @@ internal object ConfigKeys {
         }
     }
 
-    /** Game settings the code reads with a default of its own. */
-    private fun MutableList<ConfigKey>.game() {
+    private fun MutableList<ConfigKey>.camera() =
         area("camera") {
+            int(
+                CameraAssets.KEY.removePrefix("camera."),
+                default = CameraAssets.DEFAULT_MAX_BYTES,
+                description =
+                    "Bytes the photo renderer may keep of furni and avatar art, decoded sheets and their files; " +
+                        "past it the least used go, and a bundle bigger than all of it is not drawn. Read when the " +
+                        "renderer is rebuilt, hourly; 0 or less takes the default.",
+            )
             int(
                 "competition.entries_per_day",
                 default = 3,
                 description = "Photo competition entries one player may send a day; at least 1.",
             )
         }
+
+    /** Game settings the code reads with a default of its own. */
+    private fun MutableList<ConfigKey>.game() {
+        camera()
         area("respect") {
             int("buybacks.per_day", default = 1, description = "Times a day a player may buy their respects back.")
         }

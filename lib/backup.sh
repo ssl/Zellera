@@ -3,7 +3,7 @@
 
 # Sets BACKUP_FILE. The dump is one consistent snapshot, so the game may run meanwhile.
 backup_make() {
-  local dir=$DATA/backups started="" old
+  local dir=$DATA/backups started="" old keep=${1:-}
   have mariadb-dump || fail "mariadb-dump is missing: install the MariaDB client tools"
   db_made || fail "there is no database yet, so nothing to back up"
   if ! process_alive db; then db_up; started=1; fi
@@ -17,7 +17,7 @@ backup_make() {
   # Only the backups made here are counted; a file with another name stays.
   # shellcheck disable=SC2012
   ls -t "$dir/$ZEL_DB_NAME"-[0-9]*-????????-??????.sql.gz 2>/dev/null | tail -n "+$(( BACKUP_KEEP + 1 ))" \
-    | while IFS= read -r old; do rm -f "$old"; done
+    | while IFS= read -r old; do [ "$old" -ef "$keep" ] || rm -f "$old"; done
   [ -z "$started" ] || stop_or_fail db
   note "backup: $BACKUP_FILE"
 }
@@ -39,7 +39,7 @@ backup_restore() { # file, 1 when --yes was given
   db_up
   if [ -n "$(sql -N -e "SHOW TABLES IN \`$ZEL_DB_NAME\`" 2>/dev/null)" ]; then
     step "backing up what is there now"
-    backup_make
+    backup_make "$file"
   fi
   step "restoring $file"
   sql -e "DROP DATABASE IF EXISTS \`$ZEL_DB_NAME\`"

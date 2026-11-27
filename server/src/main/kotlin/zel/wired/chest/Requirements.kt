@@ -8,9 +8,15 @@ object Requirements {
         offered: Collection<OfferedFurni>,
     ): Pair<List<Term>, Int> =
         contract.give
+            .map { merge(it) }
             .map { it to sets(it, offered) }
             .firstOrNull { it.second > 0 }
             ?: (emptyList<Term>() to 0)
+
+    fun merge(rule: List<Term>): List<Term> =
+        rule
+            .groupBy { Triple(it.credits, it.wall, it.typeId) }
+            .map { (_, terms) -> terms.first().copy(amount = terms.sumOf { it.amount }) }
 
     fun sets(
         rule: List<Term>,

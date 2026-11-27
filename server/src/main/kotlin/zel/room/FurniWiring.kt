@@ -81,6 +81,15 @@ internal class FurniWiring(
                 },
                 progress = services.progress,
                 unkickable = { services.clients.onlinePlayer(it)?.hasPermission(Privilege.ROOM_KICK_IMMUNE) == true },
+                blocksEffect = { playerId, effect ->
+                    val rank =
+                        services.clients
+                            .onlinePlayer(playerId)
+                            ?.profile
+                            ?.rank
+                            ?.id ?: 0
+                    services.permissions()?.blocksEffect(effect, rank) == true
+                },
             ),
         )
     val controllerViews = ControllerViews(state)

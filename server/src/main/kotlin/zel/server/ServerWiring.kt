@@ -194,6 +194,7 @@ class ServerWiring(
                 accountLevels = { game.accountLevels },
                 wiredEarnings = { game.wiredCreditEarnings },
                 definitionByCode = { code -> game.items?.getItem(code) },
+                permissions = { game.permissions },
                 extensions = extensions,
             ),
         ).build().also { engine -> game.rooms = engine.rooms }

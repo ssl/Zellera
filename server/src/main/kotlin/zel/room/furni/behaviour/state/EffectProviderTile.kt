@@ -8,6 +8,7 @@ import zel.room.furni.behaviour.special.ObjectDataEditable
 import zel.room.furni.behaviour.special.SpecialStuff
 import zel.room.furni.place.StuffOnWire
 import zel.room.unit.RoomUnit
+import zel.room.unit.UnitKind
 
 class EffectProviderTile(
     private val part: StatePart,
@@ -22,6 +23,7 @@ class EffectProviderTile(
         values: Map<String, String>,
     ) {
         val effect = values[EFFECT]?.toIntOrNull() ?: return
+        if (part.hooks.blocksEffect(scope.room.info.ownerId, effect)) return
         val current = values(furni)
         current[EFFECT] = effect.toString()
         StateShow.whole(scope, furni, CustomValues.write(current))
@@ -35,7 +37,10 @@ class EffectProviderTile(
         val effect = values(furni)[EFFECT]?.toIntOrNull() ?: 0
         flash(scope, furni, LIT)
         part.later(scope, furni, LIT_MILLIS) { later, tile -> flash(later, tile, DARK) }
-        part.hooks.giveEffect(scope, unit, if (part.hooks.effect(unit) == effect) 0 else effect, null)
+        val given = if (part.hooks.effect(unit) == effect) 0 else effect
+        val player = unit.kind as? UnitKind.Player
+        if (given != 0 && player != null && part.hooks.blocksEffect(player.playerId, given)) return
+        part.hooks.giveEffect(scope, unit, given, null)
     }
 
     override fun onStepOff(

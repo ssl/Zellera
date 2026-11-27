@@ -25,6 +25,11 @@ interface StateHooks {
         endsAt: Long?,
     ) {}
 
+    fun blocksEffect(
+        playerId: Int,
+        effect: Int,
+    ): Boolean = false
+
     fun holdItem(
         scope: RoomScope,
         unit: RoomUnit,

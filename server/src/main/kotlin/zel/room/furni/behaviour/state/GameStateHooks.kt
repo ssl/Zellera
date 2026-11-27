@@ -22,6 +22,7 @@ class GameStateHooks(
     private val save: (Room) -> Unit = {},
     private val holds: TransitHolds = TransitHolds(),
     private val unkickable: (Int) -> Boolean = { false },
+    private val blocksEffect: (Int, Int) -> Boolean = { _, _ -> false },
 ) : StateHooks {
     override fun holdStill(
         scope: RoomScope,
@@ -65,6 +66,11 @@ class GameStateHooks(
         effect: Int,
         endsAt: Long?,
     ) = life.giveEffect(scope, unit, effect, endsAt)
+
+    override fun blocksEffect(
+        playerId: Int,
+        effect: Int,
+    ): Boolean = blocksEffect.invoke(playerId, effect)
 
     override fun holdItem(
         scope: RoomScope,

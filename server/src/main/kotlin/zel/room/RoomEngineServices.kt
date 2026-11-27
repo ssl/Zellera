@@ -11,6 +11,7 @@ import zel.game.items.OwnedFurni
 import zel.game.items.YoutubePlaylists
 import zel.game.moderation.WordFilter
 import zel.game.navigation.Navigator
+import zel.game.permissions.Permissions
 import zel.game.players.inventory.BadgeLeaderboard
 import zel.game.players.level.AccountLevels
 import zel.net.clients.ClientConnections
@@ -45,6 +46,7 @@ data class RoomEngineServices(
     val wordFilter: () -> WordFilter? = { null },
     val wiredEarnings: () -> WiredCreditEarnings? = { null },
     val definitionByCode: (String) -> Item? = { null },
+    val permissions: () -> Permissions? = { null },
     val extensions: GameExtensions = GameExtensions.None,
 ) {
     /** Runs off the room's lock, after that player's earlier achievement work. */

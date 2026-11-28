@@ -17,6 +17,7 @@ import java.time.LocalDate
 import javax.sql.DataSource
 
 private val log = LoggerFactory.getLogger(SnowballScoreTable::class.java)
+private val seeds = SecureRandom()
 
 private const val ADD_TO_WEEK_SQL =
     "INSERT INTO snowball_week_scores (week_start, player_id, score) VALUES (?, ?, ?) " +
@@ -141,7 +142,7 @@ class SnowballScoreTable internal constructor(
         log.orFallback("the settling of Snowball week $week", false) {
             sql.write(SETTLE_WEEK_SQL) {
                 value(Date.valueOf(week))
-                long(SecureRandom().nextLong())
+                long(seeds.nextLong())
             } == 1
         }
 

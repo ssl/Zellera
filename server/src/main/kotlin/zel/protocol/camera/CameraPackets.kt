@@ -8,6 +8,7 @@ import zel.game.camera.PhotoCompetition
 import zel.game.economy.LedgerEntry
 import zel.game.permissions.Privilege
 import zel.game.permissions.isAnyOwner
+import zel.game.players.Player
 import zel.game.quests.CountedAction
 import zel.game.quests.PlayerActions
 import zel.protocol.generated.CameraPublishStatusOut
@@ -131,11 +132,19 @@ class CameraPackets(
 
     private fun PacketSession.url(url: String) = send(CameraStorageUrlOutCodec, CameraStorageUrlOut(url))
 
+    private fun mayUseCamera(
+        player: Player,
+        userId: Int,
+    ): Boolean =
+        player.hasPermission(Privilege.PERK_CAMERA) &&
+            camera.preview(userId) != null &&
+            player.stats.standing.safetyAllows()
+
     private fun purchase(session: PacketSession) {
         val client = session.client
         val player = client.player ?: return
         val userId = player.profile.id
-        if (!player.hasPermission(Privilege.PERK_CAMERA) || camera.preview(userId) == null || !player.stats.standing.safetyAllows()) return
+        if (!mayUseCamera(player, userId)) return
 
         val price = CameraPrices.from(services.config).photo
         if (player.profile.credits < price.credits) {
@@ -173,7 +182,7 @@ class CameraPackets(
         val client = session.client
         val player = client.player ?: return
         val userId = player.profile.id
-        if (!player.hasPermission(Privilege.PERK_CAMERA) || camera.preview(userId) == null || !player.stats.standing.safetyAllows()) {
+        if (!mayUseCamera(player, userId)) {
             session.publishStatus(false, "")
             return
         }

@@ -1,6 +1,7 @@
 package zel.game.guilds
 
 import zel.core.rules.rules
+import zel.game.permissions.Privilege
 import zel.game.players.Player
 
 class GuildMemberships(
@@ -172,7 +173,11 @@ class GuildMemberships(
         }
 
     private fun membershipLimit(player: Player): Int =
-        if (player.stats.club.isMember) rules.groupMaxMembershipsClub else rules.groupMaxMemberships
+        when {
+            player.hasPermission(Privilege.GROUP_MANAGE_ANY) -> Int.MAX_VALUE
+            player.stats.club.isMember -> rules.groupMaxMembershipsClub
+            else -> rules.groupMaxMemberships
+        }
 
     private sealed interface Outcome {
         data class Added(

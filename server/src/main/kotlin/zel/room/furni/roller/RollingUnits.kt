@@ -7,6 +7,7 @@ import zel.room.unit.RoomUnit
 import zel.room.unit.UnitStatus
 import zel.room.unit.path.TileState
 import zel.room.unit.path.WalkTiles
+import zel.room.unit.walk.StepGate
 
 class RollingUnits(
     private val maxUnits: Int,
@@ -28,10 +29,12 @@ class RollingUnits(
         val state = WalkTiles.at(room, target.tile).state
         if (state != TileState.Open && state !is TileState.Seat) return emptyList()
         val leftTop = room.furni.at(from).topItem()
+        val gate = newTop?.behaviour as? StepGate
         val slides = ArrayList<SlideObjectBundleOut>()
         room.units
             .all()
             .filter { it.tile == from && mayRoll(pass, it) }
+            .filter { gate == null || gate.lets(pass.scope, newTop, it) }
             .take(maxUnits)
             .forEach { unit ->
                 pass.walking.horseOf(pass.scope, unit)?.let { slides += slide(pass, it, roller, from, target.tile) }

@@ -17,6 +17,7 @@ import zel.room.RoomRegistry
 import zel.room.RoomScope
 import zel.room.entry.EntryStore
 import zel.room.entry.RoomLeaving
+import zel.room.furni.behaviour.state.RoomControllers
 import zel.room.life.RoomLife
 import zel.room.tick.Audience
 import zel.room.tick.Lane
@@ -62,7 +63,7 @@ class PlayerActionPackets(
     ) {
         val item = life.handItem(unit)
         val target = leaving.doorOf(scope.room).present[targetId]?.let { scope.room.units[it.unitIndex] }
-        if (item == 0 || target == null || target === unit) return
+        if (item == 0 || target == null || target === unit || RoomControllers.handItemsBlocked(scope.room)) return
         life.dropItem(scope, unit)
         scope.out.send(
             Lane.Now,

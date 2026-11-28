@@ -431,12 +431,25 @@ class FriendsPackets(
         }
         val reason =
             when {
-                !mayTalk -> InstantMessageRefusal.SENDER_MUTED
-                friend == null -> InstantMessageRefusal.NOT_A_FRIEND
-                messenger.blocks.blocks(friendId, player.profile.id) -> InstantMessageRefusal.RECIPIENT_UNAVAILABLE
-                friend.shownOnline && receiver != null && !receiver.stats.standing.mayTalk() ->
+                !mayTalk -> {
+                    InstantMessageRefusal.SENDER_MUTED
+                }
+
+                friend == null -> {
+                    InstantMessageRefusal.NOT_A_FRIEND
+                }
+
+                messenger.blocks.blocks(friendId, player.profile.id) -> {
+                    InstantMessageRefusal.RECIPIENT_UNAVAILABLE
+                }
+
+                friend.shownOnline && receiver != null && !receiver.stats.standing.mayTalk() -> {
                     InstantMessageRefusal.RECEIVER_MUTED
-                else -> null
+                }
+
+                else -> {
+                    null
+                }
             }
         if (reason == null) return friend
         refuse(session, friendId, reason, text)

@@ -9,12 +9,19 @@ import zel.db.Database
 import zel.db.WriterSize
 import zel.game.camera.CameraAssets
 import zel.game.camera.CameraService
+import zel.game.players.TICKET_ADDRESS_KEY
 import zel.net.NetModule
 import zel.net.TransportSettings
 import zel.net.WireLimits
 import zel.net.clients.FailedTickets
 import zel.net.server.WorkerSettings
+import zel.protocol.handshake.LoginAdmission
+import zel.protocol.handshake.LoginCrowd
+import zel.protocol.handshake.PacketShuffling
 import zel.room.RoomCheckpoints
+import zel.room.rights.RaidWatch
+import zel.security.ClientCheck
+import zel.security.Suspicions
 import zel.wired.effect.user.CopyAllowance
 
 internal object ConfigKeys {
@@ -30,6 +37,8 @@ internal object ConfigKeys {
             network()
             http()
             runtime()
+            raids()
+            botGuard()
             resilience()
             operation()
             zone()
@@ -81,6 +90,16 @@ internal object ConfigKeys {
 
     private fun MutableList<ConfigKey>.client() {
         area("login") {
+            int(
+                LoginCrowd.DEVICE_KEY.removePrefix("login."),
+                LoginCrowd.PER_DEVICE,
+                "Players one device may have online at once; 0 is no cap.",
+            )
+            int(
+                LoginCrowd.ADDRESS_KEY.removePrefix("login."),
+                LoginCrowd.PER_ADDRESS,
+                "Players one client address may have online at once; 0 is no cap. Loopback addresses are not counted.",
+            )
             string(
                 "client_releases",
                 "Client version numbers a login may come from, comma separated; `any` lets in every version the " +
@@ -458,6 +477,93 @@ internal object ConfigKeys {
             string(
                 "youtube.api_key",
                 "YouTube Data API key the TV playlists are listed with; empty leaves the TVs empty.",
+            )
+        }
+    }
+
+    private fun MutableList<ConfigKey>.botGuard() {
+        area("login") {
+            flag(
+                PacketShuffling.ON_KEY.removePrefix("login."),
+                false,
+                "Shuffle the packet ids of every session after the key exchange, from a key both sides work out " +
+                    "on their own; needs the key exchange and the client's shuffle extension, and the site turns " +
+                    "the client's half on from the same setting.",
+            )
+            int(
+                PacketShuffling.STRIKES_KEY.removePrefix("login."),
+                PacketShuffling.STRIKES,
+                "Packet ids a shuffled session may send that it does not know before it is closed; 0 never closes.",
+            )
+            flag(
+                TICKET_ADDRESS_KEY.removePrefix("login."),
+                true,
+                "Refuse a login ticket used from another address than the one the site made it for; an IPv6 " +
+                    "address counts as its /64, and an IPv4 and an IPv6 address are never compared.",
+            )
+            string(
+                LoginAdmission.BUILD.removePrefix("login."),
+                "The exact client release this hotel serves, as in client.json; a hello naming another is " +
+                    "refused. Empty allows any.",
+            )
+        }
+        area("security") {
+            int(
+                Suspicions.MUTE_SCORE_KEY.removePrefix("security."),
+                Suspicions.MUTE_SCORE,
+                "Suspicion score at which a player's chat is only shown to the player; 0 never mutes.",
+            )
+            int(
+                Suspicions.WINDOW_KEY.removePrefix("security."),
+                Suspicions.WINDOW_HOURS,
+                "Hours of suspicious activity that count toward that score.",
+            )
+            flag(
+                ClientCheck.ON_KEY.removePrefix("security."),
+                false,
+                "Once a session, 30 to 300 seconds after login, ask the client for a keyed hash of a random part of " +
+                    "the launcher.js the hotel serves; a wrong answer or none in 20 seconds is a suspicion. Needs a " +
+                    "client release that answers.",
+            )
+            string(
+                ClientCheck.FOLDER_KEY.removePrefix("security."),
+                "The client folder the web serves, whose client.json names the launcher the check reads; from " +
+                    "ZEL_CLIENT_DIR.",
+            )
+        }
+    }
+
+    private fun MutableList<ConfigKey>.raids() {
+        area("room") {
+            int(
+                RaidWatch.WINDOW_KEY.removePrefix("room."),
+                RaidWatch.WINDOW_SECONDS,
+                "Seconds raid protection looks back over for suspicious newcomers.",
+            )
+            int(
+                RaidWatch.SUSPECTS_LOW_KEY.removePrefix("room."),
+                RaidWatch.SUSPECTS_LOW,
+                "Suspicious newcomers within the window that make a raid at low sensitivity.",
+            )
+            int(
+                RaidWatch.SUSPECTS_MEDIUM_KEY.removePrefix("room."),
+                RaidWatch.SUSPECTS_MEDIUM,
+                "Suspicious newcomers within the window that make a raid at medium sensitivity.",
+            )
+            int(
+                RaidWatch.SUSPECTS_HIGH_KEY.removePrefix("room."),
+                RaidWatch.SUSPECTS_HIGH,
+                "Suspicious newcomers within the window that make a raid at high sensitivity.",
+            )
+            int(
+                RaidWatch.NEW_ACCOUNT_KEY.removePrefix("room."),
+                RaidWatch.NEW_ACCOUNT_HOURS,
+                "Hours an account counts as new for raid protection.",
+            )
+            int(
+                RaidWatch.SAME_LINE_KEY.removePrefix("room."),
+                RaidWatch.SAME_LINE_PLAYERS,
+                "Newcomers saying the same line within the window that makes each of them suspicious.",
             )
         }
     }

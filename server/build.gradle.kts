@@ -140,6 +140,9 @@ tasks.shadowJar {
             "Main-Class" to "zel.Zellera",
             "Implementation-Title" to "zellera-server",
             "Implementation-Version" to project.version.toString(),
+            "Implementation-Vendor" to "Zellera",
+            "Implementation-URL" to "https://github.com/ssl/zellera",
+            "License" to "AGPL-3.0",
             "Java-Version" to javaRelease.toString(),
         )
     }

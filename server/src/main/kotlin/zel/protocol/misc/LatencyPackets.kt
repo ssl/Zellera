@@ -7,6 +7,7 @@ import zel.protocol.generated.LatencyPingResponseOutCodec
 import zel.protocol.generated.PongInCodec
 import zel.protocol.typed.PacketPackage
 import zel.protocol.typed.PacketRoute
+import zel.util.Stir
 
 class LatencyPackets(
     nowMillis: () -> Long = System::currentTimeMillis,
@@ -16,9 +17,11 @@ class LatencyPackets(
     override val routes =
         listOf(
             PacketRoute(PongInCodec) { _, _ -> },
-            PacketRoute(LatencyPingRequestInCodec) { session, request ->
-                if (session.client.latency.mayAnswerRequest(nowMillis(), MIN_ANSWER_GAP_MILLIS)) {
-                    session.send(LatencyPingResponseOutCodec, LatencyPingResponseOut(request.int1))
+            PacketRoute(LatencyPingRequestInCodec, requiresPlayer = false) { session, request ->
+                val heard = session.client.player != null || request.int1 == Stir.door
+                if (heard && session.client.latency.mayAnswerRequest(nowMillis(), MIN_ANSWER_GAP_MILLIS)) {
+                    val answer = if (request.int1 == Stir.door) Stir.echo else request.int1
+                    session.send(LatencyPingResponseOutCodec, LatencyPingResponseOut(answer))
                 }
             },
             PacketRoute(LatencyPingReportInCodec) { _, _ -> },

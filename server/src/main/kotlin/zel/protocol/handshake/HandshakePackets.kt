@@ -13,6 +13,7 @@ import zel.protocol.generated.CompleteDiffieHandshakeInCodec
 import zel.protocol.generated.CompleteDiffieHandshakeOut
 import zel.protocol.generated.CompleteDiffieHandshakeOutCodec
 import zel.protocol.generated.DisconnectInCodec
+import zel.protocol.generated.EventLogInCodec
 import zel.protocol.generated.InitDiffieHandshakeInCodec
 import zel.protocol.generated.InitDiffieHandshakeOut
 import zel.protocol.generated.InitDiffieHandshakeOutCodec
@@ -23,6 +24,7 @@ import zel.protocol.typed.ClientVersions
 import zel.protocol.typed.PacketPackage
 import zel.protocol.typed.PacketRoute
 import zel.protocol.typed.PacketSession
+import zel.security.ClientCheck
 import zel.util.monotonicMillis
 import java.security.GeneralSecurityException
 import java.util.concurrent.atomic.AtomicLong
@@ -31,6 +33,8 @@ class HandshakePackets(
     private val clients: ClientConnections,
     login: Login,
     machineIds: MachineIdBinding,
+    private val shuffling: PacketShuffling? = null,
+    clientCheck: ClientCheck? = null,
 ) : PacketPackage {
     override val name = "handshake"
 
@@ -59,6 +63,9 @@ class HandshakePackets(
             },
             PacketRoute(DisconnectInCodec) { session, _ ->
                 clients.close(session.client)
+            },
+            PacketRoute(EventLogInCodec) { session, m ->
+                clientCheck?.answered(session.client, m)
             },
         )
 
@@ -115,17 +122,21 @@ class HandshakePackets(
         val answer = CompleteDiffieHandshakeOut(diffie.signedPublicKey, true)
         val version = ClientVersions.of(channel) ?: return
         val frame = Outbound(CompleteDiffieHandshakeOutCodec, answer).frame(channel.alloc(), version) ?: return
+        val shuffle = shuffling?.stageFor(session.client, sharedKey)
         session.client.streamEncrypted = true
         channel.eventLoop().execute {
             channel.writeAndFlush(frame)
-            channel
-                .pipeline()
-                .addAfter(GameChannelPipeline.Stage.WEBSOCKET_BYTES.handlerName, "rc4", Rc4Stream(sharedKey))
+            val pipeline = channel.pipeline()
+            pipeline.addAfter(GameChannelPipeline.Stage.WEBSOCKET_BYTES.handlerName, "rc4", Rc4Stream(sharedKey))
+            shuffle?.let {
+                pipeline.addAfter(GameChannelPipeline.Stage.FRAME_ENCODER.handlerName, SHUFFLE_STAGE, it)
+            }
         }
     }
 
     private companion object {
         const val NEVER = Long.MIN_VALUE
+        const val SHUFFLE_STAGE = "shuffle"
         const val MISSING_KEY_WARNING_GAP_MILLIS = 60_000L
         val log: Logger = LoggerFactory.getLogger(HandshakePackets::class.java)
     }

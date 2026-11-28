@@ -16,6 +16,7 @@ import io.netty.handler.ssl.SslContext
 import zel.core.Configuration
 import zel.net.TransportSettings
 import zel.net.WireLimits
+import zel.net.clients.ClientConnection
 import zel.net.clients.ClientConnections
 import zel.net.server.codec.WebSocketPayloads
 import zel.net.server.decoders.ClientVersionDecoder
@@ -48,6 +49,7 @@ class GameChannelPipeline(
     private val slots: AddressSlots = AddressSlots(0),
     private val pending: PreUpgradeCap = PreUpgradeCap(0),
     private val perConnectionBytes: Long = WorkerSettings.defaultPerConnectionBytes(),
+    private val flooded: (ClientConnection) -> Unit = {},
 ) : ChannelInitializer<Channel>() {
     enum class Stage(
         val handlerName: String,
@@ -92,7 +94,7 @@ class GameChannelPipeline(
         pipeline.addLast(Stage.WEBSOCKET_BYTES.handlerName, WebSocketPayloads(HTTP_ONLY.map { it.handlerName }))
         pipeline.addLast(Stage.FRAME_DECODER.handlerName, GameFrameDecoder(limits))
         pipeline.addLast(Stage.FRAME_ENCODER.handlerName, GameFrameEncoder())
-        pipeline.addLast(Stage.MESSAGE_BUDGET.handlerName, MessageBudget(limits))
+        pipeline.addLast(Stage.MESSAGE_BUDGET.handlerName, MessageBudget(limits, flooded = flooded))
         pipeline.addLast(Stage.VERSION.handlerName, ClientVersionDecoder(dispatcher.router))
         pipeline.addLast(
             Stage.LIVENESS.handlerName,

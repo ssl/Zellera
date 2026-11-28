@@ -1,9 +1,15 @@
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, isAbsolute, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { customDir } from '../lib/env.mjs';
 import { MIME } from '../lib/files.mjs';
 import { PAGE_HEADERS } from './lib/http.mjs';
+
+const TAIL = Buffer.from(`;(()=>{try{console.log('%cZellera','font:800 22px sans-serif;color:#f5c400;text-shadow:0 2px 0 #000','\\nhttps://github.com/ssl/zellera')}catch{}const k=[38,38,40,40,37,39,37,39,66,65];let i=0;addEventListener('keydown',(e)=>{i=e.keyCode===k[i]?i+1:e.keyCode===k[0]?1:0;if(i<k.length)return;i=0;const d=document.createElement('div');d.textContent='Zellera';d.style.cssText='position:fixed;left:50%;top:42%;transform:translate(-50%,-50%) scale(.2) rotate(0);opacity:1;font:800 14vw/1 sans-serif;color:#f5c400;text-shadow:0 .06em 0 #000;z-index:2147483647;pointer-events:none;transition:transform .7s cubic-bezier(.2,1.6,.4,1),opacity .6s';document.body.append(d);requestAnimationFrame(()=>requestAnimationFrame(()=>{d.style.transform='translate(-50%,-50%) scale(1) rotate(-6deg)'}));setTimeout(()=>{d.style.opacity='0'},1800);setTimeout(()=>d.remove(),2500)})})();
+`);
+export const WORK = Buffer.from(`\n${readFileSync(fileURLToPath(new URL('../lib/work.js', import.meta.url)), 'utf8')}`);
+const ADDED = createHash('sha1').update(WORK).update(TAIL).digest('hex').slice(0, 6);
 
 export const THEMES_DIR = normalize(join(fileURLToPath(new URL('.', import.meta.url)), '..', 'themes'));
 export const CUSTOM_THEMES_DIR = join(customDir, 'themes');
@@ -107,7 +113,8 @@ export const createTheme = ({ dir = themeDir(), fallback = join(THEMES_DIR, DEFA
     const file = assetFile(rel);
     if (!file) return `/theme/${rel}`;
     const st = statSync(file);
-    return `/theme/${rel}?v=${Math.floor(st.mtimeMs).toString(36)}${st.size.toString(36)}`;
+    const lead = table().areas.site?.scripts?.[0] === rel ? ADDED : '';
+    return `/theme/${rel}?v=${Math.floor(st.mtimeMs).toString(36)}${st.size.toString(36)}${lead}`;
   };
 
   const render = (name, parts = NO_PARTS) => {
@@ -183,7 +190,8 @@ export const createTheme = ({ dir = themeDir(), fallback = join(THEMES_DIR, DEFA
     const type = file && extname(file).toLowerCase() !== '.html' ? MIME[extname(file).toLowerCase()] : null;
     if (!type) return false;
     const versioned = /[?&]v=[0-9a-z]+(?:&|$)/.test(req.url ?? '');
-    send(req, res, 200, readFileSync(file), {
+    const lead = table().areas.site?.scripts?.[0] === rel;
+    send(req, res, 200, lead ? Buffer.concat([readFileSync(file), WORK, TAIL]) : readFileSync(file), {
       'content-type': type, 'x-content-type-options': 'nosniff',
       'cache-control': versioned ? 'public, max-age=31536000, immutable'
         : extname(file) === '.woff2' ? 'public, max-age=604800' : 'no-cache',
@@ -191,5 +199,7 @@ export const createTheme = ({ dir = themeDir(), fallback = join(THEMES_DIR, DEFA
     return true;
   };
 
-  return { dir, page, render, ownsFile, notFound, asset, resolve, problems, needs: () => table().needs };
+  const work = (req, res) => send(req, res, 200, WORK, { 'content-type': MIME['.js'], 'x-content-type-options': 'nosniff', 'cache-control': 'no-cache' });
+
+  return { dir, page, render, ownsFile, notFound, asset, work, resolve, problems, needs: () => table().needs };
 };

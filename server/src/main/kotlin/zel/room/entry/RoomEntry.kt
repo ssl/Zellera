@@ -43,6 +43,7 @@ class RoomEntry(
     private val categoryPrompt: CategoryPrompt,
     private val pace: EntryPace = EntryPace(),
     private val attempts: DoorAttempts = DoorAttempts(),
+    private val guarded: (RoomScope, Pending) -> Boolean = { _, _ -> false },
 ) {
     private val opens = ConcurrentHashMap<Int, OpenGate>()
 
@@ -308,11 +309,12 @@ class RoomEntry(
         val door = leaving.doorOf(scope.room)
         val playerId = pending.card.id
         val to = Audience.Player(playerId)
+        val visitor = if (guarded(scope, pending)) pending.visitor.copy(banned = true) else pending.visitor
         val answer =
             DoorCheck.answer(
                 pending.room.door,
                 passwordFits,
-                pending.visitor,
+                visitor,
                 door.visitors(),
                 pending.room.maxUsers,
                 bellAnswered,

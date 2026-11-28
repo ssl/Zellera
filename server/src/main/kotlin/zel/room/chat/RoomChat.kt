@@ -23,6 +23,7 @@ class RoomChat(
     private val gestures: Gestures,
     private val heads: HeadTurns,
     private val active: (RoomScope, RoomUnit) -> Unit,
+    private val shadowed: (Int) -> Boolean = { false },
 ) {
     fun say(
         scope: RoomScope,
@@ -50,7 +51,11 @@ class RoomChat(
                 val style = ChatStyleRules.of(speaker, requestedStyle) { host.ownsStyle(playerId, it) }
                 val typed = verdict.typed.text
                 val line = Line(unit, playerId, kind, verdict.text, typed, style, trackingId, verdict.said)
-                if (kind == ChatKind.Whisper) whisper(scope, line, verdict.typed) else talk(scope, line)
+                when {
+                    shadowed(playerId) -> ChatOut.send(scope, kind, playerId, line.bubble(unit.index, trackingId))
+                    kind == ChatKind.Whisper -> whisper(scope, line, verdict.typed)
+                    else -> talk(scope, line)
+                }
             }
         }
     }
@@ -137,7 +142,7 @@ class RoomChat(
                     .filterNot { host.ignores(it, line.playerId) }
                     .forEach { ChatOut.send(scope, line.kind, it, line.bubble(NO_RECEIVER, -1, heard(line, it))) }
             }
-            heads.heard(scope, line.unit)
+            heads.heard(scope, line.unit, line.unfiltered)
             if (scope.room.units
                     .playerIds()
                     .any { it != line.playerId }

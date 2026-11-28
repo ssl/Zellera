@@ -26,7 +26,8 @@ export const query = (sql, params = []) => getPool().query(sql, params);
 
 const SETTING_KEYS = ['site.registration.motto',
   'site.registration.home_room_id', 'site.registration.accounts_per_address', 'login.ticket.expires', 'game.name',
-  'player.name_change.reserve_days'];
+  'player.name_change.reserve_days', 'site.pow.bits', 'login.packet_shuffle.is_on', 'security.suspicion.window_hours',
+  'security.shadow_mute.score', 'security.headless.is_noted'];
 const DEFAULTS = {
   'site.registration.motto': '',
   'site.registration.home_room_id': '0',
@@ -34,6 +35,11 @@ const DEFAULTS = {
   'login.ticket.expires': '1',
   'game.name': '',
   'player.name_change.reserve_days': '0',
+  'site.pow.bits': '16',
+  'login.packet_shuffle.is_on': '0',
+  'security.suspicion.window_hours': '24',
+  'security.shadow_mute.score': '10',
+  'security.headless.is_noted': '1',
 };
 let settingsCache = { at: 0, values: DEFAULTS };
 export const settings = async () => {
@@ -229,8 +235,15 @@ export const addressBan = async (ip) => (ip ? (await query(
 export const issueTicket = (userId, ticket, ip) => query(
   `UPDATE player_accounts a JOIN players p ON p.account_id = a.id
    SET a.player_id = p.id, a.login_ticket = ?, a.login_ticket_expires_at = UNIX_TIMESTAMP() + 60,
-     a.login_ticket_device = NULL, a.last_ip = ?
-   WHERE p.id = ?`, [ticket, ip, userId]);
+     a.login_ticket_device = NULL, a.login_ticket_ip = ?, a.last_ip = ?
+   WHERE p.id = ?`, [ticket, ip, ip, userId]);
+
+export const ticketPlayer = async (ticket) => Number((await query(
+  'SELECT player_id FROM player_accounts WHERE login_ticket = ? LIMIT 1', [ticket]))[0]?.player_id) || null;
+
+export const addSuspicion = ({ playerId = null, address = '', device = '', kind, weight = 1, detail = '' }) => query(
+  'INSERT INTO suspicions (player_id, address, device, kind, weight, detail, created_at) VALUES (?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP())',
+  [playerId, String(address).slice(0, 45), String(device).slice(0, 120), kind, weight, String(detail).slice(0, 255)]);
 
 const liveTicket = async () => {
   const honorExpiry = settingOn((await settings())['login.ticket.expires'], true);

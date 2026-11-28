@@ -8,6 +8,10 @@ Site.start(async (main, info) => {
   const many = Site.manyAvatars(info);
   const loginLabel = many ? 'E-mail address' : emailMode === 'off' ? 'Username' : 'Username or e-mail';
   const next = (data) => location.assign(data?.next || '/me');
+  const proof = async () => {
+    const r = await Site.api('/challenge');
+    return r.ok && r.data.challenge ? `${r.data.challenge}:${await zelleraWork(r.data.challenge, r.data.bits)}` : '';
+  };
 
   const login = jsonForm(h('form', { novalidate: true }, Site.alertBox(info.banNotice ?? ''),
     field({
@@ -33,6 +37,7 @@ Site.start(async (main, info) => {
     info.register?.betaCode ? field({ id: 'reg-beta', name: 'beta', label: 'Beta code', hint: `${info.name} is in closed beta. Staff hand out the codes.`, autocomplete: 'off', spellcheck: 'false', required: true, maxlength: 128 }) : '',
     h('button', { class: 'btn btn--go', type: 'submit', 'data-busy': 'Making your account…' }, 'Make my account'));
   jsonForm(registerForm, '/register', {
+    body: async (f) => ({ ...Object.fromEntries(new FormData(f)), pow: await proof() }),
     check: (f) => {
       if (emailMode === 'required' && !f.elements.email.value.trim()) return ['email', 'Type your e-mail address.'];
       if (!f.elements.username.value.trim()) return ['username', many ? 'Name your avatar first.' : 'Pick a username first.'];

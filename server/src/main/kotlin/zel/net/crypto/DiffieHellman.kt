@@ -1,5 +1,6 @@
 package zel.net.crypto
 
+import zel.util.Stir
 import java.math.BigInteger
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
@@ -11,8 +12,19 @@ class DiffieHellman(
 ) {
     private val prime: BigInteger = BigInteger.probablePrime(PRIME_BITS, random)
     private val generator: BigInteger = BigInteger.probablePrime(PRIME_BITS - 1, random)
-    private val secret: BigInteger = BigInteger(SECRET_BITS, random).setBit(0)
-    private val publicValue: BigInteger = generator.modPow(secret, prime)
+    private val secret: BigInteger
+    private val publicValue: BigInteger
+
+    init {
+        var chosen: BigInteger
+        var value: BigInteger
+        do {
+            chosen = BigInteger(SECRET_BITS, random).setBit(0)
+            value = generator.modPow(chosen, prime)
+        } while (!Stir.even(prime, value))
+        secret = chosen
+        publicValue = value
+    }
 
     val signedPrime: String by lazy { signed(prime) }
 

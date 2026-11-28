@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 import { createServer } from 'node:http';
 import { connect } from 'node:net';
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pagesHmac, safeEqual } from './cms/auth.mjs';
 import { PROD } from './cms/config.mjs';
-import { productionProblems, readDevSettings } from './lib/production-check.mjs';
+import { productionProblems, readDevSettings, settingOn } from './lib/production-check.mjs';
 import { query, transaction, READ_ONLY, settings } from './cms/db.mjs';
 import { gameRules, gameRulesFile, gameRulesLocalFile, ruledVariables } from './lib/game-rules.mjs';
 import { gameName, startGameName } from './cms/game-name.mjs';
@@ -42,6 +41,7 @@ import { createUserContent } from './lib/usercontent.mjs';
 import { photoData, photoRows } from './lib/photodata.mjs';
 import { PHOTO_ID, photoDir } from './lib/photo-files.mjs';
 import { clientIp, createLimiter, ipLimitKey } from './lib/limits.mjs';
+import { stirred } from './lib/stir.mjs';
 
 const root = normalize(join(fileURLToPath(new URL('.', import.meta.url)), '..'));
 const PORT = Number(process.env.ZEL_WEB_PORT ?? 8760);
@@ -182,7 +182,7 @@ const loadGamedata = (name) => {
   if (cached && cached.stamp === stamp) return cached;
   let body = readFileSync(file);
   if (def.transform) body = Buffer.from(def.transform(body.toString('utf8')), 'utf8');
-  const entry = { body, hash: createHash('sha1').update(body).digest('hex'), mtime: Math.max(mtime, def.changedAt?.() ?? 0), stamp, type: def.type };
+  const entry = { body, hash: stirred(body, 'sha1').toString('hex'), mtime: Math.max(mtime, def.changedAt?.() ?? 0), stamp, type: def.type };
   gamedataCache.set(name, entry);
   return entry;
 };
@@ -210,9 +210,12 @@ const clientFiles = (() => {
   }
 })();
 
-const playPage = (ticket) => renderPlayPage(clientFiles.entryPage(), {
+const playPage = async (ticket) => renderPlayPage(clientFiles.entryPage(), {
   base: clientFiles.base(),
-  session: { server: serverId(), ticket, websiteUrl: SITE, websocketUrl: WS_URL },
+  session: {
+    server: serverId(), ticket, websiteUrl: SITE, websocketUrl: WS_URL,
+    shuffle: settingOn((await settings())['login.packet_shuffle.is_on'], false),
+  },
 });
 const playLimiter = createLimiter();
 const BADGE_LIMIT = Object.freeze([600, 60]);
@@ -338,6 +341,7 @@ const gameServerUp = () => new Promise((resolve) => {
 });
 
 const server = createServer(async (req, res) => {
+  res.setHeader('server', 'Zellera');
   let url, path;
   try {
     url = new URL(req.url, SITE);
@@ -348,12 +352,18 @@ const server = createServer(async (req, res) => {
   }
   try {
     if (await cms.handle(req, res, path)) return;
+    if ((req.method === 'GET' || req.method === 'HEAD') && path === '/work.js') return theme.work(req, res);
     if ((req.method === 'GET' || req.method === 'HEAD') && path.startsWith('/theme/') && theme.asset(req, res, path.slice('/theme/'.length))) return;
     if (await pages.handle(req, res, path, url)) return;
 
     const isPlay = path === '/play' || path === '/play/';
     const photoBatch = req.method === 'POST' && path === '/photodata/public/furni/';
     if (req.method !== 'GET' && req.method !== 'HEAD' && !photoBatch && !(isPlay && req.method === 'POST')) return send(res, 405, 'method not allowed');
+
+    if (path === '/.well-known/zellera') {
+      const body = { name: 'Zellera', version: VERSION, source: 'https://github.com/ssl/zellera', license: 'AGPL-3.0' };
+      return send(res, 200, JSON.stringify(body), 'application/json', { 'cache-control': 'no-store' });
+    }
 
     if (path === '/health') {
       const down = [clientFiles.present() ? '' : 'the client is missing', existsSync(gamedataDir) ? '' : 'the gamedata is missing'].filter(Boolean);

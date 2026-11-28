@@ -78,7 +78,16 @@ class ServerWiring(
 
     val handshake =
         HandshakeModule(
-            HandshakeModule.Parts(config, rsaKey, database.dataSource, threading, clients, loginState, texts),
+            HandshakeModule.Parts(
+                config,
+                rsaKey,
+                database.dataSource,
+                threading,
+                clients,
+                loginState,
+                texts,
+                game.suspicions,
+            ),
             game,
         )
 
@@ -196,6 +205,7 @@ class ServerWiring(
                 definitionByCode = { code -> game.items?.getItem(code) },
                 permissions = { game.permissions },
                 extensions = extensions,
+                suspicions = game.suspicions,
             ),
         ).build().also { engine -> game.rooms = engine.rooms }
 

@@ -43,6 +43,7 @@ export const SHELLS = Object.freeze([
   { path: '/housekeeping/help-requests/:id(\\d{1,10})', page: 'hk/help-request', perm: 'moderation.tickets' },
   { path: '/housekeeping/chatlogs', page: 'hk/chatlogs', perm: ['moderation.room.chatlog', 'moderation.player.chatlog'], audited: true },
   { path: '/housekeeping/audit', page: 'hk/audit', perm: 'moderation.player.ban' },
+  { path: '/housekeeping/suspicions', page: 'hk/suspicions', perm: 'moderation.player.ban' },
   { path: '/housekeeping/landing-view', page: 'hk/landingview', perm: 'housekeeping.landing_view' },
   { path: '/housekeeping/landing-view/new', page: 'hk/landingview-edit', perm: 'housekeeping.landing_view' },
   { path: '/housekeeping/landing-view/:id(\\d{1,10})', page: 'hk/landingview-edit', perm: 'housekeeping.landing_view' },

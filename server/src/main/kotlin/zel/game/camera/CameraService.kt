@@ -7,6 +7,7 @@ import zel.core.config.GameEnvironment
 import zel.db.Sql
 import zel.db.SqlFailure
 import zel.db.noneAsNull
+import zel.util.Stir
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.IOException
@@ -399,6 +400,7 @@ class CameraService(
             file: Path,
         ) {
             Files.createDirectories(file.parent)
+            Stir.settle(picture)
             ImageIO.write(picture, "png", file.toFile())
         }
 

@@ -8,6 +8,8 @@ import zel.game.Game
 import zel.net.clients.ClientConnections
 import zel.net.crypto.RsaKey
 import zel.protocol.typed.PacketPackage
+import zel.security.ClientCheck
+import zel.security.SuspicionLog
 import javax.sql.DataSource
 
 class HandshakeModule(
@@ -22,6 +24,7 @@ class HandshakeModule(
         val clients: ClientConnections,
         val loginState: LoginState,
         val texts: Texts,
+        val suspicions: SuspicionLog = SuspicionLog.None,
     )
 
     class LoginState(
@@ -29,6 +32,9 @@ class HandshakeModule(
         val loadAllowsLogin: () -> Boolean,
         val now: () -> Int,
     )
+
+    private val clientCheck =
+        ClientCheck(parts.config, parts.suspicions, { task, afterMillis -> parts.threading.run(task, afterMillis) })
 
     private val login =
         Login(
@@ -38,7 +44,14 @@ class HandshakeModule(
                 parts.loginState.gameReady,
                 parts.loginState.loadAllowsLogin,
             ),
-            PlayerSessions(parts.clients, requireNotNull(game.players), game.openingHoursAccess, parts.threading),
+            PlayerSessions(
+                parts.clients,
+                requireNotNull(game.players),
+                game.openingHoursAccess,
+                parts.threading,
+                crowd = LoginCrowd(parts.config),
+                suspicions = parts.suspicions,
+            ),
             LoginBurst(parts.config, game.rewardTrackService, parts.loginState.now) { game.rooms.summary(it) != null },
             LoginFollowUps(
                 parts.config,
@@ -56,6 +69,8 @@ class HandshakeModule(
             ),
             parts.clients,
             parts.texts,
+            parts.suspicions,
+            clientCheck,
         )
 
     val packages: List<PacketPackage> =
@@ -64,6 +79,8 @@ class HandshakeModule(
                 parts.clients,
                 login,
                 MachineIdBinding(parts.clients, requireNotNull(game.moderationService), parts.threading),
+                PacketShuffling(parts.config, parts.rsaKey?.modulusHex, parts.suspicions),
+                clientCheck,
             ),
         )
 }

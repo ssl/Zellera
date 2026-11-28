@@ -66,5 +66,5 @@ export const STAFF_ONLY_TABLES = [
   'bans', 'sanctions', 'sanction_steps', 'room_chat_messages', 'direct_messages', 'room_visits', 'support_tickets',
   'report_topics', 'report_categories', 'issue_categories', 'issue_presets', 'moderator_presets',
   'staff_actions', 'rank_changes', 'command_runs', 'name_changes', 'player_accounts', 'trades', 'trade_items',
-  'permissions', 'rank_permissions', 'player_devices', 'device_bans', 'device_ban_exemptions',
+  'permissions', 'rank_permissions', 'player_devices', 'device_bans', 'device_ban_exemptions', 'suspicions',
 ];

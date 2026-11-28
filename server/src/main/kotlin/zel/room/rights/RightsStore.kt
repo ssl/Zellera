@@ -65,6 +65,13 @@ interface RightsStore {
         settings: RaidSettings,
     )
 
+    fun lastRaid(roomId: Int): Int = 0
+
+    fun saveLastRaid(
+        roomId: Int,
+        at: Int,
+    ) = Unit
+
     fun settings(roomId: Int): RoomSettings?
 
     fun saveSettings(

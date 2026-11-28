@@ -188,7 +188,7 @@
       }
       const restore = btn ? busy(btn) : () => {};
       try {
-        const r = await post(path, body(form));
+        const r = await post(path, await body(form));
         if (r.ok) { restore(); onDone?.(r.data, r); return; }
         const msg = r.data.error || 'Something went wrong. Try again.';
         if (r.data.field && fieldError(r.data.field, msg)) form.elements[r.data.field].focus();

@@ -59,6 +59,25 @@ class Moderation(
         }
     }
 
+    fun raidOut(
+        scope: RoomScope,
+        targetId: Int,
+        banSeconds: Int?,
+    ) {
+        if (unkickable(targetId)) return
+        val present = leaving.doorOf(scope.room).present[targetId] ?: return
+        if (present.level >= DoorCheck.RIGHTS || protects(scope, targetId, present.level)) return
+        val unit = scope.room.units[present.unitIndex] ?: return
+        val roomId = scope.room.info.id
+        if (banSeconds != null) {
+            val ends = (host.nowSeconds().toLong() + banSeconds).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+            host.persistInOrder(Key(roomId), Runnable { store.ban(roomId, targetId, ends) })
+        } else {
+            scope.out.send(Lane.Now, Audience.Player(targetId), GenericErrorOutCodec, GenericErrorOut(KICKED))
+        }
+        host.walkOut(scope, unit)
+    }
+
     fun unban(
         targetId: Int,
         roomId: Int,

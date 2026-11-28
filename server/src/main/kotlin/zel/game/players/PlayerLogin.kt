@@ -12,13 +12,16 @@ private val log = LoggerFactory.getLogger(PlayerLogin::class.java)
 
 private const val LOGOUT_WAIT_MILLIS = 10_000L
 private const val DEVICE_CHECK = "login.device.is_checked"
+internal const val TICKET_ADDRESS_KEY = "login.ticket.is_address_bound"
 private const val TICKET_ALIVE = "a.login_ticket_expires_at >= UNIX_TIMESTAMP()"
 private const val CONSUME_TICKET =
-    "UPDATE player_accounts a SET login_ticket = NULL, login_ticket_expires_at = NULL, login_ticket_device = NULL " +
+    "UPDATE player_accounts a SET login_ticket = NULL, login_ticket_expires_at = NULL, login_ticket_device = NULL, " +
+        "login_ticket_ip = NULL " +
         "WHERE a.player_id = ? AND "
 private const val PLAYER_SQL = "${PlayerAccountRow.SELECT} WHERE p.id = ?"
 private const val BY_TICKET =
-    "SELECT p.id, a.login_ticket_device FROM players p JOIN player_accounts a ON a.player_id = p.id WHERE "
+    "SELECT p.id, a.login_ticket_device, a.login_ticket_ip FROM players p " +
+        "JOIN player_accounts a ON a.player_id = p.id WHERE "
 
 /** One conditional update claims the ticket, so two logins never both pass. */
 internal class PlayerLogin(
@@ -36,17 +39,22 @@ internal class PlayerLogin(
     private class Ticket(
         val playerId: Int,
         val device: DeviceReading?,
+        val address: String?,
     )
 
     /** A ticket the device check refuses is not consumed: the browser it was made for can still use it. */
     fun logIn(
         sso: String,
         device: DeviceReading?,
+        address: String? = null,
     ): TicketLogin {
         if (sso.isBlank()) return TicketLogin.Unknown
         val honorExpiry = services.config.getBoolean("login.ticket.expires", true)
         val filter = "a.login_ticket = ?" + if (honorExpiry) " AND $TICKET_ALIVE" else ""
         val ticket = lookUp(BY_TICKET + filter, sso) ?: return TicketLogin.Unknown
+        if (services.config.getBoolean(TICKET_ADDRESS_KEY, true) && !SameAddress.of(ticket.address, address)) {
+            return TicketLogin.Refused(TicketLogin.Reason.TICKET_ADDRESS, playerId = ticket.playerId)
+        }
         val checked = services.config.getBoolean(DEVICE_CHECK, true)
         val refused = if (checked) deviceRefusal(ticket.device, device) else null
         return refused ?: admitted(ticket.playerId, filter, sso, device.takeIf { checked }?.filledFrom(ticket.device))
@@ -123,7 +131,13 @@ internal class PlayerLogin(
         try {
             services.database.queries
                 .select(query, sso)
-                .first { Ticket(it.getInt("id"), DeviceReading.parse(it.getString("login_ticket_device"))) }
+                .first {
+                    Ticket(
+                        it.getInt("id"),
+                        DeviceReading.parse(it.getString("login_ticket_device")),
+                        it.getString("login_ticket_ip"),
+                    )
+                }
         } catch (e: SqlFailure) {
             log.error("The login ticket could not be looked up", e)
             null

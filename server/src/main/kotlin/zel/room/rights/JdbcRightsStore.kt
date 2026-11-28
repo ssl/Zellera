@@ -108,6 +108,18 @@ class JdbcRightsStore(
         }
     }
 
+    override fun lastRaid(roomId: Int): Int = sql.select(LAST_RAID, roomId).first { it.getInt(1) } ?: 0
+
+    override fun saveLastRaid(
+        roomId: Int,
+        at: Int,
+    ) {
+        sql.write(SAVE_LAST_RAID) {
+            int(roomId)
+            int(at)
+        }
+    }
+
     override fun settings(roomId: Int): RoomSettings? = sql.select(SETTINGS, roomId).first(::settings)
 
     override fun saveSettings(
@@ -218,9 +230,16 @@ class JdbcRightsStore(
             "SELECT enabled, sensitivity, action, ban_seconds, guard_enabled, guard_seconds," +
                 " guard_sensitivity FROM room_raid_settings WHERE room_id = ?"
         internal const val SAVE_RAID =
-            "REPLACE INTO room_raid_settings (room_id, enabled, sensitivity, action," +
+            "INSERT INTO room_raid_settings (room_id, enabled, sensitivity, action," +
                 " ban_seconds, guard_enabled, guard_seconds, guard_sensitivity)" +
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE enabled = VALUES(enabled)," +
+                " sensitivity = VALUES(sensitivity), action = VALUES(action), ban_seconds = VALUES(ban_seconds)," +
+                " guard_enabled = VALUES(guard_enabled), guard_seconds = VALUES(guard_seconds)," +
+                " guard_sensitivity = VALUES(guard_sensitivity)"
+        internal const val LAST_RAID = "SELECT last_raid_at FROM room_raid_settings WHERE room_id = ?"
+        internal const val SAVE_LAST_RAID =
+            "INSERT INTO room_raid_settings (room_id, last_raid_at) VALUES (?, ?)" +
+                " ON DUPLICATE KEY UPDATE last_raid_at = VALUES(last_raid_at)"
         internal const val SETTINGS =
             "SELECT r.owner_id, r.name, r.description, r.door_mode, r.door_secret, r.max_players, r.category_id," +
                 " r.trade_mode, r.pets_allowed, r.pets_may_eat, r.walk_through, r.hide_walls, r.wall_thickness," +

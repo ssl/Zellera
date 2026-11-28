@@ -1,5 +1,6 @@
 import { clientIp, createLimiter, ipLimitKey, isLoopbackIp } from '../lib/limits.mjs';
 import { DEFAULT_ACCOUNT_RULES } from '../lib/site-access.mjs';
+import { settingOn } from '../lib/production-check.mjs';
 import { BETA_CODE, BETA_MODE, PROD } from './config.mjs';
 import * as dbModule from './db.mjs';
 import { gameRules } from '../lib/game-rules.mjs';
@@ -8,6 +9,7 @@ import { originOk, readBody, sameSiteFetch } from './lib/http.mjs';
 import { SITE_API } from '../site-api/index.mjs';
 import { PERMANENT_FROM } from '../hk-api/users-shared.mjs';
 import { randomBytes, randomInt } from 'node:crypto';
+import { createPow, powBits } from './pow.mjs';
 import {
   GUEST_SESSION_TTL, hashIsOutdated, hashPassword, newSession, newTicket, readSession, safeEqual, sessionMatchesUser, verifyPassword,
 } from './auth.mjs';
@@ -45,7 +47,7 @@ export const emailOf = (typed) => {
 
 export const createCms = ({
   SITE, db = dbModule, loginSlowdown = LOGIN_SLOWDOWN, limiter = createLimiter(), accountRules = async () => DEFAULT_ACCOUNT_RULES,
-  guestsOn = async () => false,
+  guestsOn = async () => false, pow = createPow(),
 }) => {
 
   const isHttps = (req) => PROD || req.headers['x-forwarded-proto'] === 'https';
@@ -123,6 +125,28 @@ export const createCms = ({
     if (r.ok) return false;
     fail(res, 429, 'Too many attempts. Wait a moment and try again.', null, { 'retry-after': String(r.retryAfter) });
     return true;
+  };
+
+  const suspect = (req, playerId, detail, kind = 'site.pow', weight = 1, wanted = async () => true) => {
+    Promise.resolve().then(async () => (await wanted()) && db.addSuspicion({
+      playerId: typeof playerId === 'function' ? await playerId() : playerId, address: clientIp(req), kind, weight, detail,
+    })).catch((e) => console.error(`web: a suspicion was not saved: ${e?.message ?? e}`));
+  };
+  const proofCheck = async (req, proof, where, playerId = null) => {
+    const bits = powBits(await db.settings());
+    if (bits <= 0) return 'ok';
+    const r = pow.check(proof, bits);
+    if (r !== 'ok') suspect(req, playerId, `${where}: ${r}`);
+    return r;
+  };
+  const proofOk = async (...args) => (await proofCheck(...args)) === 'ok';
+  const POW_REFUSED = 'The browser check did not finish. Reload the page and try again.';
+  const POW_MISSING = `A proof-of-work is required: the form must send a pow field (a challenge from GET ${SITE_API}/challenge, solved with zelleraWork).`;
+  const proofRefused = (r) => (r === 'missing' ? POW_MISSING : POW_REFUSED);
+
+  const challenge = async (req, res) => {
+    const bits = powBits(await db.settings());
+    return json(res, 200, { ok: true, bits, challenge: bits > 0 ? pow.challenge() : null });
   };
 
   const newAvatar = async (username, ip) => {
@@ -213,6 +237,8 @@ export const createCms = ({
     if (!(await db.nameAllowed(username))) return fail(res, 400, NAME_UNFIT, 'username');
     const weak = newPasswordProblem(password, password2);
     if (weak) return fail(res, 400, weak[1], weak[0]);
+    const proof = await proofCheck(req, str(body.pow, 256), 'register');
+    if (proof !== 'ok') return fail(res, 403, proofRefused(proof));
 
     const cfg = await db.settings();
     const maxPerIp = Number(cfg['site.registration.accounts_per_address']) || 0;
@@ -242,13 +268,15 @@ export const createCms = ({
 
   // A guest is an account nobody typed anything for: a numbered name, a password nobody knows, one free rename in the
   // game, and a year-long session cookie that is the only way back in.
-  const guest = async (req, res) => {
+  const guest = async (req, res, body) => {
     if (!(await guestsOn())) return fail(res, 403, 'Guest accounts are not available here.');
     if (BETA_MODE) return fail(res, 403, 'Registration is closed during the beta.');
     const ip = clientIp(req);
     if (limited(res, `register:ip:${ipLimitKey(ip)}`, 5, 3600)) return;
     const ban = await db.addressBan(ip);
     if (ban) return fail(res, 403, banNotice(ban));
+    const proof = await proofCheck(req, str(body.pow, 256), 'guest');
+    if (proof !== 'ok') return fail(res, 403, proofRefused(proof));
     const cfg = await db.settings();
     const maxPerIp = Number(cfg['site.registration.accounts_per_address']) || 0;
     const overCap = maxPerIp > 0 && !isLoopbackIp(ip);
@@ -428,7 +456,7 @@ export const createCms = ({
     [`${SITE_API}/me/ticket`]: ssoTicket, [`${SITE_API}/me/password`]: changePassword, [`${SITE_API}/me/email`]: changeEmail,
     [`${SITE_API}/avatars`]: createAvatar, [`${SITE_API}/avatars/select`]: selectAvatar, [`${SITE_API}/avatars/check-name`]: checkName,
   };
-  const READS = { [`${SITE_API}/avatars`]: listAvatars, [`${SITE_API}/me/account`]: accountFacts };
+  const READS = { [`${SITE_API}/avatars`]: listAvatars, [`${SITE_API}/me/account`]: accountFacts, [`${SITE_API}/challenge`]: challenge };
 
   const guarded = async (res, path, run) => {
     try {
@@ -461,6 +489,13 @@ export const createCms = ({
 
   const checkPlayTicket = async (ticket) => TICKET_SHAPE.test(ticket) && db.ticketValid(ticket);
   const bindPlayDevice = (ticket, device) => db.bindTicketDevice(ticket, device);
+  const playWork = async () => {
+    const bits = powBits(await db.settings());
+    return bits > 0 ? { challenge: pow.challenge(), bits } : null;
+  };
+  const checkPlayProof = (req, ticket, proof) => proofOk(req, proof, 'play', () => db.ticketPlayer(ticket));
+  const noteHeadless = (req, ticket, { weight, detail }) => suspect(req, () => db.ticketPlayer(ticket), detail, 'device.headless', weight,
+    async () => settingOn((await db.settings())['security.headless.is_noted'], true));
   // A reload of the game page is a plain GET /play (the page drops its POST from the history): a logged-in player
   // gets a fresh ticket, under the same rules as the site's ticket button; null sends them to /me.
   const freshPlayTicket = async (req) => {
@@ -472,5 +507,5 @@ export const createCms = ({
     return ticket;
   };
 
-  return { handle, checkPlayTicket, bindPlayDevice, freshPlayTicket, currentAccount, currentUser, endedByBan, sessionEnd };
+  return { handle, checkPlayTicket, bindPlayDevice, playWork, checkPlayProof, noteHeadless, freshPlayTicket, currentAccount, currentUser, endedByBan, sessionEnd };
 };

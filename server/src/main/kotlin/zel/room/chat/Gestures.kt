@@ -14,6 +14,8 @@ import zel.room.tick.Lane
 import zel.room.unit.RoomUnit
 import zel.room.unit.UnitKind
 import zel.room.unit.UnitStatus
+import java.util.Collections
+import java.util.WeakHashMap
 
 class Gestures(
     private val dances: Dances,
@@ -21,7 +23,10 @@ class Gestures(
     private val showNow: (RoomScope, RoomUnit) -> Unit,
     private val sleep: (RoomScope, RoomUnit) -> Unit = { _, _ -> },
     private val clubMember: (Int) -> Boolean = { false },
+    private val lift: (RoomScope, RoomUnit) -> Unit = { _, _ -> },
 ) {
+    private val waves: MutableMap<RoomUnit, ArrayDeque<Long>> = Collections.synchronizedMap(WeakHashMap())
+
     fun dance(
         scope: RoomScope,
         unit: RoomUnit,
@@ -50,6 +55,20 @@ class Gestures(
             scope.out.send(Lane.Now, Audience.Room, SpecialSystemChatOutCodec, line)
         }
         ACTIONS[id]?.let { scope.raise(RoomEvent.Action(unit.index, it, "")) }
+        if (id == WAVE) waved(scope, unit)
+    }
+
+    private fun waved(
+        scope: RoomScope,
+        unit: RoomUnit,
+    ) {
+        val now = scope.now()
+        val seen = waves.getOrPut(unit) { ArrayDeque() }
+        seen.addLast(now)
+        while (seen.isNotEmpty() && seen.first() < now - WAVES_MILLIS) seen.removeFirst()
+        if (seen.size < WAVES) return
+        seen.clear()
+        lift(scope, unit)
     }
 
     fun sign(
@@ -84,6 +103,9 @@ class Gestures(
         const val FIRST_CLUB_DANCE = 2
         val CLUB_EXPRESSIONS = setOf(2, 3)
         const val IDLE = 5
+        private const val WAVE = 1
+        private const val WAVES = 3
+        private const val WAVES_MILLIS = 4_000L
         const val SIXTY_SEVEN = 67
 
         val ACTIONS =

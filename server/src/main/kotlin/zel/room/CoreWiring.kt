@@ -140,7 +140,12 @@ internal class CoreWiring(
                 newTiles: List<Point>,
             ) = walking.furniChanged(scope, (oldTiles + newTiles).distinct(), lifts = false, onto = newTiles)
         }
-    val heads = HeadTurns(life::asleep)
+    val heads =
+        HeadTurns(
+            life::asleep,
+            { scope, unit -> walking.sendNow(scope, listOf(unit)) },
+            { roomId, delay, job -> rooms.get()?.post(roomId, delay, job) },
+        )
     val units = BotsAndPets(services, walking, life, heads, roomWrites)
     val trades =
         RoomTrades(

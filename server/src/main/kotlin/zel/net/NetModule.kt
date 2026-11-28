@@ -14,14 +14,18 @@ import zel.net.server.GamePort
 import zel.net.server.WorkerSettings
 import zel.net.server.handlers.AddressSlots
 import zel.net.server.handlers.PreUpgradeCap
+import zel.net.server.proxy.ClientAddress
 import zel.net.server.proxy.CloudflareEdge
 import zel.net.server.proxy.ProxyTrust
 import zel.protocol.typed.PacketDispatcher
+import zel.security.Suspicion
+import zel.security.SuspicionLog
 import java.io.File
 
 class NetModule(
     private val configuration: Configuration,
     private val rsaKey: RsaKey?,
+    private val suspicions: SuspicionLog,
     private val packets: (ClientConnections) -> PacketDispatcher,
 ) {
     fun gamePort(): GamePort {
@@ -51,6 +55,14 @@ class NetModule(
                 slots = AddressSlots(configuration.getInt("network.connections.per_address", DEFAULT_PER_ADDRESS)),
                 pending = PreUpgradeCap(limits.pendingPerProxy),
                 perConnectionBytes = workers.perConnectionBytes,
+                flooded = { client ->
+                    suspicions.record(
+                        client.player?.profile?.id,
+                        ClientAddress.of(client.channel),
+                        client.device?.usable("id"),
+                        Suspicion.FLOOD,
+                    )
+                },
             )
         return GamePort(
             configuration.getValue("network.listen.address", "127.0.0.1"),

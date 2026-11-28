@@ -184,7 +184,7 @@ internal class GameBootstrap(
         val rsaKey = RsaKey.fromSettings(settings)
         log.info("key exchange: {}", if (rsaKey == null) "off" else "on")
         val network =
-            NetModule(settings, rsaKey) { clients ->
+            NetModule(settings, rsaKey, game.suspicions) { clients ->
                 val wiring =
                     ServerWiring(
                         settings,

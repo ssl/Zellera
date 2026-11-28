@@ -15,10 +15,12 @@ sealed interface TicketLogin {
     class Refused(
         val reason: Reason,
         val differing: List<String> = emptyList(),
+        val playerId: Int? = null,
     ) : TicketLogin
 
     enum class Reason {
         NO_DEVICE,
         DEVICE_MISMATCH,
+        TICKET_ADDRESS,
     }
 }

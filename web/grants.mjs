@@ -19,7 +19,7 @@ for (const v of [db, user, ...hosts]) {
 
 const LOGIN = [
   { table: 'players', select: ['id', 'account_id', 'name', 'figure', 'gender', 'motto', 'created_at', 'last_online_at'], insert: ['account_id', 'name', 'created_at', 'motto', 'figure', 'gender', 'rank_id', 'home_room_id'] },
-  { table: 'player_accounts', select: ['id', 'player_id', 'email', 'password_hash', 'login_ticket', 'login_ticket_expires_at', 'login_ticket_device', 'registered_ip', 'machine_id'], insert: ['email', 'password_hash', 'registered_ip', 'last_ip'], update: ['player_id', 'email', 'email_verified', 'password_hash', 'login_ticket', 'login_ticket_expires_at', 'login_ticket_device', 'last_ip'] },
+  { table: 'player_accounts', select: ['id', 'player_id', 'email', 'password_hash', 'login_ticket', 'login_ticket_expires_at', 'login_ticket_device', 'registered_ip', 'machine_id'], insert: ['email', 'password_hash', 'registered_ip', 'last_ip'], update: ['player_id', 'email', 'email_verified', 'password_hash', 'login_ticket', 'login_ticket_expires_at', 'login_ticket_device', 'login_ticket_ip', 'last_ip'] },
   { table: 'bans', select: ['player_id', 'ends_at', 'reason', 'barred_address', 'barred_machine'] },
   { table: 'settings', select: '*' },
   { table: 'client_strings', select: '*' },
@@ -28,6 +28,7 @@ const LOGIN = [
   { table: 'player_subscriptions', insert: ['player_id', 'kind', 'started_at', 'duration_seconds', 'active'] },
   { table: 'player_balances', insert: ['player_id', 'currency', 'amount'] },
   { table: 'player_standing', insert: ['player_id', 'may_change_name'] },
+  { table: 'suspicions', insert: ['player_id', 'address', 'device', 'kind', 'weight', 'detail', 'created_at'] },
 ];
 const SESSION_REVOCATIONS = 'web_session_revocations';
 

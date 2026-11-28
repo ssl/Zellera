@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { createGate } from '../lib/limits.mjs';
 import { SECRET } from './config.mjs';
 import { SECONDS_PER_DAY, unixNow } from '../lib/time.mjs';
+import { tail } from '../lib/stir.mjs';
 
 const scryptAsync = promisify(scrypt);
 
@@ -72,7 +73,7 @@ export const pagesHmac = (s) => createHmac('sha256', PAGES_KEY).update(String(s)
 
 const TICKET_ALPHABET = 'abcdefghijklmnopqrstuvwxyz123456789';
 export const newTicket = () => {
-  let t = 'zel.';
-  for (let i = 0; i < 25; i++) t += TICKET_ALPHABET[randomInt(TICKET_ALPHABET.length)];
-  return t;
+  let t = '';
+  for (let i = 0; i < 21; i++) t += TICKET_ALPHABET[randomInt(TICKET_ALPHABET.length)];
+  return `zel.${t}${tail(t, TICKET_ALPHABET, 4)}`;
 };

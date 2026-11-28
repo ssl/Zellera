@@ -2,6 +2,7 @@ package zel.core.config
 
 import zel.ext.GameExtensions
 import zel.room.RoomCheckpoints
+import zel.security.ClientCheck
 import zel.util.GameZone
 import java.net.URI
 import java.nio.file.Path
@@ -82,6 +83,9 @@ class GameEnvironment(
             gameExtensions?.let { put(GameExtensions.LIST_KEY, it) }
             value("ZEL_ROOT")?.let { root ->
                 put(GameExtensions.FOLDER_KEY, Path.of(root, "custom", "game-extensions").toString())
+            }
+            (value("ZEL_CLIENT_DIR") ?: value("ZEL_ROOT")?.let { Path.of(it, "client").toString() })?.let {
+                put(ClientCheck.FOLDER_KEY, it)
             }
             // Over the settings row: the zone is the operator's, and an empty variable leaves the row to say.
             timeZone?.let { put(GameZone.SETTING, it) }

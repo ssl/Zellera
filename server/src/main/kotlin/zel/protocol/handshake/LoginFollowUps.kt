@@ -23,9 +23,12 @@ import zel.protocol.generated.NotificationDialogOutCodec
 import zel.protocol.generated.TargetedOfferOutCodec
 import zel.protocol.navigator.NewNavigatorSavedSearches
 import zel.protocol.outgoing.catalog.CatalogMessages
+import zel.protocol.outgoing.generic.alerts.BubbleAlertMessage
 import zel.protocol.outgoing.inventory.BadgePointLimits
+import zel.util.GameZone
 import zel.wired.chest.ChestNotice
 import zel.wired.chest.ChestNotices
+import java.time.LocalDate
 
 class LoginFollowUps(
     private val config: Configuration,
@@ -121,12 +124,25 @@ class LoginFollowUps(
         client: ClientConnection,
         player: Player,
     ) {
+        val today = LocalDate.now(GameZone.current)
+        if (today.monthValue == SEASON_MONTH && today.dayOfMonth == SEASON_DAY) {
+            client.send(
+                BubbleAlertMessage(SEASON_NOTICE, mapOf("display" to "BUBBLE", "message" to seasonGreeting())),
+            )
+        }
         if (!config.getBoolean("calendar.is_open")) return
         val campaign = game.calendars.campaign(config.getValue("calendar.campaign")) ?: return
         if (game.calendars.show(player, campaign)) {
             client.send(InClientLinkOutCodec, InClientLinkOut("openView/calendar"))
         }
     }
+
+    private fun seasonGreeting(): String =
+        SEASON_SEEDS
+            .flatMap { seed -> SEED_SHIFTS.map { (seed ushr it).toInt() and BYTE_MASK } }
+            .takeWhile { it != 0 }
+            .mapIndexed { at, part -> (part xor ((GREETING_SHIFT + at) and BYTE_MASK)).toChar() }
+            .joinToString("")
 
     private fun sendTargetOffer(
         client: ClientConnection,
@@ -149,6 +165,16 @@ class LoginFollowUps(
     }
 
     companion object {
+        private const val SEASON_MONTH = 11
+        private const val SEASON_DAY = 25
+        private const val SEASON_NOTICE = "calendar.notice"
+        private const val GREETING_SHIFT = 0x33
+        private const val BYTE_MASK = 0xFF
+        private val SEED_SHIFTS = Long.SIZE_BITS - Byte.SIZE_BITS downTo 0 step Byte.SIZE_BITS
+        private val SEASON_SEEDS =
+            longArrayOf(0x7b5545464e185b53, 0x4948555a5e396d62, 0x1921292a223a286b) +
+                longArrayOf(0x6b1f24202c357160, 0x6366630000000000)
+
         private val log = LoggerFactory.getLogger(LoginFollowUps::class.java)
         private const val SAFETY_LOCKED = 0
         private const val SAFETY_UNLOCKED = 1

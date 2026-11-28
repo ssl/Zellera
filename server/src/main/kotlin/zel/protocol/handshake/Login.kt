@@ -7,6 +7,9 @@ import zel.net.clients.ClientConnection
 import zel.net.clients.ClientConnections
 import zel.net.server.proxy.ClientAddress
 import zel.protocol.outgoing.generic.alerts.Broadcast
+import zel.security.ClientCheck
+import zel.security.Suspicion
+import zel.security.SuspicionLog
 
 class Login(
     private val gate: LoginAdmission,
@@ -15,6 +18,8 @@ class Login(
     private val followUps: LoginFollowUps,
     private val connections: ClientConnections,
     private val texts: Texts,
+    private val suspicions: SuspicionLog = SuspicionLog.None,
+    private val clientCheck: ClientCheck? = null,
 ) {
     fun admit(
         client: ClientConnection,
@@ -29,6 +34,7 @@ class Login(
         val player = sessions.start(client, ticket) ?: return
         burst.sendTo(client, player)
         followUps.run(client, player)
+        clientCheck?.loggedIn(client)
     }
 
     /** Null after turning the client away: its address failed too often, or this is no ticket. */
@@ -53,6 +59,14 @@ class Login(
         if (refusal == LoginAdmission.Refusal.OVERLOADED) client.send(Broadcast(texts.textOr(BUSY_KEY, BUSY_NOTICE)))
         if (refusal == LoginAdmission.Refusal.RELEASE) {
             log.warn("client release '{}' is not in '{}'", client.releaseName, gate.allowedReleases())
+            val from = ClientAddress.of(client.channel)
+            suspicions.record(
+                null,
+                from,
+                client.device?.usable("id"),
+                Suspicion.RELEASE,
+                client.releaseName.take(DETAIL),
+            )
         }
     }
 
@@ -68,5 +82,6 @@ class Login(
         val log: Logger = LoggerFactory.getLogger(Login::class.java)
         const val BUSY_KEY = "login.busy"
         const val BUSY_NOTICE = "The game is temporarily busy. Please try again."
+        const val DETAIL = 80
     }
 }

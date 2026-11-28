@@ -18,6 +18,7 @@ import zel.net.clients.ClientConnections
 import zel.room.chat.ChatHost
 import zel.room.listing.RoomListings
 import zel.room.unit.bot.UnitHost
+import zel.security.SuspicionLog
 import javax.sql.DataSource
 
 data class RoomEngineServices(
@@ -48,6 +49,7 @@ data class RoomEngineServices(
     val definitionByCode: (String) -> Item? = { null },
     val permissions: () -> Permissions? = { null },
     val extensions: GameExtensions = GameExtensions.None,
+    val suspicions: SuspicionLog = SuspicionLog.None,
 ) {
     /** Runs off the room's lock, after that player's earlier achievement work. */
     fun progressLater(

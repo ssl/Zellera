@@ -5,8 +5,8 @@
   const logo = document.getElementById('logo');
   const problem = document.getElementById('problem');
 
-  const call = async (path, method = 'GET') => {
-    const init = method === 'GET' ? {} : { method, headers: { 'content-type': 'application/json' }, body: '{}' };
+  const call = async (path, method = 'GET', body = {}) => {
+    const init = method === 'GET' ? {} : { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) };
     const res = await fetch(API + path, init);
     const data = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, data };
@@ -46,7 +46,9 @@
       if (!site.ok) return fail('The game is not reachable right now.');
       if (!site.data.viewer) {
         if (!site.data.guests) return fail('Guests can not join here right now.', false);
-        const made = await call('/guest', 'POST');
+        const work = await call('/challenge');
+        const pow = work.ok && work.data.challenge ? `${work.data.challenge}:${await zelleraWork(work.data.challenge, work.data.bits)}` : '';
+        const made = await call('/guest', 'POST', { pow });
         if (!made.ok) return fail(made.data.error || 'Could not open the game. Try again.');
         remember(made.data.password);
       }

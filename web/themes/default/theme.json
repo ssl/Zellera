@@ -49,6 +49,7 @@
     "hk/help-request": { "title": "Help request", "scripts": ["js/hk/help-request.js"], "tab": "help" },
     "hk/chatlogs": { "title": "Chatlogs", "scripts": ["js/hk/rooms-parts.js", "js/hk/chatlogs.js"], "tab": "chatlogs" },
     "hk/audit": { "title": "Audit log", "scripts": ["js/hk/user-pages.js", "js/hk/audit.js"], "tab": "audit" },
+    "hk/suspicions": { "title": "Suspicious activity", "scripts": ["js/hk/user-pages.js", "js/hk/suspicions.js"], "tab": "suspicions" },
     "hk/landingview": { "title": "Landing view", "scripts": ["js/hk/landingview.js"], "tab": "landingview" },
     "hk/landingview-edit": { "title": "Landing view", "scripts": ["js/hk/landingview-edit.js"], "tab": "landingview" },
     "hk/news": { "title": "News", "scripts": ["js/hk/news.js"], "tab": "news" },

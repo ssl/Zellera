@@ -11,6 +11,7 @@ export const HK_MODULES = Object.freeze([
   ['hk-api/actions.mjs', 'hk-actions'],
   ['hk-api/actions-user.mjs', 'hk-actions'],
   ['hk-api/audit.mjs', 'hk-actions'],
+  ['hk-api/suspicions.mjs', 'hk-actions'],
   ['hk-api/devices.mjs', 'hk-devices'],
   ['hk-api/device-bans.mjs', 'hk-devices'],
   ['hk-api/landingview.mjs', 'hk-content'],

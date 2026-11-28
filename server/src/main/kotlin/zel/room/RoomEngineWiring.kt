@@ -48,6 +48,7 @@ import zel.room.rights.ModerationHost
 import zel.room.rights.MuteChatHooks
 import zel.room.rights.MuteEntryViews
 import zel.room.rights.RaidProtection
+import zel.room.rights.RaidWatch
 import zel.room.rights.RoomRights
 import zel.room.rights.SettingsEditor
 import zel.room.side.RoomQuestions
@@ -70,7 +71,9 @@ class RoomEngineWiring(
         val areas = Areas()
         val core = areas.core
         val registry = registry(areas).also(core.rooms::set)
-        val moderation = Moderation(registry, core.leaving, core.rightsStore, moderationHost(core), core.mutes)
+        val moderation =
+            Moderation(registry, core.leaving, core.rightsStore, moderationHost(core), core.mutes)
+                .also(areas.moderation::set)
         val views = entryViews(areas, moderation)
         val handles =
             RoomHandles(
@@ -154,6 +157,7 @@ class RoomEngineWiring(
         val behaviours = AtomicReference<FurniBehaviours>()
         val entries = AtomicReference<RoomEntry>()
         val port = AtomicReference<RoomPort>()
+        val moderation = AtomicReference<Moderation>()
         private val behaviourOf: (String) -> FurniBehaviour = { behaviours.get()?.forType(it) ?: PlainFurni }
         val core = CoreWiring(services)
         val furni = FurniWiring(services, core, behaviourOf, entries::get)
@@ -186,6 +190,16 @@ class RoomEngineWiring(
             )
         val effects = boxes.effects
         val questions = RoomQuestions()
+        val raids =
+            RaidWatch(
+                core.rightsStore,
+                services.config,
+                core.leaving,
+                services.clients::onlinePlayer,
+                services.persistInOrder,
+                core.nowSeconds,
+                services.suspicions,
+            ) { scope, playerId, banSeconds -> moderation.get()?.raidOut(scope, playerId, banSeconds) }
         val flood = FloodControl()
         val furniBehaviours =
             FurniBehaviours(
@@ -291,6 +305,7 @@ class RoomEngineWiring(
             areas.use.jukebox,
             areas.use.gifts,
             areas.questions,
+            areas.raids,
         ) + core.units.parts +
             listOf(
                 core.life,
@@ -319,6 +334,7 @@ class RoomEngineWiring(
             areas.effects.duties +
             QuestListener(services.clients::onlinePlayer) +
             areas.questions +
+            areas.raids.listener +
             services.extensions.listener
     }
 
@@ -368,6 +384,7 @@ class RoomEngineWiring(
             core.arrivals,
             core.entryEnvironment,
             categoryPrompt = CategoryPrompt(::needsCategory),
+            guarded = areas.raids::refuses,
         )
     }
 
@@ -403,7 +420,7 @@ class RoomEngineWiring(
             furni.transitPackets(registry),
             furni.statePackets(registry),
             furni.specialPackets(registry),
-            rightsPackets(core, handles),
+            rightsPackets(core, handles, areas.raids),
             chatPackets(areas, handles),
             core.units.packets(registry),
             areas.use.packets(registry),
@@ -415,12 +432,13 @@ class RoomEngineWiring(
     private fun rightsPackets(
         core: CoreWiring,
         handles: RoomHandles,
+        raids: RaidWatch,
     ): RightsPackets =
         RightsPackets(
             handles.rights,
             handles.moderation,
             handles.settings,
-            RaidProtection(core.rightsStore),
+            RaidProtection(core.rightsStore, raids::active, raids::lastRaid, raids::saved),
             Ignores { handles.registry.roomOf(it) != null },
             core.rightsStore,
         )
@@ -440,6 +458,7 @@ class RoomEngineWiring(
                 { scope, unit -> core.walking.sendNow(scope, listOf(unit)) },
                 life::sleep,
                 { services.chat.speaker(it)?.clubMember == true },
+                core.heads::lift,
             )
         val commands =
             ChatCommands(services.chat, core.walking::changePosture) { scope, playerId, text ->
@@ -455,6 +474,7 @@ class RoomEngineWiring(
                 gestures,
                 core.heads,
                 life::active,
+                services.suspicions::muted,
             )
         return ChatPackets(handles.registry, chat, gestures, core.words)
     }
@@ -492,7 +512,10 @@ class RoomEngineWiring(
             keepsRoom = areas.wired.variables.pickupConfirm::keepsRoom,
             buildPassRooms = areas.furni.buildPass.roomSync(registry)::ofOwner,
             questions = areas.questions,
-            leftGame = areas.flood::forget,
+            leftGame = { playerId ->
+                areas.flood.forget(playerId)
+                services.suspicions.forget(playerId)
+            },
             trades = { playerId ->
                 registry.roomOf(playerId)?.let { roomId ->
                     registry.post(roomId) { scope ->

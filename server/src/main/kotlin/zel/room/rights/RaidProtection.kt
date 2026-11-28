@@ -7,6 +7,9 @@ import zel.protocol.generated.RaidProtectionSettingsResultOutCodec
 
 class RaidProtection(
     private val store: RightsStore,
+    private val active: (Int) -> Boolean = { false },
+    private val lastRaid: (Int) -> Int = { 0 },
+    private val saved: (Int, RaidSettings) -> Unit = { _, _ -> },
 ) {
     fun get(
         roomId: Int,
@@ -37,7 +40,10 @@ class RaidProtection(
                 wanted.enabled && !stored.enabled && !confirmed -> CONFIRM
                 else -> SAVED
             }
-        if (code == SAVED) store.saveRaid(roomId, wanted)
+        if (code == SAVED) {
+            store.saveRaid(roomId, wanted)
+            saved(roomId, wanted)
+        }
         result(roomId, code, if (code == SAVED) wanted else stored, reply)
     }
 
@@ -58,8 +64,8 @@ class RaidProtection(
             s.guardEnabled,
             s.guardSeconds,
             s.guardSensitivity,
-            false,
-            0,
+            active(roomId),
+            lastRaid(roomId),
         ),
     )
 
@@ -75,8 +81,8 @@ class RaidProtection(
         s.guardEnabled,
         s.guardSeconds,
         s.guardSensitivity,
-        false,
-        0,
+        active(roomId),
+        lastRaid(roomId),
     )
 
     companion object {

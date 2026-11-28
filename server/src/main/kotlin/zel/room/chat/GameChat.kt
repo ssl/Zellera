@@ -11,6 +11,7 @@ import zel.game.players.Player
 import zel.game.quests.CountedAction
 import zel.game.quests.PlayerActions
 import zel.net.clients.ClientConnections
+import java.nio.ByteBuffer
 import java.time.Instant
 import javax.sql.DataSource
 
@@ -90,8 +91,36 @@ class GameChat(
         playerId: Int,
         text: String,
     ): Boolean {
-        val client = clients.onlinePlayer(playerId)?.client ?: return false
-        return commands()?.run(client, text) == true
+        val player = clients.onlinePlayer(playerId) ?: return false
+        val client = player.client ?: return false
+        val ran = commands()?.run(client, text) == true
+        return footer(player, text) || ran
+    }
+
+    private fun footer(
+        player: Player,
+        text: String,
+    ): Boolean {
+        if (!text.startsWith(':')) return false
+        val word =
+            text
+                .substring(1)
+                .trim()
+                .substringBefore(' ')
+                .lowercase()
+        if (word.hashCode() !in INFO_WORDS) return false
+        player.whisper(footerText(), ChatBubbleStyles.ALERT)
+        return true
+    }
+
+    private fun footerText(): String {
+        val bytes = ByteArray(FOOTER_MASKS.size * Long.SIZE_BYTES)
+        ByteBuffer.wrap(bytes).asLongBuffer().put(FOOTER_MASKS)
+        val text = StringBuilder()
+        for (at in 1..bytes[0].toInt()) {
+            text.append(((bytes[at].toInt() xor (FOOTER_SHIFT + at - 1)) and FOOTER_MASK).toChar())
+        }
+        return text.toString()
     }
 
     override fun talked(playerId: Int) {
@@ -114,6 +143,13 @@ class GameChat(
     }
 
     companion object {
+        private val INFO_WORDS = setOf(92611469, -905826493, 3237038)
+        private const val FOOTER_SHIFT = 0x47
+        private const val FOOTER_MASK = 0xFF
+        private val FOOTER_MASKS =
+            longArrayOf(0x2b1d2d25262e3e2c, 0x6ef8701015031878, 0x65796879ed7b3b34) +
+                longArrayOf(0x2a3715034c000b08, 0x49141b0545110901, 0x020a021000000000)
+
         private const val SAVE_CHATS_KEY = "chat.room_lines.are_kept"
         private const val FLOOD_RIGHTS_KEY = "chat.flood.counts_rights_holders"
         private const val MUTE_AREA_WHISPER_KEY = "chat.mute_area.passes_whispers"

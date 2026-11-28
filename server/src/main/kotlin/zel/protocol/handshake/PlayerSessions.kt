@@ -16,6 +16,8 @@ import zel.net.server.proxy.ClientAddress
 import zel.protocol.generated.LoginFailedGameClosedOut
 import zel.protocol.generated.LoginFailedGameClosedOutCodec
 import zel.protocol.outgoing.handshake.DisconnectReason
+import zel.security.Suspicion
+import zel.security.SuspicionLog
 
 /** A newer login of the player replaces the older. */
 class PlayerSessions(
@@ -24,12 +26,14 @@ class PlayerSessions(
     private val access: OpeningHoursAccess,
     private val threading: GameThreads? = null,
     private val openingHours: OpeningHours = OpeningHours(),
+    private val crowd: LoginCrowd = LoginCrowd(null),
+    private val suspicions: SuspicionLog = SuspicionLog.None,
 ) {
     fun start(
         client: ClientConnection,
         ticket: String,
     ): Player? {
-        val login = players.logIn(ticket, client.device)
+        val login = players.logIn(ticket, client.device, ClientAddress.of(client.channel))
         if (login !is TicketLogin.Admitted) {
             if (login is TicketLogin.Refused) turnAway(client, login) else log.warn(UNKNOWN_TICKET)
             clients.failedTickets.record(ClientAddress.of(client.channel))
@@ -37,6 +41,17 @@ class PlayerSessions(
             return null
         }
         val player = login.player
+        val from = ClientAddress.of(client.channel)
+        if (crowd.refuses(player.profile.id, login.device, from, players.all)) {
+            log.info(
+                "login of player {} from {} turned away: too many players online from there",
+                player.profile.id,
+                from,
+            )
+            login.release()
+            clients.close(client)
+            return null
+        }
         try {
             player.device = login.device
             clients.claim(player.profile.id, client)?.takeIf { it !== client }?.let { older ->
@@ -61,6 +76,9 @@ class PlayerSessions(
         val pieces = if (differing.isEmpty()) "" else differing.joinToString(prefix = " (", postfix = ")")
         val from = ClientAddress.of(client.channel)
         log.info("login from {} turned away: {}{}", from, refused.reason, pieces)
+        if (refused.reason == TicketLogin.Reason.TICKET_ADDRESS) {
+            suspicions.record(refused.playerId, from, client.device?.usable("id"), Suspicion.TICKET_ADDRESS)
+        }
     }
 
     @Suppress("TooGenericExceptionCaught") // any failure closes the connection

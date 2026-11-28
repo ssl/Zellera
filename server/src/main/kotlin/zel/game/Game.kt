@@ -83,6 +83,7 @@ import zel.room.chat.ChatBubbleStore
 import zel.room.chat.ChatBubbleStyles
 import zel.room.listing.RoomListings
 import zel.room.port.RoomPort
+import zel.security.Suspicions
 import zel.server.GameServices
 import zel.server.RunningGameServices
 import zel.server.ServerWiring
@@ -129,6 +130,9 @@ class Game(
             { task, delayMs -> threading.run(task, delayMs) },
             { rules.accountLevelHostingDivisor },
         )
+    }
+    val suspicions: Suspicions by lazy {
+        Suspicions(core.database.dataSource, configuration, { threading.write(it) }, { now() })
     }
     val chatStyles: ChatStyles by lazy { ChatStyles(core.database) }
     val chatBubbles = ChatBubbleStyles()

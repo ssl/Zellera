@@ -65,7 +65,8 @@ class Players(
     fun logIn(
         ticket: String,
         device: DeviceReading?,
-    ): TicketLogin = login.logIn(ticket, device)
+        address: String? = null,
+    ): TicketLogin = login.logIn(ticket, device, address)
 
     /** Written by the database threads, not by the login. */
     fun loggedInFrom(

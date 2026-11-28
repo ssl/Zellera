@@ -25,7 +25,7 @@ class About(
     private val upSeconds: () -> Int,
 ) {
     fun command() =
-        ChatCommand(listOf("about")) { said ->
+        ChatCommand(listOf("about", "server", "info")) { said ->
             said.player.client?.send(BubbleAlertMessage(TYPE, window().fields()))
             true
         }

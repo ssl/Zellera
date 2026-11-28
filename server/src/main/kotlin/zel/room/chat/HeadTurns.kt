@@ -14,8 +14,11 @@ import kotlin.math.abs
 
 class HeadTurns(
     private val asleep: (RoomUnit) -> Boolean,
+    private val show: (RoomScope, RoomUnit) -> Unit = { _, _ -> },
+    private val later: (Int, Long, (RoomScope) -> Unit) -> Unit = { _, _, _ -> },
 ) : RoomPart {
     private val rooms = ConcurrentHashMap<Room, MutableMap<RoomUnit, Long>>()
+    private val turning: MutableSet<RoomUnit> = ConcurrentHashMap.newKeySet()
 
     val tick: TickPart =
         TickPart { scope ->
@@ -41,7 +44,9 @@ class HeadTurns(
     fun heard(
         scope: RoomScope,
         speaker: RoomUnit,
+        text: String = "",
     ) {
+        if (fullTurn(text)) turnAround(scope, speaker)
         val turned = rooms.getOrPut(scope.room) { LinkedHashMap() }
         scope.room.units
             .all()
@@ -55,6 +60,63 @@ class HeadTurns(
                 turned[listener] = scope.now() + TURN_MILLIS
             }
     }
+
+    private fun fullTurn(text: String): Boolean = text.lowercase().split(WORD_GAP).any { it.hashCode() == SPIN_WORD }
+
+    fun lift(
+        scope: RoomScope,
+        unit: RoomUnit,
+    ) = move(scope, unit, LIFT)
+
+    private fun turnAround(
+        scope: RoomScope,
+        unit: RoomUnit,
+    ) = move(scope, unit, FULL)
+
+    private fun move(
+        scope: RoomScope,
+        unit: RoomUnit,
+        motion: Motion,
+    ) {
+        if (unit.kind !is UnitKind.Player || unit.isWalking || !turning.add(unit)) return
+        val from = Turn(unit.tile, unit.bodyDirection, unit.z)
+        for (step in 1..motion.steps) {
+            later(scope.room.info.id, step * motion.stepMillis) { later -> step(later, unit, from, step, motion) }
+        }
+    }
+
+    private fun step(
+        scope: RoomScope,
+        unit: RoomUnit,
+        from: Turn,
+        step: Int,
+        motion: Motion,
+    ) {
+        val last = step == motion.steps
+        if (last) turning.remove(unit)
+        if (scope.room.units[unit.index] !== unit || unit.tile != from.tile || unit.isWalking) return
+        if (motion.turns) {
+            unit.bodyDirection = Math.floorMod(from.body + step, UnitDirection.COUNT)
+            unit.headDirection = unit.bodyDirection
+        }
+        val rise = if (last) 0.0 else motion.rise * (1 - abs(2.0 * step / motion.steps - 1))
+        unit.z = from.z + rise
+        show(scope, unit)
+        unit.z = from.z
+    }
+
+    private class Motion(
+        val steps: Int,
+        val stepMillis: Long,
+        val rise: Double,
+        val turns: Boolean,
+    )
+
+    private class Turn(
+        val tile: Point,
+        val body: Int,
+        val z: Double,
+    )
 
     // users and bots turn, pets do not; a sitting bot keeps its head
     private fun mayTurn(unit: RoomUnit): Boolean =
@@ -120,5 +182,10 @@ class HeadTurns(
     companion object {
         /** The head turns back 5.0 s after the last line heard. */
         const val TURN_MILLIS = 5_000L
+
+        private const val SPIN_WORD = -399097975
+        private val FULL = Motion(8, 150L, 0.5, turns = true)
+        private val LIFT = Motion(4, 110L, 0.4, turns = false)
+        private val WORD_GAP = Regex("[^\\p{L}]+")
     }
 }

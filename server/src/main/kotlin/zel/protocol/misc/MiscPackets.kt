@@ -7,7 +7,6 @@ import zel.protocol.generated.BadgePointLimitsOutCodec
 import zel.protocol.generated.ClickCharacterInCodec
 import zel.protocol.generated.ClientWindowBlurredInCodec
 import zel.protocol.generated.ClientWindowFocusedInCodec
-import zel.protocol.generated.EventLogInCodec
 import zel.protocol.generated.FriendRequestQuestCompleteInCodec
 import zel.protocol.generated.GetBadgePointLimitsInCodec
 import zel.protocol.generated.GetInterstitialInCodec
@@ -45,7 +44,6 @@ class MiscPackets(
             PacketRoute(GetBadgePointLimitsInCodec) { session, _ ->
                 achievements()?.let { session.send(BadgePointLimitsOutCodec, BadgePointLimits.of(it)) }
             },
-            unanswered(EventLogInCodec),
             unanswered(VersionCheckInCodec),
             unanswered(GetNftCreditsInCodec),
             unanswered(LagWarningReportInCodec),

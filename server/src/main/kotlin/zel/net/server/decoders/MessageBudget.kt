@@ -17,6 +17,7 @@ import zel.util.monotonicMillis
 class MessageBudget(
     private val limits: WireLimits = WireLimits(),
     private val millis: () -> Long = ::monotonicMillis,
+    private val flooded: (ClientConnection) -> Unit = {},
 ) : MessageToMessageDecoder<InboundFrame>() {
     private class Allowance(
         var left: Double,
@@ -26,6 +27,7 @@ class MessageBudget(
     private val total = Allowance(limits.totalPerWindow.toDouble(), millis())
     private val byKind = HashMap<Int, Allowance>()
     private var reportedAt: Long? = null
+    private var noted = false
 
     override fun decode(
         ctx: ChannelHandlerContext,
@@ -77,14 +79,12 @@ class MessageBudget(
     ) {
         if (reportedAt?.let { now - it < limits.rateWindowMillis } == true) return
         reportedAt = now
-        val who =
-            ctx
-                .channel()
-                .attr(ClientConnection.KEY)
-                .get()
-                ?.player
-                ?.profile
-                ?.name
+        val connection = ctx.channel().attr(ClientConnection.KEY).get()
+        if (connection != null && !noted) {
+            noted = true
+            flooded(connection)
+        }
+        val who = connection?.player?.profile?.name
         log.warn(
             "{} sends more than {} messages in {} ms; the rest is dropped",
             who ?: ctx.channel().remoteAddress(),

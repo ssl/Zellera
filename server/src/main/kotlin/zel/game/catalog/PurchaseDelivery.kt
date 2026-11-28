@@ -92,47 +92,59 @@ internal class PurchaseDelivery(
         order: PurchaseOrder,
         chatStyle: Int?,
     ): Boolean {
-        val player = order.player
-        val client = player.client
-        val products = order.item.products
-        val refused =
-            when {
-                chatStyle != null && player.services.chatStyles.has(player.profile.id, chatStyle) -> {
-                    client?.let { CatalogReplies.purchaseFailed(it, PurchaseError.CHAT_STYLE_OWNED) }
-                    true
-                }
-
-                products.any { it.type == ProductKind.BADGE && player.inventory.badges.owns(it.name) } -> {
-                    client?.let { CatalogReplies.purchaseFailed(it, PurchaseError.BADGE_OWNED) }
-                    true
-                }
-
-                products.any { it.type == ProductKind.AVATAR_EFFECT && ownsPermanently(player, it) } -> {
-                    client?.let { CatalogReplies.purchaseFailed(it, PurchaseError.EFFECT_OWNED) }
-                    true
-                }
-
-                products.any { it.isPet && !picksSellablePalette(it, order.extraData) } -> {
-                    client?.let { CatalogReplies.purchaseFailed(it, PurchaseError.GENERIC) }
-                    true
-                }
-
-                products.any { it.isPet && isClubOnlyBreed(it, order.extraData) } && !player.stats.club.isMember -> {
-                    client?.let { CatalogReplies.purchaseNotAllowed(it, PurchaseNotAllowed.CLUB_ONLY) }
-                    true
-                }
-
-                products.any { it.interaction.isGroupFurni } && !mayBuyGroupFurni(order) -> {
-                    client?.let { CatalogReplies.purchaseFailed(it, PurchaseError.GENERIC) }
-                    true
-                }
-
-                else -> {
-                    false
-                }
-            }
-        return !refused
+        val refusal = ownedRefusal(order, chatStyle) ?: productRefusal(order) ?: return true
+        order.player.client?.let(refusal)
+        return false
     }
+
+    private fun ownedRefusal(
+        order: PurchaseOrder,
+        chatStyle: Int?,
+    ): ((ClientConnection) -> Unit)? {
+        val player = order.player
+        val products = order.item.products
+        return when {
+            chatStyle != null && player.services.chatStyles.has(player.profile.id, chatStyle) -> {
+                failed(PurchaseError.CHAT_STYLE_OWNED)
+            }
+
+            products.any { it.type == ProductKind.BADGE && player.inventory.badges.owns(it.name) } -> {
+                failed(PurchaseError.BADGE_OWNED)
+            }
+
+            products.any { it.type == ProductKind.AVATAR_EFFECT && ownsPermanently(player, it) } -> {
+                failed(PurchaseError.EFFECT_OWNED)
+            }
+
+            else -> {
+                null
+            }
+        }
+    }
+
+    private fun productRefusal(order: PurchaseOrder): ((ClientConnection) -> Unit)? {
+        val player = order.player
+        val products = order.item.products
+        return when {
+            products.any { it.isPet && !picksSellablePalette(it, order.extraData) } -> {
+                failed(PurchaseError.GENERIC)
+            }
+
+            products.any { it.isPet && isClubOnlyBreed(it, order.extraData) } && !player.stats.club.isMember -> {
+                { client -> CatalogReplies.purchaseNotAllowed(client, PurchaseNotAllowed.CLUB_ONLY) }
+            }
+
+            products.any { it.interaction.isGroupFurni } && !mayBuyGroupFurni(order) -> {
+                failed(PurchaseError.GENERIC)
+            }
+
+            else -> {
+                null
+            }
+        }
+    }
+
+    private fun failed(error: PurchaseError): (ClientConnection) -> Unit = { CatalogReplies.purchaseFailed(it, error) }
 
     private fun picksSellablePalette(
         base: Item,

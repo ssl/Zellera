@@ -13,9 +13,9 @@ class PlayerContacts internal constructor(
 
     val customFilter = CustomFilter()
 
-    val ignoredIds: List<Int> get() = ignored.sorted()
+    val ignoredIds: List<Int> get() = ignored.toTypedArray().sorted()
 
-    val blockedIds: List<Int> get() = blocked.sorted()
+    val blockedIds: List<Int> get() = blocked.toTypedArray().sorted()
 
     fun userIgnored(userId: Int): Boolean = userId in ignored
 

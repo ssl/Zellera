@@ -29,7 +29,7 @@ class WordList(
                 at = range.last + 1
             }
             out.append(current, at, current.length)
-            found += hits.map { it.second }
+            found += hits.map { (_, word) -> word }
             current = out.toString()
         }
         return Censored(current, found.toList())

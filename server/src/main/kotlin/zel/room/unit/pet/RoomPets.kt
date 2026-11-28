@@ -73,7 +73,7 @@ class RoomPets(
     val horses = HorseCare(this, store, persist)
     val jumps = HorseJumps(this, ::horseJumped)
 
-    lateinit var care: PetCare
+    var care: PetCare? = null
 
     init {
         walking.walkedTiles.count = { playerId, tiles -> host.progress(playerId, GameEvents.HORSE_RIDDEN_TILES, tiles) }
@@ -564,7 +564,7 @@ class RoomPets(
     ) {
         val rider = placed.rider?.let { scope.room.units[it] } ?: return
         val horseUnit = unitOf(scope, placed) ?: return
-        care.dismount(scope, rider, horseUnit)
+        care?.dismount(scope, rider, horseUnit)
     }
 
     fun remove(

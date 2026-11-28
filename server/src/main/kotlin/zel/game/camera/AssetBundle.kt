@@ -35,14 +35,16 @@ internal class AssetBundle private constructor(
     )
 
     private var sheet: BufferedImage? = null
-    private val cache =
-        object : LinkedHashMap<String, Image?>(INITIAL_CACHE_CAPACITY, CACHE_LOAD_FACTOR, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Image?>?): Boolean {
-                if (size <= MAX_CACHED_IMAGES) return false
-                imageBytes -= ownBytes(eldest?.value)
-                return true
-            }
+    private val cache = ImageCache()
+
+    private inner class ImageCache : LinkedHashMap<String, Image?>(INITIAL_CACHE_CAPACITY, CACHE_LOAD_FACTOR, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Image?>?): Boolean {
+            if (size <= MAX_CACHED_IMAGES) return false
+            imageBytes -= ownBytes(eldest?.value)
+            return true
         }
+    }
+
     private var imageBytes = 0L
 
     val sheetBytes: Long = sheetPng?.let(::pngExtent)?.let(::argbBytes) ?: 0L

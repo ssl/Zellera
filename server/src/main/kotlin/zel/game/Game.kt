@@ -222,8 +222,8 @@ class Game(
         RunningGameServices(core, configuration, threading, this)
     }
 
-    val maintenance: Maintenance by lazy {
-        Maintenance(configuration)
+    val openingHoursAccess: OpeningHoursAccess by lazy {
+        OpeningHoursAccess(configuration)
     }
 
     fun load() {
@@ -240,7 +240,7 @@ class Game(
 
         val memberships = MembershipWatch(gameServices)
         recurring(pool, "subscription scheduler", memberships::period, memberships::check)
-        val doors = OpeningHoursWatch(OpeningHours(), maintenance, { core.clients() })
+        val doors = OpeningHoursWatch(OpeningHours(), openingHoursAccess, { core.clients() })
         recurring(pool, "opening hours", { OpeningHoursWatch.EVERY }, doors::look)
 
         webCommandProcessor =

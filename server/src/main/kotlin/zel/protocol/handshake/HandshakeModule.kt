@@ -38,7 +38,7 @@ class HandshakeModule(
                 parts.loginState.gameReady,
                 parts.loginState.loadAllowsLogin,
             ),
-            PlayerSessions(parts.clients, requireNotNull(game.players), game.maintenance, parts.threading),
+            PlayerSessions(parts.clients, requireNotNull(game.players), game.openingHoursAccess, parts.threading),
             LoginBurst(parts.config, game.rewardTrackService, parts.loginState.now) { game.rooms.summary(it) != null },
             LoginFollowUps(
                 parts.config,

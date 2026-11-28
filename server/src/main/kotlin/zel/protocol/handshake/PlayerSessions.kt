@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory
 import zel.core.threading.GameThreads
 import zel.ext.ExtensionBus
 import zel.ext.ServerEvent
-import zel.game.Maintenance
 import zel.game.OpeningHours
+import zel.game.OpeningHoursAccess
 import zel.game.players.Player
 import zel.game.players.Players
 import zel.game.players.TicketLogin
@@ -15,15 +15,13 @@ import zel.net.clients.ClientConnections
 import zel.net.server.proxy.ClientAddress
 import zel.protocol.generated.LoginFailedGameClosedOut
 import zel.protocol.generated.LoginFailedGameClosedOutCodec
-import zel.protocol.generated.MaintenanceStatusOut
-import zel.protocol.generated.MaintenanceStatusOutCodec
 import zel.protocol.outgoing.handshake.DisconnectReason
 
 /** A newer login of the player replaces the older. */
 class PlayerSessions(
     private val clients: ClientConnections,
     private val players: Players,
-    private val maintenance: Maintenance,
+    private val access: OpeningHoursAccess,
     private val threading: GameThreads? = null,
     private val openingHours: OpeningHours = OpeningHours(),
 ) {
@@ -78,13 +76,7 @@ class PlayerSessions(
                     refuse(client)
                 }
 
-                !maintenance.admits(player.profile.rank.id) -> {
-                    // The break starts in 0 minutes: it is on now.
-                    client.send(MaintenanceStatusOutCodec, MaintenanceStatusOut(true, 0, maintenance.durationMinutes))
-                    refuse(client)
-                }
-
-                !openingHours.isOpen && !maintenance.letsThrough(player.profile.rank.id) -> {
+                !openingHours.isOpen && !access.letsThrough(player.profile.rank.id) -> {
                     client.send(
                         LoginFailedGameClosedOutCodec,
                         LoginFailedGameClosedOut(openingHours.openHour, openingHours.openMinute),

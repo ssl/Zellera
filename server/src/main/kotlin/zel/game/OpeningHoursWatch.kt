@@ -12,7 +12,7 @@ import java.time.LocalTime
 
 class OpeningHoursWatch(
     private val hours: OpeningHours,
-    private val maintenance: Maintenance,
+    private val access: OpeningHoursAccess,
     private val clients: () -> ClientConnections?,
     private val clock: () -> LocalTime = { LocalTime.now(GameZone.clock) },
 ) {
@@ -58,7 +58,7 @@ class OpeningHoursWatch(
 
     private fun isStaff(connection: ClientConnection): Boolean {
         val rank = connection.player?.profile?.rank ?: return false
-        return maintenance.letsThrough(rank.id)
+        return access.letsThrough(rank.id)
     }
 
     companion object {
